@@ -14,9 +14,14 @@ app = FastAPI(
 )
 
 # Setup CORS middleware to allow our frontend to communicate with the API
+allowed_origins = [
+    "https://ai-github-analyzer.vercel.app",
+    "http://localhost:5173"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: Restrict this in production
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
