@@ -1,22 +1,25 @@
 import React from 'react';
 
 /**
- * GitHubStats component — Displays various GitHub contribution and activity statistics widgets
- * using the GitHub Readme Stats and Activity Graph APIs.
+ * GitHubStats component — Displays advanced GitHub summary cards 
+ * using the GitHub Profile Summary Cards API.
  * 
  * @param {string} username - The GitHub username to fetch stats for
- * @returns A section containing multiple statistics widgets
+ * @returns A section containing multiple summary card widgets
  */
 const GitHubStats = ({ username }) => {
-    // #156: Verify the component is mounting in production
-    console.log("GitHubStats rendering for:", username);
-
     if (!username) return null;
 
-    // Helper to handle image load errors by hiding the broken image
+    /**
+     * Handles image load errors by hiding the broken card
+     * @param {Event} e - The error event
+     */
     const handleImgError = (e) => {
         e.target.style.display = 'none';
     };
+
+    const theme = 'prussian';
+    const baseUrl = 'http://github-profile-summary-cards.vercel.app/api/cards';
 
     return (
         <div className="p-6 rounded-3xl bg-white/[0.01] border border-white/5">
@@ -24,51 +27,49 @@ const GitHubStats = ({ username }) => {
                 📊 GitHub Statistics
             </h2>
 
-            <section className="space-y-6">
-                {/* Top Row: Stats Card & Streak Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-blue-500/30 transition-all duration-300 min-h-[150px] flex flex-col justify-center items-center">
-                        <img
-                            src={`https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=radical&count_private=true&hide_border=true`}
-                            alt={`${username}'s GitHub stats`}
-                            className="w-full h-auto rounded-lg"
-                            onError={handleImgError}
-                        />
-                        <p style={{ color: 'gray', fontSize: '12px' }}>Stats loading...</p>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-blue-500/30 transition-all duration-300 min-h-[150px] flex flex-col justify-center items-center">
-                        <img
-                            src={`https://streak-stats.demolab.com?user=${username}&theme=radical&hide_border=true`}
-                            alt={`${username}'s GitHub streak`}
-                            className="w-full h-auto rounded-lg"
-                            onError={handleImgError}
-                        />
-                        <p style={{ color: 'gray', fontSize: '12px' }}>Stats loading...</p>
-                    </div>
-                </div>
-
-                {/* Middle: Top Languages */}
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-blue-500/30 transition-all duration-300 min-h-[150px] flex flex-col justify-center items-center">
+            <div className="flex flex-col gap-6">
+                {/* 1. Full Width - Profile Details */}
+                <div className="w-full">
                     <img
-                        src={`https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=radical&hide_border=true&langs_count=8`}
-                        alt={`${username}'s top languages`}
-                        className="w-full h-auto rounded-lg"
+                        src={`${baseUrl}/profile-details?username=${username}&theme=${theme}`}
+                        alt="GitHub Profile Details"
+                        style={{ width: '100%', height: 'auto' }}
                         onError={handleImgError}
                     />
-                    <p style={{ color: 'gray', fontSize: '12px' }}>Stats loading...</p>
                 </div>
 
-                {/* Bottom: Activity Graph */}
-                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-blue-500/30 transition-all duration-300 min-h-[200px] flex flex-col justify-center items-center">
+                {/* 2. Side by Side - Language Stats */}
+                <div className="flex flex-wrap justify-between gap-y-4">
                     <img
-                        src={`https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=react-dark&hide_border=true&area=true`}
-                        alt={`${username}'s activity graph`}
-                        className="w-full h-auto rounded-lg"
+                        src={`${baseUrl}/repos-per-language?username=${username}&theme=${theme}`}
+                        alt="Repos per Language"
+                        style={{ width: '48%', minWidth: '300px', flexGrow: 1, height: 'auto' }}
                         onError={handleImgError}
                     />
-                    <p style={{ color: 'gray', fontSize: '12px' }}>Stats loading...</p>
+                    <img
+                        src={`${baseUrl}/most-commit-language?username=${username}&theme=${theme}`}
+                        alt="Most Commit Language"
+                        style={{ width: '48%', minWidth: '300px', flexGrow: 1, height: 'auto' }}
+                        onError={handleImgError}
+                    />
                 </div>
-            </section>
+
+                {/* 3. Side by Side - Stats & Productive Time */}
+                <div className="flex flex-wrap justify-between gap-y-4">
+                    <img
+                        src={`${baseUrl}/stats?username=${username}&theme=${theme}`}
+                        alt="GitHub Stats"
+                        style={{ width: '48%', minWidth: '300px', flexGrow: 1, height: 'auto' }}
+                        onError={handleImgError}
+                    />
+                    <img
+                        src={`${baseUrl}/productive-time?username=${username}&theme=${theme}&utcOffset=+5.5`}
+                        alt="Productive Time"
+                        style={{ width: '48%', minWidth: '300px', flexGrow: 1, height: 'auto' }}
+                        onError={handleImgError}
+                    />
+                </div>
+            </div>
         </div>
     );
 };
