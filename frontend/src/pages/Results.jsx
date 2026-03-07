@@ -4,6 +4,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import ProfileCard from '../components/ProfileCard';
 import RoleScoreCard from '../components/RoleScoreCard';
 import ResumeBullets from '../components/ResumeBullets';
+import GitHubStats from '../components/GitHubStats';
 
 // Fix #1: 30-second timeout so the loading screen never spins forever
 const FETCH_TIMEOUT_MS = 90000;
@@ -180,6 +181,8 @@ function Results() {
                     strengths={data.stack?.strengths}
                     gaps={data.stack?.gaps}
                 />
+
+                <GitHubStats username={username} />
 
                 <RoleScoreCard
                     scores={data.role_fit?.scores}
