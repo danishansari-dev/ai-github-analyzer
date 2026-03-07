@@ -117,8 +117,7 @@ function Results() {
             </header>
 
             <main className="max-w-4xl mx-auto px-4 py-10 space-y-8">
-                {/* 1. Global GitHub Stats Card — Always shows up immediately! */}
-                <GitHubStats username={username} />
+
 
                 {/* 2. Error Message Section */}
                 {error && (
@@ -164,6 +163,8 @@ function Results() {
                             strengths={data.stack?.strengths}
                             gaps={data.stack?.gaps}
                         />
+
+                        <GitHubStats username={username} />
 
                         <RoleScoreCard
                             scores={data.role_fit?.scores}
