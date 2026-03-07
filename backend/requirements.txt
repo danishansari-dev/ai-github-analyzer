@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+PyGithub
+google-generativeai
+python-dotenv
+pydantic
+httpx
+slowapi
+groq

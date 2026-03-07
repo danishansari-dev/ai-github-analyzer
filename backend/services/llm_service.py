@@ -1,0 +1,270 @@
+import os
+import json
+import logging
+from typing import Dict, List, Any
+from groq import Groq
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+class LLMService:
+    """
+    Service to interact with the Groq API for analyzing GitHub profiles.
+    Used for its high speed and reliable JSON output capabilities.
+    """
+
+    def __init__(self):
+        # GROQ_API_KEY is used for high-performance Llama 3 analysis
+        self.api_key = os.getenv("GROQ_API_KEY")
+        if not self.api_key:
+            logging.warning("Warning: GROQ_API_KEY not found in environment variables.")
+
+        # Initialize Groq client
+        self.client = Groq(api_key=self.api_key)
+
+    def _parse_json_response(self, response_text: str) -> Any:
+        """
+        Strips any residual markdown fencing and parses JSON.
+        Even with response_mime_type set, this acts as a safety net.
+        @param response_text - Raw text from the Gemini API
+        @returns Parsed Python object (dict or list)
+        """
+        text = response_text.strip()
+        text = text.replace("```json", "").replace("```", "").strip()
+        return json.loads(text)
+
+    def _call_groq_with_retry(self, system_prompt: str, user_prompt: str) -> Any:
+        """
+        Helper method to call Groq and parse the JSON response.
+        Retries exactly once if JSON parsing fails to ensure robustness.
+        @param system_prompt - Instructions for the model's behavior
+        @param user_prompt - The specific data to analyze
+        @returns Parsed Python object (dict or list)
+        """
+        response_text = ""
+        for attempt in range(2):
+            try:
+                # Using Groq's chat completion with JSON mode for structured output
+                response = self.client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    response_format={"type": "json_object"},
+                    max_tokens=2000
+                )
+
+                response_text = response.choices[0].message.content
+                print(f"  [groq] Raw response (first 200 chars): {response_text[:200]}")
+                return self._parse_json_response(response_text)
+
+            except json.JSONDecodeError as e:
+                logging.warning(f"JSON parsing failed on attempt {attempt + 1}: {e}")
+                if attempt == 1:
+                    raise Exception(f"Failed to parse JSON from Groq after retry. Response: {response_text[:500]}")
+            except Exception as e:
+                raise Exception(f"Groq API error: {str(e)}")
+
+
+    def analyze_stack(self, profile_data: Dict[str, Any], repos: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Analyzes a developer's stack and profile based on GitHub data.
+        @param profile_data - The user profile details from GitHub
+        @param repos - A list of the user's top repositories
+        @returns A dictionary with the analyzed primary stack, domains, summary, strengths, and gaps
+        """
+        print("Starting analyze_stack...")
+
+        system_prompt = "You are a senior developer recruiter analyzing a GitHub profile. Return ONLY valid JSON, no explanation, no markdown backticks."
+
+        name = profile_data.get('name', 'Developer')
+        bio = profile_data.get('bio', 'No bio provided')
+        public_repos = profile_data.get('public_repos', 0)
+
+        repos_summary = []
+        for r in repos:
+            desc = r.get('description') or 'No description'
+            lang = r.get('language') or 'Unknown'
+            repos_summary.append(f"- {r.get('name')}: {desc} (Language: {lang})")
+
+        repos_str = "\n".join(repos_summary)
+
+        user_prompt = f"""Analyze this GitHub profile and return a JSON object with exactly these keys:
+- primary_stack: array of top 5 technologies used (languages + frameworks)
+- domains: array of engineering domains detected (e.g. Machine Learning, Web Dev, MLOps, DevOps)
+- profile_summary: 2-sentence human-readable summary of this developer
+- strengths: array of exactly 3 specific strengths based on their repos
+- gaps: array of exactly 2 notable gaps (missing tests, docs, diversity of projects, etc.)
+
+Profile: {name}, {bio}, {public_repos} public repos.
+Top repos:
+{repos_str}"""
+
+        result = self._call_groq_with_retry(system_prompt, user_prompt)
+        print("analyze_stack done")
+        return result
+
+
+    def analyze_role_fit(self, stack_data: Dict[str, Any], repos: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Scores a developer's fit for 5 specific engineering roles.
+        @param stack_data - The analyzed stack data (from analyze_stack)
+        @param repos - A list of the user's top repositories
+        @returns A dictionary containing scores and the top role match
+        """
+        print("Starting analyze_role_fit...")
+
+        system_prompt = "You are a technical recruiter. Return ONLY valid JSON."
+
+        summary = stack_data.get('profile_summary', '')
+        primary_stack = ", ".join(stack_data.get('primary_stack', []))
+        domains = ", ".join(stack_data.get('domains', []))
+
+        repos_summary = []
+        for r in repos:
+            desc = r.get('description') or 'No description'
+            repos_summary.append(f"- {r.get('name')}: {desc}")
+
+        repos_str = "\n".join(repos_summary)
+
+        user_prompt = f"""Score this developer for these 5 roles on a scale of 0-100 based on their GitHub profile.
+Be strict and realistic - most developers score 40-70 range.
+Return JSON with exactly these keys:
+- scores: object with keys: ml_engineer, backend_developer, frontend_developer, mlops_engineer, full_stack_developer. Each value is integer 0-100.
+- top_role: the key with highest score
+- top_role_label: human readable name of top role
+- reasoning: 2-sentence explanation of why they fit the top role
+
+Developer profile summary: {summary}
+Primary stack: {primary_stack}
+Domains: {domains}
+Repos:
+{repos_str}"""
+
+        result = self._call_groq_with_retry(system_prompt, user_prompt)
+        print("analyze_role_fit done")
+        return result
+
+
+    def generate_resume_bullets(self, repos_with_readmes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Generates resume bullet points for a developer's projects.
+        @param repos_with_readmes - A list of repos that include a 'readme' field
+        @returns A list of dictionaries representing projects and their resume bullets
+        """
+        print("Starting generate_resume_bullets...")
+
+        system_prompt = "You are an expert technical resume writer. Return ONLY valid JSON."
+
+        projects_data = []
+        for r in repos_with_readmes:
+            name = r.get('name', 'Unknown')
+            desc = r.get('description') or 'No description'
+            lang = r.get('language') or 'Unknown'
+            stars = r.get('stargazers_count', 0)
+            url = r.get('html_url', '')
+
+            readme = r.get('readme', '')
+            readme_excerpt = readme[:500] if readme else 'No README provided'
+
+            projects_data.append({
+                "name": name,
+                "description": desc,
+                "language": lang,
+                "stars": stars,
+                "readme_excerpt": readme_excerpt,
+                "url": url
+            })
+
+        projects_str = json.dumps(projects_data, indent=2)
+
+        user_prompt = f"""Generate resume bullet points for each of these GitHub projects.
+For each project return 2-3 bullet points following these strict rules:
+- Start with a strong action verb (Built, Developed, Deployed, Trained, Designed, Implemented, Engineered)
+- Mention the specific tech stack
+- Include at least one metric (accuracy %, dataset size, users, latency, etc.) - infer from context if not explicit
+- Keep each bullet under 160 characters
+- Do NOT use vague words like 'various', 'multiple', 'several'
+
+Return JSON array where each item has:
+- project_name: string
+- repo_url: string  
+- bullets: array of bullet point strings
+
+Projects data:
+{projects_str}"""
+
+        result = self._call_groq_with_retry(system_prompt, user_prompt)
+        print("generate_resume_bullets done")
+        return result
+    def analyze_all(self, profile_data: Dict[str, Any], repos: List[Dict[str, Any]], repos_with_readmes: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Combines stack analysis, role fit, and resume bullet generation into ONE Gemini API call.
+        This reduces 3 API round trips to 1, significantly cutting down latency.
+        
+        @param profile_data - The user profile details from GitHub
+        @param repos - A list of the user's top repositories
+        @param repos_with_readmes - A list of repos that include a 'readme' field
+        @returns A dictionary containing 'stack', 'role_fit', and 'resume_bullets'
+        """
+        print("Starting unified analyze_all call...")
+
+        system_prompt = "You are a senior technical recruiter and resume expert. Return ONLY valid JSON."
+
+        # Prepare context data
+        name = profile_data.get('name', 'Developer')
+        bio = profile_data.get('bio', 'No bio provided')
+        public_repos = profile_data.get('public_repos', 0)
+
+        repos_summary = []
+        for r in repos:
+            desc = r.get('description') or 'No description'
+            lang = r.get('language') or 'Unknown'
+            repos_summary.append(f"- {r.get('name')}: {desc} (Language: {lang})")
+        repos_str = "\n".join(repos_summary)
+
+        projects_data = []
+        for r in repos_with_readmes:
+            projects_data.append({
+                "name": r.get('name', 'Unknown'),
+                "description": r.get('description') or 'No description',
+                "language": r.get('language') or 'Unknown',
+                "stars": r.get('stargazers_count', 0),
+                "readme_excerpt": (r.get('readme', '')[:500] if r.get('readme') else 'No README provided'),
+                "repo_url": r.get('html_url', '')
+            })
+        projects_str = json.dumps(projects_data, indent=2)
+
+        user_prompt = f"""Perform a comprehensive analysis of this GitHub developer profile and return ONE JSON object with exactly these three keys: 'stack', 'role_fit', 'resume_bullets'.
+
+1. STACK ANALYSIS ('stack' key):
+   - primary_stack: array of top 5 technologies used
+   - domains: array of engineering domains detected
+   - profile_summary: 2-sentence summary
+   - strengths: array of exactly 3 specific strengths
+   - gaps: array of exactly 2 notable gaps
+
+2. ROLE FIT ('role_fit' key):
+   - scores: object with scores (0-100) for: ml_engineer, backend_developer, frontend_developer, mlops_engineer, full_stack_developer.
+   - top_role: the key with highest score
+   - top_role_label: human readable name of top role
+   - reasoning: 2-sentence explanation
+
+3. RESUME BULLETS ('resume_bullets' key):
+   - Generate 2-3 bullets for each project in the provided projects data.
+   - Start with action verbs, mention stack, include a metric (infer if needed).
+   - Return as array of objects with: project_name, repo_url, bullets (array of strings).
+
+Developer Profile: {name}, {bio}, {public_repos} repos.
+Repositories:
+{repos_str}
+
+Projects for Resume:
+{projects_str}"""
+
+        # We use await asyncio.to_thread in the router, but here we call the sync helper
+        result = self._call_groq_with_retry(system_prompt, user_prompt)
+        print("analyze_all done")
+        return result
