@@ -8,6 +8,9 @@ import ResumeBullets from '../components/ResumeBullets';
 // Fix #1: 30-second timeout so the loading screen never spins forever
 const FETCH_TIMEOUT_MS = 90000;
 
+// Fix #2: Use production API URL if available, else fallback to empty string (Vite proxy)
+const apiUrl = import.meta.env.VITE_API_URL || '';
+
 /**
  * Results page — Fetches analysis data from the backend for a given GitHub username
  * and renders the three main result cards: ProfileCard, RoleScoreCard, and ResumeBullets.
@@ -36,7 +39,7 @@ function Results() {
             const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
             try {
-                const response = await fetch(`/api/analyze/${encodeURIComponent(username)}`, {
+                const response = await fetch(`${apiUrl}/api/analyze/${encodeURIComponent(username)}`, {
                     signal: controller.signal,
                 });
 
