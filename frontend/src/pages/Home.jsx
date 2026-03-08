@@ -1,23 +1,67 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Use production API URL if available, else fallback to empty string (Vite proxy)
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 /**
  * Home page — the landing page for the AI GitHub Analyzer.
- * Contains a hero section, "how it works" steps, and a sample preview
- * to visually communicate to visitors what the tool does before they use it.
+ * Contains a hero section with roast mode toggle, live counter,
+ * "how it works" steps, and a sample preview.
  */
 function Home() {
     const [username, setUsername] = useState('');
+    const [isRoastMode, setIsRoastMode] = useState(false);
+    const [totalAnalyzed, setTotalAnalyzed] = useState(0);
+    const [displayCount, setDisplayCount] = useState(0);
     const navigate = useNavigate();
 
     /**
+     * Fetches the total analysis count from the backend on mount,
+     * then kicks off a count-up animation from 0 to the real value.
+     */
+    useEffect(() => {
+        fetch(`${apiUrl}/api/stats`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.total_analyzed) {
+                    setTotalAnalyzed(data.total_analyzed);
+                }
+            })
+            .catch(() => {
+                // Silently fail — counter is cosmetic, not critical
+            });
+    }, []);
+
+    // Animate the counter from 0 → totalAnalyzed over ~1.5 seconds
+    useEffect(() => {
+        if (totalAnalyzed === 0) return;
+
+        const duration = 1500;
+        const steps = 40;
+        const increment = totalAnalyzed / steps;
+        let current = 0;
+        let step = 0;
+
+        const timer = setInterval(() => {
+            step++;
+            current = Math.min(Math.round(increment * step), totalAnalyzed);
+            setDisplayCount(current);
+            if (step >= steps) clearInterval(timer);
+        }, duration / steps);
+
+        return () => clearInterval(timer);
+    }, [totalAnalyzed]);
+
+    /**
      * Navigates the user to the results page when the form is submitted.
-     * We trim whitespace to prevent accidental empty submissions.
+     * Appends ?mode=roast if roast mode is enabled.
      */
     const handleAnalyze = (e) => {
         e.preventDefault();
         if (username.trim()) {
-            navigate(`/results/${username.trim()}`);
+            const path = `/results/${username.trim()}${isRoastMode ? '?mode=roast' : ''}`;
+            navigate(path);
         }
     };
 
@@ -32,7 +76,7 @@ function Home() {
                 <div className="relative z-10 text-center max-w-3xl mx-auto">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full border border-white/10 bg-white/5 text-sm text-gray-400">
                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        Powered by Claude AI
+                        Powered by Groq AI
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
@@ -45,8 +89,15 @@ function Home() {
                         Enter any GitHub username to get your tech stack analysis, job role fit score, and AI-generated resume bullets.
                     </p>
 
+                    {/* Live counter — animates from 0 on page load */}
+                    {totalAnalyzed > 0 && (
+                        <p className="mt-4 text-gray-500 text-sm font-medium tracking-wide">
+                            🔍 {displayCount.toLocaleString()} developer profiles analyzed
+                        </p>
+                    )}
+
                     {/* Search form */}
-                    <form onSubmit={handleAnalyze} className="mt-10 flex flex-col sm:flex-row items-center gap-3 max-w-lg mx-auto">
+                    <form onSubmit={handleAnalyze} className="mt-8 flex flex-col sm:flex-row items-center gap-3 max-w-lg mx-auto">
                         <input
                             id="github-username-input"
                             type="text"
@@ -63,6 +114,24 @@ function Home() {
                             Analyze →
                         </button>
                     </form>
+
+                    {/* Roast Mode toggle */}
+                    <div className="mt-5 flex items-center justify-center gap-3">
+                        <span className={`text-sm transition-colors ${!isRoastMode ? 'text-gray-300' : 'text-gray-600'}`}>Normal</span>
+                        <button
+                            type="button"
+                            onClick={() => setIsRoastMode(!isRoastMode)}
+                            className={`relative w-14 h-7 rounded-full transition-colors duration-300 cursor-pointer ${isRoastMode ? 'bg-orange-500' : 'bg-white/10'
+                                }`}
+                            aria-label="Toggle roast mode"
+                        >
+                            <span
+                                className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${isRoastMode ? 'translate-x-7' : 'translate-x-0'
+                                    }`}
+                            />
+                        </button>
+                        <span className={`text-sm transition-colors ${isRoastMode ? 'text-orange-400' : 'text-gray-600'}`}>🔥 Roast Me</span>
+                    </div>
                 </div>
             </section>
 
@@ -85,7 +154,7 @@ function Home() {
                                 step: '02',
                                 icon: '🤖',
                                 title: 'AI Reads Your Code',
-                                desc: 'Claude AI analyzes your repos, READMEs, languages, and project structures.',
+                                desc: 'Groq AI analyzes your repos, READMEs, languages, and project structures.',
                             },
                             {
                                 step: '03',
@@ -182,7 +251,7 @@ function Home() {
 
             {/* ===== FOOTER ===== */}
             <footer className="py-8 px-4 border-t border-white/5 text-center text-gray-500 text-sm">
-                Built with FastAPI, Claude AI, and React.
+                Built with FastAPI, Groq AI, and React.
             </footer>
         </div>
     );
