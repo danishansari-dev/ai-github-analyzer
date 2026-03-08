@@ -115,6 +115,10 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         language_breakdown = await asyncio.to_thread(github_svc.get_language_breakdown, username)
         print(f"[analyze] Language breakdown complete")
 
+        # 5b. Fetch GitHub achievement badges
+        badges = await asyncio.to_thread(github_svc.get_user_badges, username)
+        print(f"[analyze] Badges fetched: {len(badges)} unlocked")
+
         # 6. Run LLM call — combined analysis in one prompt
         print(f"[analyze] Starting combined LLM analysis...")
 
@@ -169,6 +173,7 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             role_fit=role_fit,
             resume_bullets=llm_result.get('resume_bullets'),
             top_repos=top_repos,
+            badges=badges,
             analyzed_at=datetime.now(timezone.utc)
         )
 

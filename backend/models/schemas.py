@@ -66,6 +66,7 @@ class FullAnalysisResponse(BaseModel):
     resume_bullets: List[ResumeBulletProject]
     # Optional so older cached responses without this field still deserialize
     top_repos: List[TopRepoInfo] = []
+    badges: List[str] = []
     analyzed_at: datetime
 
 class ErrorResponse(BaseModel):

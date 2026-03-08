@@ -208,3 +208,36 @@ class GitHubService:
             # Fail open — if the star check itself errors, don't block the user
             print(f"[star-check] Error checking starred status for {username}: {e}")
             return True
+
+    def get_user_badges(self, username: str) -> list:
+        """
+        Checks which GitHub achievement badges a user has unlocked.
+        Uses HEAD requests against the user's profile achievements tab
+        to avoid downloading full HTML bodies.
+        @param username - The GitHub username to check
+        @returns List of unlocked badge slug strings
+        """
+        # All known GitHub achievement slugs as of 2024
+        achievement_slugs = [
+            "pull-shark", "starstruck", "pair-extraordinaire",
+            "galaxy-brain", "yolo", "quickdraw",
+            "arctic-code-vault-contributor", "public-sponsor",
+            "heart-on-your-sleeve", "open-sourcerer"
+        ]
+
+        unlocked = []
+        headers = {}
+        if self.token:
+            headers["Authorization"] = f"token {self.token}"
+
+        for slug in achievement_slugs:
+            try:
+                url = f"https://github.com/{username}?tab=achievements&achievement={slug}"
+                res = requests.head(url, headers=headers, timeout=5, allow_redirects=True)
+                if res.status_code == 200:
+                    unlocked.append(slug)
+            except Exception:
+                # Skip individual badge check failures silently
+                pass
+
+        return unlocked

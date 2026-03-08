@@ -286,6 +286,7 @@ function Results() {
                             strengths={data.stack?.strengths}
                             developer_type={data.stack?.developer_type}
                             profile_tag={data.stack?.profile_tag}
+                            badges={data.badges}
                         />
 
                         {/* Repo Showcase — between ProfileCard and GitHubStats */}
