@@ -12,8 +12,6 @@ const GitHubStats = ({ username }) => {
 
     useEffect(() => {
         if (!username) return;
-
-        // OSS Insight requires a numeric user ID, so we fetch it from the public profile
         fetch(`https://api.github.com/users/${username}`)
             .then(r => r.json())
             .then(data => {
@@ -24,77 +22,82 @@ const GitHubStats = ({ username }) => {
 
     if (!username) return null;
 
-    /**
-     * Handles image load errors by hiding the broken card
-     * @param {Event} e - The error event
-     */
     const handleImgError = (e) => {
         e.target.style.display = 'none';
+        // If parent is a 2x2 grid item and it fails, we might want to hide the wrapper too
+        if (e.target.parentElement.classList.contains('count-card')) {
+            e.target.parentElement.style.display = 'none';
+        }
     };
 
-    const theme = 'github_dark';
+    const theme = 'custom'; // Custom theme to match our #111111 background
+    const themeColor = '111111';
     const baseUrl = 'http://github-profile-summary-cards.vercel.app/api/cards';
 
     return (
-        <div className="p-6 rounded-2xl border border-white/5 bg-[#0d1117]" style={{ marginBottom: '24px' }}>
-            <h2 className="text-white text-xl font-semibold mb-5 flex items-center gap-2">
+        <div className="flex flex-col h-full">
+            <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                 📊 GitHub Statistics
             </h2>
 
-            {/* 
-              Responsive grid: single column on mobile, 2 columns on ≥768px.
-              Using Tailwind's responsive prefix instead of inline styles so mobile stacks properly. 
-            */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Row 0: OSS Insight Dashboard full width */}
+            <div className="flex flex-col gap-4">
+                {/* Full Width OSS Insight */}
                 {userId && (
-                    <div className="md:col-span-2">
+                    <div className="w-full">
                         <img
                             src={`https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats/thumbnail.png?user_id=${userId}&image_size=auto&color_scheme=dark`}
                             alt="OSS Insight Dashboard"
-                            className="w-full rounded-xl mb-4"
+                            className="w-full rounded-xl border border-[#1f1f1f]"
                             onError={(e) => e.target.style.display = 'none'}
                         />
                     </div>
                 )}
 
-                {/* Row 1: profile-details full width */}
-                <div className="md:col-span-2">
+                {/* Contribution Graph (Summary Cards version) */}
+                <div className="w-full">
                     <img
-                        src={`${baseUrl}/profile-details?username=${username}&theme=${theme}`}
+                        src={`${baseUrl}/profile-details?username=${username}&theme=github_dark`}
                         alt="Profile Details"
-                        className="w-full rounded-xl hover:scale-[1.01] transition-transform duration-200"
+                        className="w-full rounded-xl border border-[#1f1f1f]"
                         onError={handleImgError}
                     />
                 </div>
 
-                {/* Row 2: repos-per-language + most-commit-language */}
-                <img
-                    src={`${baseUrl}/repos-per-language?username=${username}&theme=${theme}`}
-                    alt="Repos per Language"
-                    className="w-full rounded-xl hover:scale-[1.01] transition-transform duration-200"
-                    onError={handleImgError}
-                />
-                <img
-                    src={`${baseUrl}/most-commit-language?username=${username}&theme=${theme}`}
-                    alt="Most Commit Language"
-                    className="w-full rounded-xl hover:scale-[1.01] transition-transform duration-200"
-                    onError={handleImgError}
-                />
-
-                {/* Row 3: stats + productive-time */}
-                <img
-                    src={`${baseUrl}/stats?username=${username}&theme=${theme}`}
-                    alt="General Stats"
-                    className="w-full rounded-xl hover:scale-[1.01] transition-transform duration-200"
-                    onError={handleImgError}
-                />
-                <img
-                    src={`${baseUrl}/productive-time?username=${username}&theme=${theme}&utcOffset=+5.5`}
-                    alt="Productive Time"
-                    className="w-full rounded-xl hover:scale-[1.01] transition-transform duration-200"
-                    onError={handleImgError}
-                />
+                {/* 2x2 Sub-grid */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
+                        <img
+                            src={`${baseUrl}/repos-per-language?username=${username}&theme=github_dark`}
+                            alt="Repos per Language"
+                            className="w-full h-auto"
+                            onError={handleImgError}
+                        />
+                    </div>
+                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
+                        <img
+                            src={`${baseUrl}/most-commit-language?username=${username}&theme=github_dark`}
+                            alt="Most Commit Language"
+                            className="w-full h-auto"
+                            onError={handleImgError}
+                        />
+                    </div>
+                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
+                        <img
+                            src={`${baseUrl}/stats?username=${username}&theme=github_dark`}
+                            alt="General Stats"
+                            className="w-full h-auto"
+                            onError={handleImgError}
+                        />
+                    </div>
+                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
+                        <img
+                            src={`${baseUrl}/productive-time?username=${username}&theme=github_dark&utcOffset=+5.5`}
+                            alt="Productive Time"
+                            className="w-full h-auto"
+                            onError={handleImgError}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );
