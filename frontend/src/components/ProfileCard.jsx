@@ -71,12 +71,20 @@ function ProfileCard({ data, username }) {
                 </div>
             )}
 
-            {/* Stats Row */}
-            <div className="flex items-center gap-4 mb-8 text-[11px] font-medium text-gray-500 uppercase tracking-wider">
-                <span className="flex items-center gap-1.5">
-                    <span className="text-gray-300">📁</span> {data.top_repos?.length || 0} Repos
-                </span>
-                {/* Note: followers/following aren't in schemas.py yet, but let's see if we can get them from somewhere or just show what we have */}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3 mb-8">
+                <div className="flex flex-col items-center justify-center py-4 rounded-xl bg-[#0a0a0a] border border-[#1f1f1f] group-hover:border-[#2f2f2f] transition-all">
+                    <span className="text-xl font-black text-white leading-none mb-2">{data.followers || 0}</span>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Followers</span>
+                </div>
+                <div className="flex flex-col items-center justify-center py-4 rounded-xl bg-[#0a0a0a] border border-[#1f1f1f] group-hover:border-[#2f2f2f] transition-all">
+                    <span className="text-xl font-black text-white leading-none mb-2">{data.following || 0}</span>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Following</span>
+                </div>
+                <div className="flex flex-col items-center justify-center py-4 rounded-xl bg-[#0a0a0a] border border-[#1f1f1f] group-hover:border-[#2f2f2f] transition-all">
+                    <span className="text-xl font-black text-white leading-none mb-2">{data.public_repos || 0}</span>
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Repos</span>
+                </div>
             </div>
 
             {/* Sections */}
