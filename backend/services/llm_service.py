@@ -272,6 +272,10 @@ Projects data:
      - Community signals (stars earned, forks, contributions to others) — 25pts
 
 2. STACK ANALYSIS ('stack' key):
+   - developer_type: one of these exact values based on their repos:
+     ML Researcher, Data Engineer, Full Stack Builder, Frontend Craftsman, Backend Architect, DevOps Engineer, Open Source Contributor, Student Hacker, Polyglot Developer, AI Engineer, Systems Programmer
+   - profile_tag: a creative 2-4 word personality label for this developer.
+     Examples: "The Silent Builder", "Data Whisperer", "Bug Slayer", "Stack Agnostic", "The Notebook Ninja". Make it specific to their repos, not generic.
    - primary_stack: array of top 5 technologies used (languages + frameworks).
      IMPORTANT: Detect the actual programming languages, frameworks and libraries the developer uses — NOT file formats or tools.
      For example: if repos contain .ipynb files, the language is Python not Jupyter Notebook.

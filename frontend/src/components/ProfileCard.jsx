@@ -3,7 +3,7 @@
  * domains, strengths, and gaps. This is the first card users see
  * after analysis completes, so it needs to feel immediately informative.
  */
-function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, domains, profile_summary, strengths }) {
+function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, domains, profile_summary, strengths, developer_type, profile_tag }) {
     return (
         <div className="p-6 sm:p-8 rounded-2xl border border-white/5 bg-white/[0.02]">
             {/* Profile header — stacks vertically on very small screens */}
@@ -14,7 +14,14 @@ function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, d
                     className="w-20 h-20 rounded-full border-2 border-white/10 shrink-0"
                 />
                 <div className="min-w-0">
-                    <h2 className="text-2xl font-bold text-white break-words">{name || username}</h2>
+                    <div className="flex flex-wrap items-center gap-3 mb-1">
+                        <h2 className="text-2xl font-bold text-white break-words">{name || username}</h2>
+                        {developer_type && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                                {developer_type}
+                            </span>
+                        )}
+                    </div>
                     <a
                         href={profile_url}
                         target="_blank"
@@ -27,7 +34,14 @@ function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, d
             </div>
 
             {/* Profile summary */}
-            <p className="text-gray-300 leading-relaxed mb-6 text-lg break-words">{profile_summary}</p>
+            <p className="text-gray-300 leading-relaxed mb-4 text-lg break-words">{profile_summary}</p>
+
+            {/* Profile tag / Quote */}
+            {profile_tag && (
+                <div className="mb-6 pl-4 border-l-2 border-indigo-500/50">
+                    <p className="text-indigo-400 italic font-medium text-lg">"{profile_tag}"</p>
+                </div>
+            )}
 
             {/* Tech stack badges — flex-wrap ensures no overflow on small screens */}
             <div className="mb-6 overflow-hidden">

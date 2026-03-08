@@ -275,6 +275,8 @@ function Results() {
                             domains={data.stack?.domains}
                             profile_summary={data.stack?.profile_summary}
                             strengths={data.stack?.strengths}
+                            developer_type={data.stack?.developer_type}
+                            profile_tag={data.stack?.profile_tag}
                         />
 
                         {/* Repo Showcase — between ProfileCard and GitHubStats */}

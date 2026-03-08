@@ -14,6 +14,8 @@ class RepoInfo(BaseModel):
     url: str
 
 class StackAnalysis(BaseModel):
+    developer_type: Optional[str] = None
+    profile_tag: Optional[str] = None
     primary_stack: List[str]
     domains: List[str]
     profile_summary: str
