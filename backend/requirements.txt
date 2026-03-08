@@ -7,4 +7,4 @@ pydantic
 httpx
 slowapi
 groq
-filelock
+upstash-redis

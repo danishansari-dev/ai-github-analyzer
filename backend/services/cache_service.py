@@ -1,101 +1,78 @@
 import time
 import os
-import json
+import logging
 from typing import Any, Dict, Optional
-from filelock import FileLock
+from upstash_redis import Redis
 
 class CacheService:
     # This service exists to temporarily house expensive LLM analytics and 
     # API data in server RAM, bypassing the necessity to re-ping Anthropic 
     # or GitHub if a user refreshes the page or re-searches the same profile within an hour.
+    # Counters (analysis_count, visitor_count) are persisted in Upstash Redis
+    # so they survive Railway redeploys, unlike the previous JSON file approach.
     
     def __init__(self):
-        # We are intentionally utilizing a basic dictionary here to restrict
-        # the necessity of provisioning external infrastructure instances like Redis.
+        # In-memory cache for analysis results (still RAM-based, intentionally ephemeral)
         self.cache: Dict[str, Dict[str, Any]] = {}
         
         # We set hard expiration to 60 minutes equivalent in seconds
         self.expiration_seconds = 60 * 60
 
-        # The counter starts at 0 and increments naturally.
-        # NOTE: On Railway's standard container filesystem MVP, these JSON files 
-        # will reset on every redeploy because they are not attached to a persistent volume.
-        self.data_file = os.path.join(os.path.dirname(__file__), "..", "data.json")
-        self.data_lock_file = self.data_file + ".lock"
-        self._init_data_file()
+        # Initialize Upstash Redis for persistent counters.
+        # Falls back to in-memory counters if Redis credentials are missing,
+        # so local development still works without Upstash.
+        redis_url = os.getenv("UPSTASH_REDIS_REST_URL")
+        redis_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
 
-        # Visitor tracking mechanics
-        self.visitors_file = os.path.join(os.path.dirname(__file__), "..", "visitors.json")
-        self.visitors_lock_file = self.visitors_file + ".lock"
-        self._init_visitor_file()
-
-    def _init_data_file(self) -> None:
-        """Bootstraps the analysis count tracking file if it does not yet exist on disk."""
-        if not os.path.exists(self.data_file):
-            with FileLock(self.data_lock_file):
-                if not os.path.exists(self.data_file):
-                    with open(self.data_file, "w") as f:
-                        json.dump({"count": 0}, f)
-
-    def _init_visitor_file(self) -> None:
-        """Bootstraps the visitor count tracking file if it does not yet exist on disk."""
-        if not os.path.exists(self.visitors_file):
-            # Acquire lock to prevent race conditions during initial file creation
-            with FileLock(self.visitors_lock_file):
-                if not os.path.exists(self.visitors_file):
-                    with open(self.visitors_file, "w") as f:
-                        json.dump({"count": 0}, f)
+        if redis_url and redis_token:
+            self.redis = Redis(url=redis_url, token=redis_token)
+            logging.info("Upstash Redis connected for persistent counters")
+        else:
+            self.redis = None
+            logging.warning("UPSTASH_REDIS credentials not found — counters will reset on restart")
 
     def increment_count(self) -> None:
-        """Bumps the analysis counter after every successful profile analysis."""
-        with FileLock(self.data_lock_file):
-            try:
-                with open(self.data_file, "r") as f:
-                    data = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                data = {"count": 0}
-            
-            data["count"] += 1
-            
-            with open(self.data_file, "w") as f:
-                json.dump(data, f)
+        """
+        Bumps the analysis counter after every successful profile analysis.
+        Uses Redis INCR for atomic, persistent incrementing.
+        """
+        if self.redis:
+            self.redis.incr("analysis_count")
+        # No fallback needed — if Redis is down, we just skip the count
 
     def get_count(self) -> int:
-        """Returns the total number of analyses performed."""
-        try:
-            with open(self.data_file, "r") as f:
-                data = json.load(f)
-                return data.get("count", 0)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return 0
+        """
+        Returns the total number of analyses performed.
+        @returns The analysis count as an integer
+        """
+        if self.redis:
+            try:
+                val = self.redis.get("analysis_count")
+                return int(val) if val else 0
+            except Exception:
+                return 0
+        return 0
 
     def increment_visitor(self) -> None:
         """
-        Safely increments the global visitor counter using a file lock.
+        Atomically increments the global visitor counter in Redis.
+        Called once per frontend session from App.jsx.
         """
-        with FileLock(self.visitors_lock_file):
-            try:
-                with open(self.visitors_file, "r") as f:
-                    data = json.load(f)
-            except (FileNotFoundError, json.JSONDecodeError):
-                data = {"count": 0}
-            
-            data["count"] += 1
-            
-            with open(self.visitors_file, "w") as f:
-                json.dump(data, f)
+        if self.redis:
+            self.redis.incr("visitor_count")
 
     def get_visitor_count(self) -> int:
         """
-        Retrieves the exact number of unique visitors from persistent storage.
+        Retrieves the exact number of unique visitors from Redis.
         @returns The visitor count as an integer
         """
-        try:
-            with open(self.visitors_file, "r") as f:
-                data = json.load(f)
-                return data.get("count", 0)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return 0
+        if self.redis:
+            try:
+                val = self.redis.get("visitor_count")
+                return int(val) if val else 0
+            except Exception:
+                return 0
+        return 0
 
     def set(self, username: str, data: Any) -> None:
         """
