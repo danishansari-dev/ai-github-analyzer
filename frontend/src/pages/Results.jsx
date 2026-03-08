@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { toPng } from 'html-to-image';
 import LoadingScreen from '../components/LoadingScreen';
 import ProfileCard from '../components/ProfileCard';
 import RoleScoreCard from '../components/RoleScoreCard';
@@ -33,8 +32,6 @@ function Results() {
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
 
-    // Ref for the hidden share card that gets rendered to PNG
-    const shareCardRef = useRef(null);
     const shareDropdownRef = useRef(null);
     const [isShareOpen, setIsShareOpen] = useState(false);
 
@@ -105,32 +102,6 @@ function Results() {
         return () => { isCancelled = true; };
     }, [username, isRoast]);
 
-    const handleDownloadImage = async () => {
-        try {
-            // 1. Generate PNG from the hidden share card
-            if (shareCardRef.current) {
-                const dataUrl = await toPng(shareCardRef.current, {
-                    pixelRatio: 2,
-                    backgroundColor: '#0a0a0f'
-                });
-
-                // 2. Create a download link and trigger it
-                const link = document.createElement('a');
-                link.download = `${username}-github-analysis.png`;
-                link.href = dataUrl;
-                link.click();
-            }
-
-            // 3. Show success toast
-            setToast('Image downloaded successfully!');
-            setTimeout(() => setToast(null), 3000);
-        } catch (err) {
-            console.error('Share failed:', err);
-            setToast('Image generation failed.');
-            setTimeout(() => setToast(null), 3000);
-        }
-    };
-
     const handleCopyLink = async () => {
         try {
             await navigator.clipboard.writeText(window.location.href);
@@ -141,12 +112,19 @@ function Results() {
         }
     };
 
-    // Derive top role info for the share card
-    const topRole = data?.role_fit?.top_3_roles?.[0];
-    const topStack = data?.stack?.primary_stack?.slice(0, 3) || [];
+    const topRoleLabel = data?.role_fit?.top_role_label || 'Developer';
+    const topRoleKey = data?.role_fit?.top_role;
+    const score = data?.role_fit?.scores?.[topRoleKey] || 100;
+    const stackItems = data?.stack?.primary_stack?.slice(0, 3).join(', ') || '';
 
     const shareUrl = apiUrl ? `${apiUrl}/og/${username}` : window.location.href;
     const encodedURL = encodeURIComponent(shareUrl);
+
+    const linkedInText = `I just analyzed my GitHub profile with AI!\n🎯 Top Role: ${topRoleLabel} — ${score}%\n🛠️ Stack: ${stackItems}\nCheck yours 👇`;
+    const encodedLinkedInText = encodeURIComponent(linkedInText);
+
+    const whatsappText = `Check out my GitHub analysis! 🚀\nTop Role: ${topRoleLabel} — ${score}%\nStack: ${stackItems}\nAnalyze yours: ${shareUrl}`;
+    const encodedWhatsAppText = encodeURIComponent(whatsappText);
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -182,18 +160,9 @@ function Results() {
                                     >
                                         <span className="text-lg">🔗</span> Copy Link
                                     </button>
-                                    <button
-                                        onClick={() => {
-                                            handleDownloadImage();
-                                            setIsShareOpen(false);
-                                        }}
-                                        className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
-                                    >
-                                        <span className="text-lg">📸</span> Download Image
-                                    </button>
                                     <div className="h-px bg-white/10 mx-2 my-1"></div>
                                     <a
-                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedURL}`}
+                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedURL}&summary=${encodedLinkedInText}`}
                                         target="_blank" rel="noopener noreferrer"
                                         onClick={() => setIsShareOpen(false)}
                                         className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
@@ -201,15 +170,7 @@ function Results() {
                                         <span className="text-lg">💼</span> Share on LinkedIn
                                     </a>
                                     <a
-                                        href={`https://twitter.com/intent/tweet?text=I%20analyzed%20my%20GitHub%20profile%20with%20AI!%20Check%20it%20out%20%F0%9F%91%87&url=${encodedURL}`}
-                                        target="_blank" rel="noopener noreferrer"
-                                        onClick={() => setIsShareOpen(false)}
-                                        className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
-                                    >
-                                        <span className="text-lg">🐦</span> Share on Twitter/X
-                                    </a>
-                                    <a
-                                        href={`https://wa.me/?text=Check%20my%20GitHub%20analysis:%20${encodedURL}`}
+                                        href={`https://wa.me/?text=${encodedWhatsAppText}`}
                                         target="_blank" rel="noopener noreferrer"
                                         onClick={() => setIsShareOpen(false)}
                                         className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
@@ -287,88 +248,6 @@ function Results() {
                 )}
             </main>
 
-            {/* Hidden share card — rendered off-screen, only used for PNG generation */}
-            {data && (
-                <div
-                    ref={shareCardRef}
-                    style={{
-                        position: 'absolute',
-                        left: '-9999px',
-                        top: '-9999px',
-                        width: '600px',
-                        padding: '40px',
-                        background: 'linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%)',
-                        borderRadius: '24px',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    }}
-                >
-                    {/* Avatar + Name */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                        <img
-                            src={data.avatar_url}
-                            alt={username}
-                            style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.15)' }}
-                        />
-                        <div>
-                            <div style={{ color: 'white', fontSize: '22px', fontWeight: 'bold' }}>
-                                {data.name || username}
-                            </div>
-                            <div style={{ color: '#9ca3af', fontSize: '14px' }}>@{username}</div>
-                        </div>
-                    </div>
-
-                    {/* Top role badge */}
-                    {topRole && (
-                        <div style={{
-                            background: 'rgba(59,130,246,0.15)',
-                            border: '1px solid rgba(59,130,246,0.3)',
-                            borderRadius: '12px',
-                            padding: '14px 20px',
-                            marginBottom: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                        }}>
-                            <span style={{ fontSize: '24px' }}>🥇</span>
-                            <span style={{ color: '#93c5fd', fontSize: '16px', fontWeight: '600' }}>
-                                {topRole.label} — {topRole.score}%
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Top 3 tech stack badges */}
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap' }}>
-                        {topStack.map((tech) => (
-                            <span
-                                key={tech}
-                                style={{
-                                    padding: '6px 14px',
-                                    borderRadius: '999px',
-                                    background: 'rgba(96,165,250,0.1)',
-                                    border: '1px solid rgba(96,165,250,0.25)',
-                                    color: '#93c5fd',
-                                    fontSize: '13px',
-                                    fontWeight: '500',
-                                }}
-                            >
-                                {tech}
-                            </span>
-                        ))}
-                    </div>
-
-                    {/* Footer */}
-                    <div style={{
-                        borderTop: '1px solid rgba(255,255,255,0.08)',
-                        paddingTop: '16px',
-                        color: '#6b7280',
-                        fontSize: '12px',
-                        textAlign: 'center',
-                    }}>
-                        Analyzed by ai-github-analyzer.vercel.app
-                    </div>
-                </div>
-            )}
 
             {/* Toast notification */}
             {toast && (
