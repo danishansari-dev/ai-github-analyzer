@@ -35,6 +35,19 @@ function Results() {
 
     // Ref for the hidden share card that gets rendered to PNG
     const shareCardRef = useRef(null);
+    const shareDropdownRef = useRef(null);
+    const [isShareOpen, setIsShareOpen] = useState(false);
+
+    // Close share dropdown on click outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (shareDropdownRef.current && !shareDropdownRef.current.contains(e.target)) {
+                setIsShareOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         let isCancelled = false;
@@ -92,11 +105,7 @@ function Results() {
         return () => { isCancelled = true; };
     }, [username, isRoast]);
 
-    /**
-     * Generates a styled PNG summary card, downloads it, copies the profile URL,
-     * and shows a toast notification confirming both actions.
-     */
-    const handleShare = async () => {
+    const handleDownloadImage = async () => {
         try {
             // 1. Generate PNG from the hidden share card
             if (shareCardRef.current) {
@@ -112,24 +121,32 @@ function Results() {
                 link.click();
             }
 
-            // 3. Copy URL to clipboard
-            await navigator.clipboard.writeText(window.location.href);
-
-            // 4. Show success toast
-            setToast('Image downloaded + link copied!');
+            // 3. Show success toast
+            setToast('Image downloaded successfully!');
             setTimeout(() => setToast(null), 3000);
         } catch (err) {
             console.error('Share failed:', err);
-            // Fallback: just copy the link
-            await navigator.clipboard.writeText(window.location.href);
-            setToast('Link copied! (Image generation failed)');
+            setToast('Image generation failed.');
             setTimeout(() => setToast(null), 3000);
+        }
+    };
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setToast('Link copied!');
+            setTimeout(() => setToast(null), 3000);
+        } catch (err) {
+            console.error('Failed to copy link:', err);
         }
     };
 
     // Derive top role info for the share card
     const topRole = data?.role_fit?.top_3_roles?.[0];
     const topStack = data?.stack?.primary_stack?.slice(0, 3) || [];
+
+    const shareUrl = apiUrl ? `${apiUrl}/og/${username}` : window.location.href;
+    const encodedURL = encodeURIComponent(shareUrl);
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -145,12 +162,64 @@ function Results() {
                     <h1 className="text-sm font-medium text-gray-400 hidden sm:block">
                         Analysis for <span className="text-white font-semibold">@{username}</span>
                     </h1>
-                    <button
-                        onClick={handleShare}
-                        className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 transition-all duration-200 cursor-pointer"
-                    >
-                        Share This Analysis
-                    </button>
+                    <div className="relative" ref={shareDropdownRef}>
+                        <button
+                            onClick={() => setIsShareOpen(!isShareOpen)}
+                            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 transition-all duration-200 cursor-pointer flex items-center gap-2"
+                        >
+                            Share This Analysis <span className="text-xs">▼</span>
+                        </button>
+
+                        {isShareOpen && (
+                            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#1a1a2e] border border-white/10 shadow-xl overflow-hidden z-50 transform origin-top-right transition-all">
+                                <div className="py-1">
+                                    <button
+                                        onClick={() => {
+                                            handleCopyLink();
+                                            setIsShareOpen(false);
+                                        }}
+                                        className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
+                                    >
+                                        <span className="text-lg">🔗</span> Copy Link
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleDownloadImage();
+                                            setIsShareOpen(false);
+                                        }}
+                                        className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
+                                    >
+                                        <span className="text-lg">📸</span> Download Image
+                                    </button>
+                                    <div className="h-px bg-white/10 mx-2 my-1"></div>
+                                    <a
+                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedURL}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        onClick={() => setIsShareOpen(false)}
+                                        className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
+                                    >
+                                        <span className="text-lg">💼</span> Share on LinkedIn
+                                    </a>
+                                    <a
+                                        href={`https://twitter.com/intent/tweet?text=I%20analyzed%20my%20GitHub%20profile%20with%20AI!%20Check%20it%20out%20%F0%9F%91%87&url=${encodedURL}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        onClick={() => setIsShareOpen(false)}
+                                        className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
+                                    >
+                                        <span className="text-lg">🐦</span> Share on Twitter/X
+                                    </a>
+                                    <a
+                                        href={`https://wa.me/?text=Check%20my%20GitHub%20analysis:%20${encodedURL}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        onClick={() => setIsShareOpen(false)}
+                                        className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
+                                    >
+                                        <span className="text-lg">📱</span> Share on WhatsApp
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
