@@ -143,12 +143,7 @@ function Results() {
                 )}
 
                 {/* 3. AI Data Sections — Loading or Data Dependent */}
-                {loading && !error && (
-                    <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                        <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4" />
-                        <p className="text-gray-400">Claude is analyzing your code...</p>
-                    </div>
-                )}
+                {loading && !error && <LoadingScreen />}
 
                 {!loading && data && (
                     <div className="space-y-8 fade-in">
