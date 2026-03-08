@@ -1,5 +1,7 @@
 import os
 import time
+import requests
+import re
 from typing import Dict, List, Any, Optional
 from github import Github, GithubException, UnknownObjectException, RateLimitExceededException
 from dotenv import load_dotenv
@@ -68,11 +70,27 @@ class GitHubService:
             
             repo_list = []
             for repo in sorted_repos:
+                total_commits = 1
+                try:
+                    headers = {}
+                    if self.token:
+                        headers["Authorization"] = f"token {self.token}"
+                    req_url = f"https://api.github.com/repos/{username}/{repo.name}/commits?per_page=1"
+                    res = requests.head(req_url, headers=headers, timeout=5)
+                    link_header = res.headers.get("Link")
+                    if link_header:
+                        match = re.search(r'page=(\d+)>; rel="last"', link_header)
+                        if match:
+                            total_commits = int(match.group(1))
+                except Exception as e:
+                    print(f"Failed to fetch commit count for {repo.name}: {e}")
+
                 repo_list.append({
                     "name": repo.name,
                     "description": repo.description,
                     "language": repo.language,
                     "stargazers_count": repo.stargazers_count,
+                    "total_commits": total_commits,
                     "html_url": repo.html_url,
                     "topics": repo.get_topics()
                 })
