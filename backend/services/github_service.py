@@ -54,9 +54,11 @@ class GitHubService:
 
     def get_user_repos(self, username: str) -> List[Dict[str, Any]]:
         """
-        Retrieves the top 10 repositories for a user, sorted by stars.
+        Fetches and sorts the top repositories for a user.
+        Sorts initially by stars to limit API calls, fetches commit counts for the top 10,
+        calculates a combined score (stars * 2 + commits), and returns the top 5.
         @param username - The GitHub username
-        @returns List of repository dictionaries
+        @returns List of top 5 repository dictionaries
         """
         try:
             time.sleep(0.5)
@@ -111,9 +113,15 @@ class GitHubService:
                     "stargazers_count": repo.stargazers_count,
                     "total_commits": total_commits,
                     "html_url": repo.html_url,
-                    "topics": topics
+                    "topics": topics,
+                    "combined_score": (repo.stargazers_count * 2) + total_commits
                 })
-            return repo_list
+                
+            # Sort by the new combined score descending
+            repo_list.sort(key=lambda x: x["combined_score"], reverse=True)
+            
+            # Return top 5
+            return repo_list[:5]
         except UnknownObjectException:
             raise ValueError(f"User '{username}' not found.")
         except RateLimitExceededException:

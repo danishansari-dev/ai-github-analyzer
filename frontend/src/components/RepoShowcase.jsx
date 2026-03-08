@@ -36,9 +36,14 @@ function RepoShowcase({ repos }) {
 
     return (
         <div className="p-8 rounded-2xl border border-white/5 bg-white/[0.02]">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-6">
-                🗂️ Top Repositories
-            </h3>
+            <div className="mb-6">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                    🗂️ Top Repositories
+                </h3>
+                <p className="text-xs text-gray-600 mt-1 uppercase tracking-wider">
+                    sorted by stars & commits
+                </p>
+            </div>
             <div className="space-y-3">
                 {repos.map((repo) => (
                     <a
