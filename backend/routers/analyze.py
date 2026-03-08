@@ -149,6 +149,7 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             avatar_url=profile.get('avatar_url', ''),
             name=profile.get('name', username),
             profile_url=profile.get('html_url', ''),
+            overall_score=llm_result.get('overall_score', 0),
             stack=llm_result.get('stack'),
             role_fit=role_fit,
             resume_bullets=llm_result.get('resume_bullets'),

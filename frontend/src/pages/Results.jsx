@@ -223,6 +223,49 @@ function Results() {
                 {/* Data Sections */}
                 {!loading && data && (
                     <div className="space-y-8 fade-in">
+                        {/* Profile Score - Circular Gauge */}
+                        <div className="flex flex-col items-center justify-center py-6">
+                            <h2 className="text-xl font-medium text-gray-300 mb-6">Profile Score</h2>
+                            <div className="relative w-48 h-48 flex items-center justify-center">
+                                {/* SVG Ring */}
+                                <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                    {/* Track */}
+                                    <circle
+                                        cx="96" cy="96" r="80"
+                                        fill="none"
+                                        className="stroke-gray-800"
+                                        strokeWidth="12"
+                                    />
+                                    {/* Progress */}
+                                    <circle
+                                        cx="96" cy="96" r="80"
+                                        fill="none"
+                                        stroke={
+                                            data.overall_score >= 75 ? '#22c55e' :
+                                                data.overall_score >= 50 ? '#eab308' : '#ef4444'
+                                        }
+                                        strokeWidth="12"
+                                        strokeLinecap="round"
+                                        strokeDasharray="502"
+                                        strokeDashoffset={502 - (502 * data.overall_score) / 100}
+                                        style={{ transition: 'stroke-dashoffset 1.5s ease-out' }}
+                                    />
+                                </svg>
+                                {/* Center Text */}
+                                <div className="z-10 flex flex-col items-center">
+                                    <div className="flex items-baseline font-bold"
+                                        style={{
+                                            color:
+                                                data.overall_score >= 75 ? '#4ade80' :
+                                                    data.overall_score >= 50 ? '#facc15' : '#f87171'
+                                        }}>
+                                        <span className="text-6xl">{data.overall_score}</span>
+                                        <span className="text-2xl opacity-60">/100</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <ProfileCard
                             name={data.name}
                             username={username}

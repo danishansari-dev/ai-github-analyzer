@@ -262,9 +262,16 @@ Projects data:
      Example: 'Built bone fracture CNN classifier using PyTorch achieving 90%+ accuracy'
      NOT: 'Strong in Machine Learning' (too vague, rejected)"""
 
-        user_prompt = f"""Perform a comprehensive analysis of this GitHub developer profile and return ONE JSON object with exactly these three keys: 'stack', 'role_fit', 'resume_bullets'.
+        user_prompt = f"""Perform a comprehensive analysis of this GitHub developer profile and return ONE JSON object with exactly these four keys: 'overall_score', 'stack', 'role_fit', 'resume_bullets'.
 
-1. STACK ANALYSIS ('stack' key):
+1. OVERALL SCORE ('overall_score' key):
+   - Integer between 0 and 100 representing the overall quality of the profile based on:
+     - Code quality signals (README presence, descriptions, topics) — 25pts
+     - Activity (recent commits, contribution frequency) — 25pts
+     - Project diversity and complexity — 25pts
+     - Community signals (stars earned, forks, contributions to others) — 25pts
+
+2. STACK ANALYSIS ('stack' key):
    - primary_stack: array of top 5 technologies used (languages + frameworks).
      IMPORTANT: Detect the actual programming languages, frameworks and libraries the developer uses — NOT file formats or tools.
      For example: if repos contain .ipynb files, the language is Python not Jupyter Notebook.
@@ -272,11 +279,12 @@ Projects data:
      Read the README files and repo descriptions to find actual frameworks used.
      Never include: Jupyter Notebook, Google Colab, VS Code, Git as stack items.
      Always prefer: Python, PyTorch, TensorFlow, FastAPI, React, Node.js etc.
+2. STACK ANALYSIS ('stack' key) continues...
    - domains: array of engineering domains detected
    {summary_instruction}
    {strengths_instruction}
 
-2. ROLE FIT ('role_fit' key):
+3. ROLE FIT ('role_fit' key):
 
    - Score this developer for EVERY possible tech career role that exists.
    - Include ALL of these categories and their sub-roles:
@@ -307,7 +315,7 @@ Projects data:
      - top_3_roles: array of top 3 {{'role': key, 'label': name, 'score': score}}
      - reasoning: 2-sentence explanation
 
-3. RESUME BULLETS ('resume_bullets' key):
+4. RESUME BULLETS ('resume_bullets' key):
    - Generate 2-3 bullets for each project in the provided projects data.
    - Start with action verbs, mention stack, include a metric (infer if needed).
    - Return as array of objects with: project_name, repo_url, bullets (array of strings).

@@ -58,6 +58,7 @@ class FullAnalysisResponse(BaseModel):
     avatar_url: str
     name: Optional[str] = None
     profile_url: str
+    overall_score: int = 0
     stack: StackAnalysis
     role_fit: RoleFitAnalysis
     resume_bullets: List[ResumeBulletProject]
