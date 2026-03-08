@@ -17,13 +17,25 @@ class CacheService:
         # We set hard expiration to 60 minutes equivalent in seconds
         self.expiration_seconds = 60 * 60
 
-        # Base number so the counter doesn't show 0 on a fresh deploy
-        self.analysis_count: int = 1247
+        # The counter starts at 0 and increments naturally.
+        # NOTE: On Railway's standard container filesystem MVP, these JSON files 
+        # will reset on every redeploy because they are not attached to a persistent volume.
+        self.data_file = os.path.join(os.path.dirname(__file__), "..", "data.json")
+        self.data_lock_file = self.data_file + ".lock"
+        self._init_data_file()
 
         # Visitor tracking mechanics
         self.visitors_file = os.path.join(os.path.dirname(__file__), "..", "visitors.json")
         self.visitors_lock_file = self.visitors_file + ".lock"
         self._init_visitor_file()
+
+    def _init_data_file(self) -> None:
+        """Bootstraps the analysis count tracking file if it does not yet exist on disk."""
+        if not os.path.exists(self.data_file):
+            with FileLock(self.data_lock_file):
+                if not os.path.exists(self.data_file):
+                    with open(self.data_file, "w") as f:
+                        json.dump({"count": 0}, f)
 
     def _init_visitor_file(self) -> None:
         """Bootstraps the visitor count tracking file if it does not yet exist on disk."""
@@ -36,11 +48,26 @@ class CacheService:
 
     def increment_count(self) -> None:
         """Bumps the analysis counter after every successful profile analysis."""
-        self.analysis_count += 1
+        with FileLock(self.data_lock_file):
+            try:
+                with open(self.data_file, "r") as f:
+                    data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                data = {"count": 0}
+            
+            data["count"] += 1
+            
+            with open(self.data_file, "w") as f:
+                json.dump(data, f)
 
     def get_count(self) -> int:
-        """Returns the total number of analyses performed (including the base seed)."""
-        return self.analysis_count
+        """Returns the total number of analyses performed."""
+        try:
+            with open(self.data_file, "r") as f:
+                data = json.load(f)
+                return data.get("count", 0)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return 0
 
     def increment_visitor(self) -> None:
         """

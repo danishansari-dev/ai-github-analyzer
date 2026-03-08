@@ -17,3 +17,8 @@ dist/
 build/
 .DS_Store
 tmp/
+
+# Production data stores
+backend/data.json
+backend/visitors.json
+backend/*.lock
