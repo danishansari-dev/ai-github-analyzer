@@ -180,7 +180,7 @@ function Home() {
                                 step: '03',
                                 icon: '📊',
                                 title: 'Get Your Report',
-                                desc: 'Receive your tech stack analysis, role fit score, and resume bullets — ready to copy.',
+                                desc: 'Receive your tech stack analysis, career match scores, and GitHub stats — shareable in one click.',
                             },
                         ].map((item) => (
                             <div
@@ -251,19 +251,29 @@ function Home() {
                             </div>
                         </div>
 
-                        {/* Resume Bullets Preview */}
+                        {/* Career Match Preview */}
                         <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.02]">
-                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Resume Bullets</h3>
-                            <ul className="space-y-3">
+                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Career Match</h3>
+                            <div className="space-y-3">
                                 {[
-                                    'Built a real-time ML pipeline using PyTorch, processing 50K+ images with 94% accuracy',
-                                    'Developed a FastAPI backend serving 10K daily requests with sub-100ms latency',
-                                ].map((bullet, i) => (
-                                    <li key={i} className="text-sm text-gray-300 pl-4 border-l-2 border-blue-500/40 leading-relaxed">
-                                        {bullet}
-                                    </li>
+                                    { role: 'Full Stack Dev', score: 92, color: 'bg-blue-500' },
+                                    { role: 'ML Engineer', score: 84, color: 'bg-violet-500' },
+                                    { role: 'Cloud Engineer', score: 71, color: 'bg-cyan-500' },
+                                ].map((item) => (
+                                    <div key={item.role}>
+                                        <div className="flex justify-between text-sm mb-1">
+                                            <span className="text-gray-300">{item.role}</span>
+                                            <span className="text-gray-400">{item.score}%</span>
+                                        </div>
+                                        <div className="w-full h-2 rounded-full bg-white/5">
+                                            <div
+                                                className={`h-full rounded-full ${item.color}`}
+                                                style={{ width: `${item.score}%` }}
+                                            />
+                                        </div>
+                                    </div>
                                 ))}
-                            </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
