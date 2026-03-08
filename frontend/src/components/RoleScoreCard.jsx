@@ -156,20 +156,22 @@ function RoleScoreCard({ scores, reasoning }) {
         return maxB - maxA;
     });
 
+    const totalRolesShown = Object.values(groupedRoles).reduce((acc, roles) => acc + roles.length, 0);
+
     return (
-        <div className="flex flex-col gap-16 pb-12">
+        <div className="flex flex-col gap-16">
             <div className="text-center">
                 <h2 className="text-sm font-bold text-gray-500 uppercase tracking-[0.3em] mb-4">
                     🎯 TOP CAREER MATCHES
                 </h2>
                 <div className="max-w-[600px] mx-auto">
                     <p className="text-gray-400 text-sm leading-relaxed">
-                        {reasoning}
+                        {reasoning ? reasoning.split('.').filter(Boolean).slice(0, 2).join('. ') + '.' : ''}
                     </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12 items-start">
                 {sortedCategories.map(catKey => {
                     const category = ROLE_CATEGORIES[catKey];
                     const roles = groupedRoles[catKey].sort((a, b) => b.score - a.score);
@@ -183,7 +185,7 @@ function RoleScoreCard({ scores, reasoning }) {
                                 </h4>
                             </div>
 
-                            <div className="space-y-6 flex-1">
+                            <div className="space-y-6">
                                 {roles.map(({ role, score }) => (
                                     <div key={role} className="flex flex-col gap-2">
                                         <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
@@ -214,7 +216,9 @@ function RoleScoreCard({ scores, reasoning }) {
 
             <div className="text-center pt-4">
                 <p className="text-[10px] text-gray-700 uppercase tracking-[0.2em]">
-                    Only roles with evidence-based scores {'>'} 25% shown
+                    {totalRolesShown < 6
+                        ? 'Only roles with strong evidence are shown'
+                        : 'Only roles with evidence-based scores > 25% shown'}
                 </p>
             </div>
         </div>
