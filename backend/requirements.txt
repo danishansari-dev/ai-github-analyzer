@@ -7,3 +7,4 @@ pydantic
 httpx
 slowapi
 groq
+filelock

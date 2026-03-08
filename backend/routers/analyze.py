@@ -38,11 +38,23 @@ async def health_check():
 @router.get("/stats")
 async def get_stats():
     """
-    Returns the total number of profiles analyzed.
-    Used by the home page to display a live counter.
-    @returns JSON object with total_analyzed count
+    Returns the total number of profiles analyzed and total visitors.
+    Used by the home page to display live counters.
+    @returns JSON object with total_analyzed and total_visitors counts
     """
-    return {"total_analyzed": cache_service.get_count()}
+    return {
+        "total_analyzed": cache_service.get_count(),
+        "total_visitors": cache_service.get_visitor_count()
+    }
+
+@router.post("/track-visit")
+async def track_visit():
+    """
+    Increments the unique visitor counter.
+    Called once per frontend session from App.jsx.
+    """
+    cache_service.increment_visitor()
+    return {"status": "ok"}
 
 @router.get("/analyze/{username}", response_model=FullAnalysisResponse)
 async def analyze_user(username: str, response: Response, mode: str = Query("normal", description="Analysis mode: 'normal' or 'roast'")):

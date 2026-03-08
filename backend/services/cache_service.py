@@ -1,5 +1,8 @@
 import time
+import os
+import json
 from typing import Any, Dict, Optional
+from filelock import FileLock
 
 class CacheService:
     # This service exists to temporarily house expensive LLM analytics and 
@@ -17,6 +20,20 @@ class CacheService:
         # Base number so the counter doesn't show 0 on a fresh deploy
         self.analysis_count: int = 1247
 
+        # Visitor tracking mechanics
+        self.visitors_file = os.path.join(os.path.dirname(__file__), "..", "visitors.json")
+        self.visitors_lock_file = self.visitors_file + ".lock"
+        self._init_visitor_file()
+
+    def _init_visitor_file(self) -> None:
+        """Bootstraps the visitor count tracking file if it does not yet exist on disk."""
+        if not os.path.exists(self.visitors_file):
+            # Acquire lock to prevent race conditions during initial file creation
+            with FileLock(self.visitors_lock_file):
+                if not os.path.exists(self.visitors_file):
+                    with open(self.visitors_file, "w") as f:
+                        json.dump({"count": 0}, f)
+
     def increment_count(self) -> None:
         """Bumps the analysis counter after every successful profile analysis."""
         self.analysis_count += 1
@@ -24,6 +41,34 @@ class CacheService:
     def get_count(self) -> int:
         """Returns the total number of analyses performed (including the base seed)."""
         return self.analysis_count
+
+    def increment_visitor(self) -> None:
+        """
+        Safely increments the global visitor counter using a file lock.
+        """
+        with FileLock(self.visitors_lock_file):
+            try:
+                with open(self.visitors_file, "r") as f:
+                    data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                data = {"count": 0}
+            
+            data["count"] += 1
+            
+            with open(self.visitors_file, "w") as f:
+                json.dump(data, f)
+
+    def get_visitor_count(self) -> int:
+        """
+        Retrieves the exact number of unique visitors from persistent storage.
+        @returns The visitor count as an integer
+        """
+        try:
+            with open(self.visitors_file, "r") as f:
+                data = json.load(f)
+                return data.get("count", 0)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return 0
 
     def set(self, username: str, data: Any) -> None:
         """

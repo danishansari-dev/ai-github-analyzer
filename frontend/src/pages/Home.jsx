@@ -13,12 +13,14 @@ function Home() {
     const [username, setUsername] = useState('');
     const [isRoastMode, setIsRoastMode] = useState(false);
     const [totalAnalyzed, setTotalAnalyzed] = useState(0);
-    const [displayCount, setDisplayCount] = useState(0);
+    const [displayAnalyzed, setDisplayAnalyzed] = useState(0);
+    const [totalVisitors, setTotalVisitors] = useState(0);
+    const [displayVisitors, setDisplayVisitors] = useState(0);
     const navigate = useNavigate();
 
     /**
-     * Fetches the total analysis count from the backend on mount,
-     * then kicks off a count-up animation from 0 to the real value.
+     * Fetches the total analysis count and visitor count from the backend on mount,
+     * then kicks off a count-up animation from 0 to the real values.
      */
     useEffect(() => {
         fetch(`${apiUrl}/api/stats`)
@@ -27,31 +29,40 @@ function Home() {
                 if (data.total_analyzed) {
                     setTotalAnalyzed(data.total_analyzed);
                 }
+                if (data.total_visitors) {
+                    setTotalVisitors(data.total_visitors);
+                }
             })
             .catch(() => {
                 // Silently fail — counter is cosmetic, not critical
             });
     }, []);
 
-    // Animate the counter from 0 → totalAnalyzed over ~1.5 seconds
+    // Animate the counters from 0 over ~1.5 seconds
     useEffect(() => {
-        if (totalAnalyzed === 0) return;
+        if (totalAnalyzed === 0 && totalVisitors === 0) return;
 
         const duration = 1500;
         const steps = 40;
-        const increment = totalAnalyzed / steps;
-        let current = 0;
+        const incrementAnalyzed = totalAnalyzed / steps;
+        const incrementVisitors = totalVisitors / steps;
+        let currentAnalyzed = 0;
+        let currentVisitors = 0;
         let step = 0;
 
         const timer = setInterval(() => {
             step++;
-            current = Math.min(Math.round(increment * step), totalAnalyzed);
-            setDisplayCount(current);
+            currentAnalyzed = Math.min(Math.round(incrementAnalyzed * step), totalAnalyzed);
+            currentVisitors = Math.min(Math.round(incrementVisitors * step), totalVisitors);
+
+            setDisplayAnalyzed(currentAnalyzed);
+            setDisplayVisitors(currentVisitors);
+
             if (step >= steps) clearInterval(timer);
         }, duration / steps);
 
         return () => clearInterval(timer);
-    }, [totalAnalyzed]);
+    }, [totalAnalyzed, totalVisitors]);
 
     /**
      * Navigates the user to the results page when the form is submitted.
@@ -89,11 +100,20 @@ function Home() {
                         Enter any GitHub username to get your tech stack analysis, job role fit score, and AI-generated resume bullets.
                     </p>
 
-                    {/* Live counter — animates from 0 on page load */}
-                    {totalAnalyzed > 0 && (
-                        <p className="mt-4 text-gray-500 text-sm font-medium tracking-wide">
-                            🔍 {displayCount.toLocaleString()} developer profiles analyzed
-                        </p>
+                    {/* Live counters — animates from 0 on page load */}
+                    {(totalAnalyzed > 0 || totalVisitors > 0) && (
+                        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm font-medium tracking-wide">
+                            {totalVisitors > 0 && (
+                                <p className="text-gray-400">
+                                    👥 {displayVisitors.toLocaleString()} developers visited
+                                </p>
+                            )}
+                            {totalAnalyzed > 0 && (
+                                <p className="text-gray-500">
+                                    🔍 {displayAnalyzed.toLocaleString()} profiles analyzed
+                                </p>
+                            )}
+                        </div>
                     )}
 
                     {/* Search form */}
