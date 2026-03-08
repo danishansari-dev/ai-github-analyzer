@@ -109,6 +109,7 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
                 "description": r.get("description"),
                 "language": r.get("language"),
                 "stars": r.get("stargazers_count", 0),
+                "total_commits": r.get("total_commits", 0),
                 "html_url": r.get("html_url", ""),
             })
 
