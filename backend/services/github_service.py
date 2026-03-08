@@ -165,3 +165,46 @@ class GitHubService:
             repo["readme"] = self.get_repo_readme(username, repo["name"])
             
         return top_3
+
+    def has_starred_repo(self, username: str, owner: str, repo: str) -> bool:
+        """
+        Checks if a GitHub user has starred a specific repository.
+        Paginates through their starred repos using the REST API
+        because PyGithub's starred list can be very slow for prolific starrers.
+        @param username - The GitHub user to check
+        @param owner - The owner of the target repository
+        @param repo - The name of the target repository
+        @returns True if the user has starred owner/repo, False otherwise
+        """
+        try:
+            headers = {"Accept": "application/vnd.github.v3+json"}
+            if self.token:
+                headers["Authorization"] = f"token {self.token}"
+
+            page = 1
+            while True:
+                url = f"https://api.github.com/users/{username}/starred?per_page=100&page={page}"
+                res = requests.get(url, headers=headers, timeout=10)
+                if res.status_code != 200:
+                    # If the endpoint errors out, fail open so the user isn't blocked
+                    return True
+
+                starred = res.json()
+                if not starred:
+                    break
+
+                for r in starred:
+                    if r.get("full_name", "").lower() == f"{owner}/{repo}".lower():
+                        return True
+
+                # Stop paginating after 5 pages (500 starred repos) to avoid
+                # excessive API calls; assume not starred beyond this point
+                if page >= 5:
+                    break
+                page += 1
+
+            return False
+        except Exception as e:
+            # Fail open — if the star check itself errors, don't block the user
+            print(f"[star-check] Error checking starred status for {username}: {e}")
+            return True

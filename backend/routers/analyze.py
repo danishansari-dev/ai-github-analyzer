@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Response, Query
+from fastapi.responses import JSONResponse
 from typing import Dict, Any
 import asyncio
 import traceback
@@ -87,6 +88,20 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             raise HTTPException(status_code=404, detail=str(e))
 
         print(f"[analyze] Profile fetched for '{username}'")
+
+        # 2b. Star gating — require the user to star our repo before analysis
+        has_starred = await asyncio.to_thread(
+            github_svc.has_starred_repo, username,
+            "danishansari-dev", "ai-github-analyzer"
+        )
+        if not has_starred:
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "error": "star_required",
+                    "message": "Please star the repo to unlock your analysis"
+                }
+            )
 
         # 3. Call github_service.get_user_repos(username)
         repos = await asyncio.to_thread(github_svc.get_user_repos, username)

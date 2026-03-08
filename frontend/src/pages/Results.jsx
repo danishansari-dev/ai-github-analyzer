@@ -31,6 +31,7 @@ function Results() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
+    const [starRequired, setStarRequired] = useState(false);
 
     const shareDropdownRef = useRef(null);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -67,6 +68,14 @@ function Results() {
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => null);
+
+                    // Star gating — backend returns 403 with error: "star_required"
+                    if (response.status === 403 && errorData?.error === 'star_required') {
+                        setStarRequired(true);
+                        setLoading(false);
+                        return;
+                    }
+
                     const apiMessage = errorData?.detail || null;
 
                     if (response.status === 404) {
@@ -293,6 +302,32 @@ function Results() {
                 )}
             </main>
 
+
+            {/* Star gating overlay — non-dismissable blocker when user hasn't starred the repo */}
+            {starRequired && (
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center">
+                    <div className="max-w-md mx-4 text-center p-10 rounded-3xl bg-[#12121f] border border-white/10 shadow-2xl">
+                        <div className="text-6xl mb-6">⭐</div>
+                        <h2 className="text-2xl font-bold text-white mb-3">
+                            One small step before your analysis...
+                        </h2>
+                        <p className="text-gray-400 mb-8 text-lg">
+                            Star the repo to unlock your free GitHub analysis
+                        </p>
+                        <a
+                            href="https://github.com/danishansari-dev/ai-github-analyzer"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block px-8 py-4 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-lg transition-all duration-200 shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:scale-105"
+                        >
+                            ⭐ Star on GitHub
+                        </a>
+                        <p className="text-gray-500 text-sm mt-6">
+                            Then come back and analyze again
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Toast notification */}
             {toast && (
