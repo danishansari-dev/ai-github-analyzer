@@ -323,7 +323,7 @@ Projects data:
      - top_role: key of highest score
      - top_role_label: human readable name
      - top_3_roles: array of top 3 {{'role': key, 'label': name, 'score': score}}
-     - reasoning: 2-sentence explanation
+     - reasoning: Write exactly 2 sentences maximum. Be direct and specific. No italic formatting. Reference top role and top project only.
 
 4. RESUME BULLETS ('resume_bullets' key):
    - Generate 2-3 bullets for each project in the provided projects data.
