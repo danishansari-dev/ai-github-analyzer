@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, Query
 from typing import Dict, Any
 import asyncio
 import traceback
@@ -13,7 +13,7 @@ from models.schemas import FullAnalysisResponse, ErrorResponse
 router = APIRouter()
 
 # Lazy service initialization — avoids crashing the entire server at import time
-# if a service has a config issue (e.g. missing GEMINI_API_KEY)
+# if a service has a config issue (e.g. missing GROQ_API_KEY)
 github_service = None
 llm_service = None
 cache_service = CacheService()  # Cache has no external deps, safe to init eagerly
@@ -35,16 +35,30 @@ async def health_check():
     """
     return {"status": "ok"}
 
+@router.get("/stats")
+async def get_stats():
+    """
+    Returns the total number of profiles analyzed.
+    Used by the home page to display a live counter.
+    @returns JSON object with total_analyzed count
+    """
+    return {"total_analyzed": cache_service.get_count()}
+
 @router.get("/analyze/{username}", response_model=FullAnalysisResponse)
-async def analyze_user(username: str, response: Response):
+async def analyze_user(username: str, response: Response, mode: str = Query("normal", description="Analysis mode: 'normal' or 'roast'")):
     """
     Analyzes a GitHub user's profile, fetching their repos and returning a comprehensive LLM-powered summary.
     @param username - GitHub handle to analyze
     @param response - FastAPI Response object to mutate headers
+    @param mode - 'normal' for professional analysis, 'roast' for comedy roast mode
     @returns FullAnalysisResponse containing LLM analysis
     """
+    # Roast mode uses a separate cache key so normal and roast results don't collide
+    is_roast = mode == "roast"
+    cache_key = f"{username}:roast" if is_roast else username
+
     # 1. Check cache first
-    cached_result = cache_service.get(username)
+    cached_result = cache_service.get(cache_key)
     if cached_result:
         # We append a custom header so the frontend can display a 'served from cache' indicator
         response.headers["X-Cache"] = "HIT"
@@ -52,7 +66,7 @@ async def analyze_user(username: str, response: Response):
 
     try:
         github_svc, llm_svc = _get_services()
-        print(f"[analyze] Starting analysis for '{username}'...")
+        print(f"[analyze] Starting analysis for '{username}' (mode={mode})...")
 
         # 2. Call github_service.get_user_profile(username)
         try:
@@ -74,21 +88,31 @@ async def analyze_user(username: str, response: Response):
         language_breakdown = await asyncio.to_thread(github_svc.get_language_breakdown, username)
         print(f"[analyze] Language breakdown complete")
 
-        # 6. Run LLM calls
-        # Fix #2: Combined all 3 LLM calls into ONE single Gemini API call.
-        # This reduces 3 API round trips to 1, cutting time significantly.
+        # 6. Run LLM call — combined analysis in one prompt
         print(f"[analyze] Starting combined LLM analysis...")
 
         llm_result = await asyncio.to_thread(
             llm_svc.analyze_all, 
             profile, 
             repos, 
-            repos_with_readmes
+            repos_with_readmes,
+            is_roast
         )
 
         print(f"[analyze] Combined LLM call complete for '{username}'")
 
-        # 7. Build FullAnalysisResponse object
+        # 7. Build top_repos list (top 5 by stars, already sorted from github_service)
+        top_repos = []
+        for r in repos[:5]:
+            top_repos.append({
+                "name": r.get("name", ""),
+                "description": r.get("description"),
+                "language": r.get("language"),
+                "stars": r.get("stargazers_count", 0),
+                "html_url": r.get("html_url", ""),
+            })
+
+        # 8. Build FullAnalysisResponse object
         role_fit = llm_result.get('role_fit', {})
         
         # Normalization: Groq often returns scores flattened instead of nested.
@@ -115,15 +139,17 @@ async def analyze_user(username: str, response: Response):
             stack=llm_result.get('stack'),
             role_fit=role_fit,
             resume_bullets=llm_result.get('resume_bullets'),
+            top_repos=top_repos,
             analyzed_at=datetime.now(timezone.utc)
         )
 
-        # 8. Store in cache
-        cache_service.set(username, analysis_response)
+        # 9. Store in cache and increment analysis counter
+        cache_service.set(cache_key, analysis_response)
+        cache_service.increment_count()
 
         print(f"[analyze] Analysis complete for '{username}', returning response")
 
-        # 9. Return the response
+        # 10. Return the response
         return analysis_response
 
     except HTTPException:
@@ -137,4 +163,3 @@ async def analyze_user(username: str, response: Response):
             raise HTTPException(status_code=429, detail="API rate limit exceeded. Please try again in 1 hour.")
 
         raise HTTPException(status_code=500, detail=str(e))
-
