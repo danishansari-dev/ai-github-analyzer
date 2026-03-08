@@ -129,7 +129,6 @@ function Results() {
     };
 
     const topRoleLabel = data?.role_fit?.top_role_label || 'Developer';
-    const topRoleKey = data?.role_fit?.top_role;
     const score = data?.overall_score || 0;
     const stackItems = data?.stack?.primary_stack?.slice(0, 3).join(', ') || '';
 
@@ -249,71 +248,75 @@ function Results() {
                     <div className="space-y-10 animate-in fade-in duration-500">
 
                         {/* HERO ROW - 3 COL GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[0.3fr_0.4fr_0.3fr] gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-[0.35fr_0.35fr_0.3fr] gap-4 items-stretch">
 
-                            {/* LEFT COLUMN - Profile Card */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                            {/* LEFT: Profile */}
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card h-full">
                                 <ProfileCard data={data} username={username} />
                             </div>
 
-                            {/* CENTER COLUMN - Score + Summary */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card">
-                                {/* Circular Score Ring */}
-                                <div className="relative w-44 h-44 flex items-center justify-center mb-10">
-                                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                        <circle
-                                            cx="88" cy="88" r="82"
-                                            fill="none"
-                                            className="stroke-gray-800/50"
-                                            strokeWidth="10"
-                                        />
-                                        <circle
-                                            cx="88" cy="88" r="82"
-                                            fill="none"
-                                            stroke={data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444'}
-                                            strokeWidth="10"
-                                            strokeLinecap="round"
-                                            strokeDasharray="515"
-                                            strokeDashoffset={515 - (515 * data.overall_score) / 100}
-                                            className="transition-all duration-[2000ms] ease-out"
-                                        />
-                                    </svg>
-                                    <div className="z-10 flex flex-col items-center">
-                                        <div className="flex items-baseline font-black leading-none">
-                                            <span className="text-6xl tracking-tight" style={{ color: data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444' }}>
-                                                {data.overall_score}
-                                            </span>
-                                            <span className="text-xl text-gray-600 ml-1">/100</span>
+                            {/* CENTER: Score & Summary */}
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card h-full overflow-hidden">
+                                <div className="flex flex-col items-center justify-center flex-grow py-4">
+                                    {/* Circular Score Ring */}
+                                    <div className="relative w-44 h-44 flex items-center justify-center mb-10">
+                                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                            <circle
+                                                cx="88" cy="88" r="82"
+                                                fill="none"
+                                                className="stroke-gray-800/50"
+                                                strokeWidth="10"
+                                            />
+                                            <circle
+                                                cx="88" cy="88" r="82"
+                                                fill="none"
+                                                stroke={data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444'}
+                                                strokeWidth="10"
+                                                strokeLinecap="round"
+                                                strokeDasharray="515"
+                                                strokeDashoffset={515 - (515 * data.overall_score) / 100}
+                                                className="transition-all duration-[2000ms] ease-out"
+                                            />
+                                        </svg>
+                                        <div className="z-10 flex flex-col items-center">
+                                            <div className="flex items-baseline font-black leading-none">
+                                                <span className="text-6xl tracking-tight" style={{ color: data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444' }}>
+                                                    {data.overall_score}
+                                                </span>
+                                                <span className="text-xl text-gray-600 ml-1">/100</span>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-3">PROFILE SCORE</span>
                                         </div>
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-3">PROFILE SCORE</span>
                                     </div>
-                                </div>
 
-                                {/* Top 3 Hero Career Badges */}
-                                <div className="flex gap-2 mb-8">
-                                    {data.role_fit?.top_3_roles?.map((role, i) => (
-                                        <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 min-w-[90px]">
-                                            <span className="text-xl mb-1">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                                            <span className="text-[10px] font-bold text-gray-300 uppercase truncate w-20">{role.label}</span>
-                                            <span className="text-xs font-black text-indigo-400 mt-1">{role.score}%</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                    {/* Top 3 Hero Career Badges */}
+                                    <div className="flex gap-2 mb-8 w-full justify-center">
+                                        {(data.role_fit?.top_3_roles || []).map((role, i) => (
+                                            <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 w-1/3 max-w-[100px] overflow-hidden">
+                                                <span className="text-xl mb-1">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                                                <span className="text-[9px] font-bold text-gray-400 uppercase truncate w-full px-1 text-center">
+                                                    {role.label}
+                                                </span>
+                                                <span className="text-xs font-black text-indigo-400 mt-1">{role.score}%</span>
+                                            </div>
+                                        ))}
+                                    </div>
 
-                                {/* Summary */}
-                                <div className="max-w-md">
-                                    <p className="text-gray-400 italic text-sm leading-relaxed">
-                                        {data.stack?.profile_summary}
-                                    </p>
+                                    {/* Summary */}
+                                    <div className="max-w-md">
+                                        <p className="text-gray-500 italic text-sm leading-relaxed">
+                                            {data.stack?.profile_summary}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* RIGHT COLUMN - Strengths */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                            {/* RIGHT: Strengths */}
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card h-full">
                                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-6">STRENGTHS</h3>
                                 <div className="space-y-4">
                                     {(data.stack?.strengths || []).slice(0, 4).map((str, i) => (
-                                        <div key={i} className="p-5 rounded-xl bg-[#22c55e]/[0.05] border-l-[3px] border-[#22c55e] flex gap-4 items-start">
+                                        <div key={i} className="p-5 rounded-xl bg-[#22c55e]/[0.05] border-l-[3px] border-[#22c55e] flex gap-4 items-start overflow-hidden">
                                             <span className="text-[#22c55e] mt-1 text-sm font-black">✦</span>
                                             <p className="text-gray-300 text-sm leading-relaxed font-medium">
                                                 {str}
@@ -322,7 +325,6 @@ function Results() {
                                     ))}
                                 </div>
                             </div>
-
                         </div>
 
                         {/* SECOND ROW - 2 COL GRID */}
