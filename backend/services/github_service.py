@@ -65,10 +65,23 @@ class GitHubService:
             # We fetch all (within reason) and sort locally
             repos = user.get_repos()
             
+            safe_repos = []
+            if repos:
+                for repo in repos:
+                    try:
+                        # Evaluating a property forces the API to fetch repo details,
+                        # triggering a 451 DMCA exception if the repo is blocked.
+                        _ = repo.stargazers_count
+                        safe_repos.append(repo)
+                    except Exception as e:
+                        print(f"Skipping repo due to error (possibly DMCA 451): {e}")
+                        continue
+
             # Sort by stargazers_count descending and take top 10
-            sorted_repos = sorted(repos, key=lambda x: x.stargazers_count, reverse=True)[:10]
+            sorted_repos = sorted(safe_repos, key=lambda x: x.stargazers_count, reverse=True)[:10]
             
             repo_list = []
+            sorted_repos = sorted_repos or []
             for repo in sorted_repos:
                 total_commits = 1
                 try:
@@ -85,6 +98,12 @@ class GitHubService:
                 except Exception as e:
                     print(f"Failed to fetch commit count for {repo.name}: {e}")
 
+                topics = []
+                try:
+                    topics = repo.get_topics() or []
+                except Exception:
+                    pass
+
                 repo_list.append({
                     "name": repo.name,
                     "description": repo.description,
@@ -92,7 +111,7 @@ class GitHubService:
                     "stargazers_count": repo.stargazers_count,
                     "total_commits": total_commits,
                     "html_url": repo.html_url,
-                    "topics": repo.get_topics()
+                    "topics": topics
                 })
             return repo_list
         except UnknownObjectException:
@@ -137,11 +156,16 @@ class GitHubService:
             repos = user.get_repos()
             
             language_breakdown = {}
-            for repo in repos:
-                time.sleep(0.1) # Minimal additional delay for nested calls
-                languages = repo.get_languages()
-                for lang, bytes_count in languages.items():
-                    language_breakdown[lang] = language_breakdown.get(lang, 0) + bytes_count
+            if repos:
+                for repo in repos:
+                    try:
+                        time.sleep(0.1) # Minimal additional delay for nested calls
+                        languages = repo.get_languages() or {}
+                        for lang, bytes_count in languages.items():
+                            language_breakdown[lang] = language_breakdown.get(lang, 0) + bytes_count
+                    except Exception as e:
+                        print(f"Skipping repo language fetch due to error: {e}")
+                        continue
             
             return language_breakdown
         except UnknownObjectException:
@@ -156,7 +180,7 @@ class GitHubService:
         @returns List of top 3 repositories with their README content
         """
         # Get top 10 repos first
-        top_repos = self.get_user_repos(username)
+        top_repos = self.get_user_repos(username) or []
         # Take the top 3
         top_3 = top_repos[:3]
         

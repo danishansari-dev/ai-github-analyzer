@@ -83,6 +83,7 @@ class LLMService:
         bio = profile_data.get('bio', 'No bio provided')
         public_repos = profile_data.get('public_repos', 0)
 
+        repos = repos or []
         repos_summary = []
         for r in repos:
             desc = r.get('description') or 'No description'
@@ -118,10 +119,12 @@ Top repos:
 
         system_prompt = "You are a technical recruiter. Return ONLY valid JSON."
 
+        stack_data = stack_data or {}
         summary = stack_data.get('profile_summary', '')
-        primary_stack = ", ".join(stack_data.get('primary_stack', []))
-        domains = ", ".join(stack_data.get('domains', []))
+        primary_stack = ", ".join(stack_data.get('primary_stack') or [])
+        domains = ", ".join(stack_data.get('domains') or [])
 
+        repos = repos or []
         repos_summary = []
         for r in repos:
             desc = r.get('description') or 'No description'
@@ -158,6 +161,7 @@ Repos:
 
         system_prompt = "You are an expert technical resume writer. Return ONLY valid JSON."
 
+        repos_with_readmes = repos_with_readmes or []
         projects_data = []
         for r in repos_with_readmes:
             name = r.get('name', 'Unknown')
@@ -219,6 +223,7 @@ Projects data:
         bio = profile_data.get('bio', 'No bio provided')
         public_repos = profile_data.get('public_repos', 0)
 
+        repos = repos or []
         repos_summary = []
         for r in repos:
             desc = r.get('description') or 'No description'
@@ -226,6 +231,7 @@ Projects data:
             repos_summary.append(f"- {r.get('name')}: {desc} (Language: {lang})")
         repos_str = "\n".join(repos_summary)
 
+        repos_with_readmes = repos_with_readmes or []
         projects_data = []
         for r in repos_with_readmes:
             projects_data.append({
@@ -333,6 +339,19 @@ Projects for Resume:
 
         # We use await asyncio.to_thread in the router, but here we call the sync helper
         result = self._call_groq_with_retry(system_prompt, user_prompt)
+        
+        # Enforce that array fields are empty lists instead of None
+        if result:
+            if "stack" in result and getattr(result["stack"], "get", None):
+                result["stack"]["primary_stack"] = result["stack"].get("primary_stack") or []
+                result["stack"]["domains"] = result["stack"].get("domains") or []
+                if roast:
+                    result["stack"]["roast_lines"] = result["stack"].get("roast_lines") or []
+                else:
+                    result["stack"]["strengths"] = result["stack"].get("strengths") or []
+            if "resume_bullets" in result:
+                result["resume_bullets"] = result.get("resume_bullets") or []
+
         print("analyze_all done")
         return result
 
