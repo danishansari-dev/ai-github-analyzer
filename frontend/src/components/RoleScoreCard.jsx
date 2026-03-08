@@ -130,31 +130,26 @@ const ROLE_LABELS = {
  * RoleScoreCard — Displays the developer's career fit analysis.
  * Groups roles by category and highlights the top 3 matches.
  */
-function RoleScoreCard({ scores, top_3_roles, reasoning }) {
+function RoleScoreCard({ scores, reasoning }) {
     const [animated, setAnimated] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => setAnimated(true), 100);
+        const timer = setTimeout(() => setAnimated(true), 300);
         return () => clearTimeout(timer);
     }, []);
 
-    // Filter and group roles
     const groupedRoles = {};
     Object.entries(scores || {}).forEach(([role, score]) => {
-        if (score <= 25) return; // Hide low-evidence roles
-
-        // Find which category this role belongs to
+        if (score <= 25) return;
         const categoryKey = Object.keys(ROLE_CATEGORIES).find(cat =>
             ROLE_CATEGORIES[cat].roles.includes(role)
         );
-
         if (categoryKey) {
             if (!groupedRoles[categoryKey]) groupedRoles[categoryKey] = [];
             groupedRoles[categoryKey].push({ role, score });
         }
     });
 
-    // Sort categories by their highest scoring role
     const sortedCategories = Object.keys(groupedRoles).sort((a, b) => {
         const maxA = Math.max(...groupedRoles[a].map(r => r.score));
         const maxB = Math.max(...groupedRoles[b].map(r => r.score));
@@ -162,58 +157,50 @@ function RoleScoreCard({ scores, top_3_roles, reasoning }) {
     });
 
     return (
-        <div className="p-8 rounded-2xl border border-white/5 bg-white/[0.02] space-y-10">
-            {/* Top 3 Hero Badges */}
+        <div className="flex flex-col gap-12">
             <div className="text-center">
-                <h3 className="text-gray-400 text-sm font-medium mb-6 uppercase tracking-widest">🚀 Top Career Matches</h3>
-                <div className="flex flex-wrap justify-center gap-4">
-                    {(top_3_roles || []).map((match, idx) => (
-                        <div
-                            key={idx}
-                            className="flex flex-col items-center p-4 min-w-[140px] rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500/30 transition-all duration-300"
-                        >
-                            <span className="text-3xl mb-2">
-                                {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
-                            </span>
-                            <span className="text-xs text-gray-400 mb-1">{match.label}</span>
-                            <span className="text-xl font-bold text-white">{match.score}%</span>
-                        </div>
-                    ))}
+                <h2 className="text-sm font-bold text-gray-500 uppercase tracking-[0.3em] mb-4">
+                    🎯 TOP CAREER MATCHES
+                </h2>
+                <div className="max-w-2xl mx-auto border-l-2 border-[#1f1f1f] pl-6 py-2">
+                    <p className="text-gray-500 italic text-sm leading-relaxed text-left">
+                        {reasoning}
+                    </p>
                 </div>
-                <p className="mt-8 text-gray-400 max-w-2xl mx-auto leading-relaxed text-sm italic">
-                    {reasoning}
-                </p>
             </div>
 
-            {/* Role categories and bars */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {sortedCategories.map(catKey => {
                     const category = ROLE_CATEGORIES[catKey];
                     const roles = groupedRoles[catKey].sort((a, b) => b.score - a.score);
 
                     return (
-                        <div key={catKey} className="space-y-4">
-                            <h4 className="text-sm font-bold text-gray-300 border-b border-white/5 pb-2 mb-4">
-                                {category.label}
-                            </h4>
-                            <div className="space-y-6">
+                        <div key={catKey} className="p-6 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col h-full">
+                            <div className="flex items-center gap-2 mb-6 border-b border-[#1f1f1f] pb-4">
+                                <span className="text-lg">{category.label.split(' ')[0]}</span>
+                                <h4 className="text-[11px] font-bold text-gray-300 uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
+                                    {category.label.split(' ').slice(1).join(' ')}
+                                </h4>
+                            </div>
+
+                            <div className="space-y-6 flex-1">
                                 {roles.map(({ role, score }) => (
-                                    <div key={role}>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <span className="text-xs font-medium text-gray-400">
+                                    <div key={role} className="flex flex-col gap-2">
+                                        <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                                            <span className="text-gray-500">
                                                 {ROLE_LABELS[role] || role}
                                             </span>
-                                            <span className="text-xs font-mono text-gray-500">
+                                            <span style={{ color: category.color }}>
                                                 {score}%
                                             </span>
                                         </div>
-                                        <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                                        <div className="w-full h-1.5 rounded-full bg-black/40 overflow-hidden">
                                             <div
-                                                className="h-full rounded-full transition-all duration-1000 ease-out"
+                                                className="h-full rounded-full transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
                                                 style={{
                                                     width: animated ? `${score}%` : '0%',
                                                     backgroundColor: category.color,
-                                                    boxShadow: `0 0 8px ${category.color}44`
+                                                    boxShadow: `0 0 10px ${category.color}44`
                                                 }}
                                             />
                                         </div>
@@ -225,9 +212,9 @@ function RoleScoreCard({ scores, top_3_roles, reasoning }) {
                 })}
             </div>
 
-            <div className="pt-6 border-t border-white/5 text-center">
-                <p className="text-[10px] text-gray-600 uppercase tracking-widest">
-                    Only roles with evidence-based scores {'>'} 25% are displayed.
+            <div className="text-center pt-4">
+                <p className="text-[10px] text-gray-700 uppercase tracking-[0.2em]">
+                    Only roles with evidence-based scores {'>'} 25% shown
                 </p>
             </div>
         </div>
