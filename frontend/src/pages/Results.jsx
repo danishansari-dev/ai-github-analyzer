@@ -29,6 +29,7 @@ function Results() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [errorCode, setErrorCode] = useState(null);
     const [toast, setToast] = useState(null);
     const [starRequired, setStarRequired] = useState(false);
     const [startTrigger, setStartTrigger] = useState(0);
@@ -57,6 +58,7 @@ function Results() {
         const fetchAnalysis = async () => {
             setLoading(true);
             setError(null);
+            setErrorCode(null);
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -72,11 +74,15 @@ function Results() {
                     const errorData = await response.json().catch(() => null);
                     const apiMessage = errorData?.detail || null;
 
-                    if (response.status === 404) {
-                        throw new Error(apiMessage || `User "${username}" not found on GitHub.`);
+                    // Store the status code so the error UI can adapt
+                    if (response.status === 404 || response.status === 422) {
+                        setErrorCode(404);
+                        throw new Error(apiMessage || `We couldn't find GitHub user '@${username}'. Check the spelling and try again.`);
                     } else if (response.status === 429) {
+                        setErrorCode(429);
                         throw new Error(apiMessage || 'GitHub API rate limit exceeded. Please try again in about an hour.');
                     } else {
+                        setErrorCode(response.status);
                         throw new Error(apiMessage || `Server error ${response.status}: ${response.statusText}`);
                     }
                 }
@@ -89,6 +95,7 @@ function Results() {
                 clearTimeout(timeoutId);
                 if (!isCancelled) {
                     if (err.name === 'AbortError') {
+                        setErrorCode(0);
                         setError('Analysis is taking too long. Please try again.');
                     } else {
                         setError(err.message || 'An unexpected error occurred.');
@@ -232,15 +239,29 @@ function Results() {
 
                 {error && (
                     <div className="p-12 rounded-2xl bg-red-500/5 border border-red-500/20 text-center max-w-xl mx-auto">
-                        <div className="text-5xl mb-6">😞</div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Analysis Failed</h2>
+                        <div className="text-5xl mb-6">
+                            {errorCode === 404 ? '🔍' : errorCode === 429 ? '⏳' : '😞'}
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">
+                            {errorCode === 404 ? 'User Not Found' : errorCode === 429 ? 'Rate Limited' : 'Analysis Failed'}
+                        </h2>
                         <p className="text-gray-400 mb-8">{error}</p>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-sm font-bold transition-all"
-                        >
-                            Try Again
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                                onClick={() => navigate('/')}
+                                className="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-bold transition-all"
+                            >
+                                ← Try Another
+                            </button>
+                            {errorCode !== 404 && (
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="px-8 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold text-gray-300 hover:bg-white/10 transition-all"
+                                >
+                                    Retry
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -285,7 +306,15 @@ function Results() {
                                                 </span>
                                                 <span className="text-xl text-gray-600 ml-1">/100</span>
                                             </div>
-                                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-3">PROFILE SCORE</span>
+                                            <span className="flex items-center gap-1.5 mt-3">
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">PROFILE SCORE</span>
+                                                <span
+                                                    title="Score based on repo quality, tech stack diversity, commit consistency, and project complexity"
+                                                    className="text-gray-600 hover:text-gray-400 cursor-help transition-colors text-xs leading-none"
+                                                >
+                                                    ⓘ
+                                                </span>
+                                            </span>
                                         </div>
                                     </div>
 
@@ -294,7 +323,7 @@ function Results() {
                                         {(data.role_fit?.top_3_roles || []).slice(0, 3).map((role, i) => (
                                             <div key={i} title={role.label} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 w-1/3 max-w-[90px] overflow-hidden">
                                                 <span className="text-xl mb-1">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                                                <span className="text-[11px] font-bold text-gray-400 uppercase truncate w-full px-1 text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                                                <span className="text-[10px] leading-[1.2] font-bold text-gray-400 uppercase break-words px-1 text-center w-full">
                                                     {role.label}
                                                 </span>
                                                 <span className="text-xs font-black text-indigo-400 mt-1">{role.score}%</span>
@@ -312,7 +341,7 @@ function Results() {
                             </div>
 
                             {/* RIGHT: Strengths */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card self-start">
                                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-6">STRENGTHS</h3>
                                 <div className="space-y-4">
                                     {(data.stack?.strengths || []).slice(0, 4).map((str, i) => (
