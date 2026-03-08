@@ -22,7 +22,6 @@ function Results() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    // URL can get a UUID hash fragment appended (e.g. "user#7392822e..."), strip it
     const username = rawUsername.split('#')[0].trim();
     const mode = searchParams.get('mode') || 'normal';
     const isRoast = mode === 'roast';
@@ -36,7 +35,6 @@ function Results() {
     const shareDropdownRef = useRef(null);
     const [isShareOpen, setIsShareOpen] = useState(false);
 
-    // Close share dropdown on click outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (shareDropdownRef.current && !shareDropdownRef.current.contains(e.target)) {
@@ -48,7 +46,6 @@ function Results() {
     }, []);
 
     useEffect(() => {
-        // Star gating based on localStorage - halts fetch if not starred
         if (!localStorage.getItem('has_starred')) {
             setStarRequired(true);
             setLoading(false);
@@ -61,12 +58,10 @@ function Results() {
             setLoading(true);
             setError(null);
 
-            // AbortController used here specifically for the timeout mechanism
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
             try {
-                // Pass mode to backend so roast mode gets the alternate prompts
                 const url = `${apiUrl}/api/analyze/${encodeURIComponent(username)}${isRoast ? '?mode=roast' : ''}`;
                 const response = await fetch(url, { signal: controller.signal });
 
@@ -114,13 +109,13 @@ function Results() {
         window.open('https://github.com/danishansari-dev/ai-github-analyzer', '_blank');
         localStorage.setItem('has_starred', 'true');
         setStarRequired(false);
-        setStartTrigger(prev => prev + 1); // trigger the useEffect to run fetchAnalysis
+        setStartTrigger(prev => prev + 1);
     };
 
     const handleAlreadyStarred = () => {
         localStorage.setItem('has_starred', 'true');
         setStarRequired(false);
-        setStartTrigger(prev => prev + 1); // trigger the useEffect to run fetchAnalysis
+        setStartTrigger(prev => prev + 1);
     };
 
     const handleCopyLink = async () => {
@@ -135,7 +130,7 @@ function Results() {
 
     const topRoleLabel = data?.role_fit?.top_role_label || 'Developer';
     const topRoleKey = data?.role_fit?.top_role;
-    const score = data?.role_fit?.scores?.[topRoleKey] || 100;
+    const score = data?.overall_score || 0;
     const stackItems = data?.stack?.primary_stack?.slice(0, 3).join(', ') || '';
 
     const shareUrl = apiUrl ? `${apiUrl}/og/${username}` : window.location.href;
@@ -147,212 +142,238 @@ function Results() {
     const whatsappText = `Check out my GitHub analysis! 🚀\nTop Role: ${topRoleLabel} — ${score}%\nStack: ${stackItems}\nAnalyze yours: ${shareUrl}`;
     const encodedWhatsAppText = encodeURIComponent(whatsappText);
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white">
-            {/* Top bar — Rendered Unconditionally */}
-            <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#0a0a0f]/80 border-b border-white/5">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="min-h-screen bg-[#0a0a0a] text-white">
+            <style>
+                {`
+                @media print {
+                    .no-print { display: none !important; }
+                    body { background: white !important; color: black !important; }
+                    .print-card { 
+                        background: white !important; 
+                        border: 1px solid #e5e7eb !important; 
+                        box-shadow: none !important;
+                        break-inside: avoid;
+                    }
+                    .text-gray-400, .text-gray-500, .text-gray-600 { color: #4b5563 !important; }
+                    .bg-white\\/\\[0\\.02\\], .bg-\\[\\#111111\\] { background: #f9fafb !important; }
+                    .border-white\\/5, .border-\\[\\#1f1f1f\\] { border-color: #e5e7eb !important; }
+                }
+                `}
+            </style>
+
+            {/* TOP BAR */}
+            <header className="sticky top-0 z-40 bg-[#0d0d0d] border-b border-[#1f1f1f] no-print">
+                <div className="w-full px-6 py-4 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/')}
-                        className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                        className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"
                     >
-                        ← Back
+                        <span>←</span> Back
                     </button>
-                    <h1 className="text-sm font-medium text-gray-400 hidden sm:block">
-                        Analysis for <span className="text-white font-semibold">@{username}</span>
+
+                    <h1 className="text-sm font-medium text-gray-500">
+                        Analysis for <span className="text-white font-bold tracking-tight">@{username}</span>
                     </h1>
-                    <div className="relative" ref={shareDropdownRef}>
+
+                    <div className="flex items-center gap-3">
                         <button
-                            onClick={() => setIsShareOpen(!isShareOpen)}
-                            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 transition-all duration-200 cursor-pointer flex items-center gap-2"
+                            onClick={handlePrint}
+                            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10 transition-all flex items-center gap-2"
                         >
-                            Share This Analysis <span className="text-xs">▼</span>
+                            📄 Full Report
                         </button>
 
-                        {isShareOpen && (
-                            <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#1a1a2e] border border-white/10 shadow-xl overflow-hidden z-50 transform origin-top-right transition-all">
-                                <div className="py-1">
-                                    <button
-                                        onClick={() => {
-                                            handleCopyLink();
-                                            setIsShareOpen(false);
-                                        }}
-                                        className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
-                                    >
-                                        <span className="text-lg">🔗</span> Copy Link
-                                    </button>
-                                    <div className="h-px bg-white/10 mx-2 my-1"></div>
-                                    <a
-                                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedURL}&summary=${encodedLinkedInText}`}
-                                        target="_blank" rel="noopener noreferrer"
-                                        onClick={() => setIsShareOpen(false)}
-                                        className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
-                                    >
-                                        <span className="text-lg">💼</span> Share on LinkedIn
-                                    </a>
-                                    <a
-                                        href={`https://wa.me/?text=${encodedWhatsAppText}`}
-                                        target="_blank" rel="noopener noreferrer"
-                                        onClick={() => setIsShareOpen(false)}
-                                        className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-3 cursor-pointer"
-                                    >
-                                        <span className="text-lg">📱</span> Share on WhatsApp
-                                    </a>
+                        <div className="relative" ref={shareDropdownRef}>
+                            <button
+                                onClick={() => setIsShareOpen(!isShareOpen)}
+                                className="px-4 py-2 rounded-lg bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-500 transition-all flex items-center gap-2"
+                            >
+                                Share <span className="text-[10px]">▼</span>
+                            </button>
+
+                            {isShareOpen && (
+                                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#111111] border border-[#1f1f1f] shadow-2xl overflow-hidden z-50">
+                                    <div className="py-1">
+                                        <button
+                                            onClick={handleCopyLink}
+                                            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 flex items-center gap-3"
+                                        >
+                                            🔗 Copy Link
+                                        </button>
+                                        <div className="h-px bg-[#1f1f1f] mx-2"></div>
+                                        <a
+                                            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedURL}&summary=${encodedLinkedInText}`}
+                                            target="_blank" rel="noopener noreferrer"
+                                            className="block px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 flex items-center gap-3"
+                                        >
+                                            💼 Share on LinkedIn
+                                        </a>
+                                        <a
+                                            href={`https://wa.me/?text=${encodedWhatsAppText}`}
+                                            target="_blank" rel="noopener noreferrer"
+                                            className="block px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 flex items-center gap-3"
+                                        >
+                                            📱 Share on WhatsApp
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-4xl mx-auto px-4 py-10 space-y-8">
-
-                {/* Roast mode banner */}
-                {isRoast && !loading && data && (
-                    <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30 text-center">
-                        <span className="text-2xl">🔥</span>
-                        <p className="text-orange-400 font-semibold mt-1">You asked for it...</p>
-                    </div>
-                )}
-
-                {/* Error Message Section */}
-                {error && (
-                    <div className="p-8 rounded-2xl bg-red-500/10 border border-red-500/20 text-center">
-                        <div className="text-4xl mb-4">😞</div>
-                        <h2 className="text-xl font-bold text-white mb-2">Oops!</h2>
-                        <p className="text-gray-300 mb-6">{error}</p>
-                        <div className="flex gap-3 justify-center">
-                            <button
-                                onClick={() => navigate('/')}
-                                className="px-5 py-2 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10"
-                            >
-                                ← Go Home
-                            </button>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-sm font-semibold"
-                            >
-                                Try Again
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Loading Section */}
+            <main className="w-full max-w-[1400px] mx-auto px-6 py-10 space-y-10">
                 {loading && !error && <LoadingScreen />}
 
-                {/* Data Sections */}
+                {error && (
+                    <div className="p-12 rounded-2xl bg-red-500/5 border border-red-500/20 text-center max-w-xl mx-auto">
+                        <div className="text-5xl mb-6">😞</div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Analysis Failed</h2>
+                        <p className="text-gray-400 mb-8">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-sm font-bold transition-all"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
+
                 {!loading && data && (
-                    <div className="space-y-8 fade-in">
-                        {/* Profile Score - Circular Gauge */}
-                        <div className="flex flex-col items-center justify-center py-6">
-                            <h2 className="text-xl font-medium text-gray-300 mb-6">Profile Score</h2>
-                            <div className="relative w-48 h-48 flex items-center justify-center">
-                                {/* SVG Ring */}
-                                <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                    {/* Track */}
-                                    <circle
-                                        cx="96" cy="96" r="80"
-                                        fill="none"
-                                        className="stroke-gray-800"
-                                        strokeWidth="12"
-                                    />
-                                    {/* Progress */}
-                                    <circle
-                                        cx="96" cy="96" r="80"
-                                        fill="none"
-                                        stroke={
-                                            data.overall_score >= 75 ? '#22c55e' :
-                                                data.overall_score >= 50 ? '#eab308' : '#ef4444'
-                                        }
-                                        strokeWidth="12"
-                                        strokeLinecap="round"
-                                        strokeDasharray="502"
-                                        strokeDashoffset={502 - (502 * data.overall_score) / 100}
-                                        style={{ transition: 'stroke-dashoffset 1.5s ease-out' }}
-                                    />
-                                </svg>
-                                {/* Center Text */}
-                                <div className="z-10 flex flex-col items-center">
-                                    <div className="flex items-baseline font-bold"
-                                        style={{
-                                            color:
-                                                data.overall_score >= 75 ? '#4ade80' :
-                                                    data.overall_score >= 50 ? '#facc15' : '#f87171'
-                                        }}>
-                                        <span className="text-6xl">{data.overall_score}</span>
-                                        <span className="text-2xl opacity-60">/100</span>
+                    <div className="space-y-10 animate-in fade-in duration-500">
+
+                        {/* HERO ROW - 3 COL GRID */}
+                        <div className="grid grid-cols-1 lg:grid-cols-[0.3fr_0.4fr_0.3fr] gap-8">
+
+                            {/* LEFT COLUMN - Profile Card */}
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                                <ProfileCard data={data} username={username} />
+                            </div>
+
+                            {/* CENTER COLUMN - Score + Summary */}
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card">
+                                {/* Circular Score Ring */}
+                                <div className="relative w-44 h-44 flex items-center justify-center mb-10">
+                                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                        <circle
+                                            cx="88" cy="88" r="82"
+                                            fill="none"
+                                            className="stroke-gray-800/50"
+                                            strokeWidth="10"
+                                        />
+                                        <circle
+                                            cx="88" cy="88" r="82"
+                                            fill="none"
+                                            stroke={data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444'}
+                                            strokeWidth="10"
+                                            strokeLinecap="round"
+                                            strokeDasharray="515"
+                                            strokeDashoffset={515 - (515 * data.overall_score) / 100}
+                                            className="transition-all duration-[2000ms] ease-out"
+                                        />
+                                    </svg>
+                                    <div className="z-10 flex flex-col items-center">
+                                        <div className="flex items-baseline font-black leading-none">
+                                            <span className="text-6xl tracking-tight" style={{ color: data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444' }}>
+                                                {data.overall_score}
+                                            </span>
+                                            <span className="text-xl text-gray-600 ml-1">/100</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-3">PROFILE SCORE</span>
                                     </div>
                                 </div>
+
+                                {/* Top 3 Hero Career Badges */}
+                                <div className="flex gap-2 mb-8">
+                                    {data.role_fit?.top_3_roles?.map((role, i) => (
+                                        <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 min-w-[90px]">
+                                            <span className="text-xl mb-1">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
+                                            <span className="text-[10px] font-bold text-gray-300 uppercase truncate w-20">{role.label}</span>
+                                            <span className="text-xs font-black text-indigo-400 mt-1">{role.score}%</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Summary */}
+                                <div className="max-w-md">
+                                    <p className="text-gray-400 italic text-sm leading-relaxed">
+                                        {data.stack?.profile_summary}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* RIGHT COLUMN - Strengths */}
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                                <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-6">STRENGTHS</h3>
+                                <div className="space-y-4">
+                                    {(data.stack?.strengths || []).slice(0, 4).map((str, i) => (
+                                        <div key={i} className="p-5 rounded-xl bg-[#22c55e]/[0.05] border-l-[3px] border-[#22c55e] flex gap-4 items-start">
+                                            <span className="text-[#22c55e] mt-1 text-sm font-black">✦</span>
+                                            <p className="text-gray-300 text-sm leading-relaxed font-medium">
+                                                {str}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {/* SECOND ROW - 2 COL GRID */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                                <RepoShowcase repos={data.top_repos} />
+                            </div>
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card overflow-hidden">
+                                <GitHubStats username={username} />
                             </div>
                         </div>
 
-                        <ProfileCard
-                            name={data.name}
-                            username={username}
-                            avatar_url={data.avatar_url}
-                            profile_url={data.profile_url}
-                            primary_stack={data.stack?.primary_stack}
-                            domains={data.stack?.domains}
-                            profile_summary={data.stack?.profile_summary}
-                            strengths={data.stack?.strengths}
-                            developer_type={data.stack?.developer_type}
-                            profile_tag={data.stack?.profile_tag}
-                            badges={data.badges}
-                        />
+                        {/* THIRD ROW - FULL WIDTH */}
+                        <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                            <RoleScoreCard scores={data.role_fit?.scores} reasoning={data.role_fit?.reasoning} />
+                        </div>
 
-                        {/* Repo Showcase — between ProfileCard and GitHubStats */}
-                        <RepoShowcase repos={data.top_repos} />
-
-                        <GitHubStats username={username} />
-
-                        <RoleScoreCard
-                            scores={data.role_fit?.scores}
-                            top_3_roles={data.role_fit?.top_3_roles}
-                            reasoning={data.role_fit?.reasoning}
-                        />
                     </div>
                 )}
             </main>
 
-
-            {/* Star gating overlay — non-dismissable blocker when user hasn't starred the repo */}
+            {/* STAR GATE OVERLAY */}
             {starRequired && (
-                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center">
-                    <div className="max-w-md mx-4 text-center p-10 rounded-3xl bg-[#12121f] border border-white/10 shadow-2xl">
-                        <div className="text-6xl mb-6">⭐</div>
-                        <h2 className="text-2xl font-bold text-white mb-3">
-                            One small step before your analysis...
-                        </h2>
-                        <p className="text-gray-400 mb-8 text-lg">
-                            Star the repo to support this free tool
+                <div className="fixed inset-0 z-[100] bg-black/98 flex items-center justify-center p-6">
+                    <div className="max-w-md w-full text-center p-12 rounded-[2rem] bg-[#0d0d0d] border border-[#1f1f1f] shadow-2xl">
+                        <div className="text-6xl mb-8 animate-pulse text-yellow-500">⭐</div>
+                        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">One small step...</h2>
+                        <p className="text-gray-500 mb-10 text-lg leading-relaxed font-medium">
+                            Star our repo to unlock this free premium analysis. It helps us keep the servers running!
                         </p>
-
-                        <div className="flex flex-col gap-4">
+                        <div className="space-y-4">
                             <button
                                 onClick={handleStarRepo}
-                                className="w-full px-8 py-4 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-lg transition-all duration-200 shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:scale-105 cursor-pointer"
+                                className="w-full py-5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg transition-all transform hover:scale-[1.02] active:scale-95"
                             >
                                 ⭐ Star on GitHub
                             </button>
-
                             <button
                                 onClick={handleAlreadyStarred}
-                                className="w-full px-8 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 font-medium transition-all duration-200 cursor-pointer"
+                                className="w-full py-3 rounded-xl bg-white/5 border border-white/5 text-gray-500 font-bold hover:text-gray-300 transition-all text-xs uppercase tracking-widest"
                             >
-                                I already starred it ✓
+                                I already starred it
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Toast notification */}
+            {/* TOAST */}
             {toast && (
-                <div
-                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-xl bg-green-500/90 text-white text-sm font-medium shadow-lg shadow-green-500/20 animate-bounce"
-                    style={{ animationIterationCount: 1, animationDuration: '0.5s' }}
-                >
+                <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[60] px-8 py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
                     ✅ {toast}
                 </div>
             )}
