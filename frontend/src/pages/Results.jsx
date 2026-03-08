@@ -146,7 +146,7 @@ function Results() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white">
+        <div className="min-h-screen bg-[#0a0a0a] text-white pb-[60px]">
             <style>
                 {`
                 @media print {
@@ -248,15 +248,15 @@ function Results() {
                     <div className="space-y-10 animate-in fade-in duration-500">
 
                         {/* HERO ROW - 3 COL GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[0.35fr_0.35fr_0.3fr] gap-4 items-stretch">
+                        <div className="grid grid-cols-1 lg:grid-cols-[0.35fr_0.35fr_0.3fr] gap-4 items-start">
 
                             {/* LEFT: Profile */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card h-full">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
                                 <ProfileCard data={data} username={username} />
                             </div>
 
                             {/* CENTER: Score & Summary */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card h-full overflow-hidden">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card overflow-hidden">
                                 <div className="flex flex-col items-center justify-center flex-grow py-4">
                                     {/* Circular Score Ring */}
                                     <div className="relative w-44 h-44 flex items-center justify-center mb-10">
@@ -291,10 +291,10 @@ function Results() {
 
                                     {/* Top 3 Hero Career Badges */}
                                     <div className="flex gap-2 mb-8 w-full justify-center">
-                                        {(data.role_fit?.top_3_roles || []).map((role, i) => (
-                                            <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 w-1/3 max-w-[100px] overflow-hidden">
+                                        {(data.role_fit?.top_3_roles || []).slice(0, 3).map((role, i) => (
+                                            <div key={i} title={role.label} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 w-1/3 max-w-[90px] overflow-hidden">
                                                 <span className="text-xl mb-1">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                                                <span className="text-[9px] font-bold text-gray-400 uppercase truncate w-full px-1 text-center">
+                                                <span className="text-[11px] font-bold text-gray-400 uppercase truncate w-full px-1 text-center whitespace-nowrap overflow-hidden text-ellipsis">
                                                     {role.label}
                                                 </span>
                                                 <span className="text-xs font-black text-indigo-400 mt-1">{role.score}%</span>
@@ -312,7 +312,7 @@ function Results() {
                             </div>
 
                             {/* RIGHT: Strengths */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card h-full">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
                                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-6">STRENGTHS</h3>
                                 <div className="space-y-4">
                                     {(data.stack?.strengths || []).slice(0, 4).map((str, i) => (
