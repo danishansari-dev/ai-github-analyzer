@@ -97,7 +97,7 @@ function Home() {
                     </h1>
 
                     <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                        Enter any GitHub username to get your tech stack analysis, job role fit score, and AI-generated resume bullets.
+                        Enter any GitHub username to get your tech stack analysis, career role fit across 50+ roles, and GitHub stats dashboard.
                     </p>
 
                     {/* Live counters — animates from 0 on page load */}
