@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
 import ProfileCard from '../components/ProfileCard';
 import RoleScoreCard from '../components/RoleScoreCard';
-import ResumeBullets from '../components/ResumeBullets';
+
 import GitHubStats from '../components/GitHubStats';
 
 // 30-second timeout so the loading screen never spins forever
@@ -14,7 +14,7 @@ const apiUrl = import.meta.env.VITE_API_URL || '';
 
 /**
  * Results page — Fetches analysis data from the backend for a given GitHub username
- * and renders the main result cards: ProfileCard, GitHubStats, RoleScoreCard, and ResumeBullets.
+ * and renders the main result cards: ProfileCard, GitHubStats, and RoleScoreCard.
  * The GitHubStats component is rendered unconditionally, while other cards are dependent
  * on the AI analysis results.
  */
@@ -168,12 +168,11 @@ function Results() {
 
                         <RoleScoreCard
                             scores={data.role_fit?.scores}
-                            top_role={data.role_fit?.top_role}
-                            top_role_label={data.role_fit?.top_role_label}
+                            top_3_roles={data.role_fit?.top_3_roles}
                             reasoning={data.role_fit?.reasoning}
                         />
 
-                        <ResumeBullets resume_bullets={data.resume_bullets} />
+
                     </div>
                 )}
             </main>

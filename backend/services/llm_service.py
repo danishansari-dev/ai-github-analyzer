@@ -247,10 +247,27 @@ Projects data:
    - gaps: array of exactly 2 notable gaps
 
 2. ROLE FIT ('role_fit' key):
-   - scores: object with scores (0-100) for: ml_engineer, backend_developer, frontend_developer, mlops_engineer, full_stack_developer.
-   - top_role: the key with highest score
-   - top_role_label: human readable name of top role
-   - reasoning: 2-sentence explanation
+   - Score this developer for EVERY possible tech career role that exists.
+   - Include ALL of these categories and their sub-roles:
+     AI/ML: ml_engineer, data_scientist, data_analyst, nlp_engineer, computer_vision_engineer, ai_researcher, mlops_engineer, prompt_engineer, ai_product_manager
+     Web: frontend_developer, backend_developer, full_stack_developer, web3_developer, wordpress_developer, jamstack_developer
+     Mobile: ios_developer, android_developer, react_native_developer, flutter_developer, cross_platform_developer
+     DevOps/Cloud: devops_engineer, cloud_engineer, site_reliability_engineer, platform_engineer, kubernetes_engineer, aws_specialist, azure_specialist, gcp_specialist, infrastructure_engineer
+     Data: data_engineer, database_administrator, business_intelligence_engineer, big_data_engineer, etl_developer, analytics_engineer
+     Security: security_engineer, penetration_tester, security_analyst, devsecops_engineer, cryptography_engineer
+     Systems: embedded_developer, firmware_engineer, systems_programmer, os_developer, hardware_engineer, iot_developer
+     Specialized: game_developer, ar_vr_developer, blockchain_developer, smart_contract_developer, robotics_engineer, quantum_computing_engineer, compiler_engineer, graphics_engineer
+     Research: research_engineer, research_scientist, phd_researcher, academic_researcher
+     Product/Design: technical_product_manager, developer_advocate, solutions_architect, technical_writer, ui_ux_engineer
+
+   - Score each 0-100. Be realistic and strict.
+   - Only give scores above 30 if there is actual evidence in their repos.
+   - Return object with:
+     - scores: object with ALL keys above and their integer scores
+     - top_role: key of highest score
+     - top_role_label: human readable name
+     - top_3_roles: array of top 3 {{'role': key, 'label': name, 'score': score}}
+     - reasoning: 2-sentence explanation
 
 3. RESUME BULLETS ('resume_bullets' key):
    - Generate 2-3 bullets for each project in the provided projects data.
@@ -268,3 +285,4 @@ Projects for Resume:
         result = self._call_groq_with_retry(system_prompt, user_prompt)
         print("analyze_all done")
         return result
+

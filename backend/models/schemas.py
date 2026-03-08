@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 # These schemas exist to enforce a strict type contract between our backend 
@@ -21,21 +21,20 @@ class StackAnalysis(BaseModel):
     gaps: List[str]
 
 class RoleScores(BaseModel):
-    # Tricky logic: These fields mirror the exact keys expected by the LLM prompt.
-    # Currently, they are hardcoded, but if we change the prompt options, 
-    # we must change these fields simultaneously or Pydantic validation will fail.
-    # TODO: Refactor to allow dynamic role ingestion based on user selection.
-    ml_engineer: int
-    backend_developer: int
-    frontend_developer: int
-    mlops_engineer: int
-    full_stack_developer: int
+    # Refactored to allow a dynamic dictionary of roles scored 0-100.
+    # Supported keys are defined in the LLM service prompt.
+    scores: Dict[str, int] = Field(default_factory=dict)
+
 
 class RoleFitAnalysis(BaseModel):
-    scores: RoleScores
+    # This stores the scores for all possible roles.
+    scores: Dict[str, int]
     top_role: str
     top_role_label: str
+    top_3_roles: List[Dict[str, Any]] = Field(default_factory=list)
     reasoning: str
+
+
 
 class ResumeBulletProject(BaseModel):
     project_name: str
