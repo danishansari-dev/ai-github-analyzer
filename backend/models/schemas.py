@@ -47,6 +47,7 @@ class TopRepoInfo(BaseModel):
     description: Optional[str] = None
     language: Optional[str] = None
     stars: int
+    total_commits: int = 0
     html_url: str
 
 class FullAnalysisResponse(BaseModel):
