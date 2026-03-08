@@ -57,10 +57,15 @@ function RepoShowcase({ repos }) {
                                 <span className="ml-1 text-gray-600 text-xs">↗</span>
                             </span>
 
-                            {/* Star count */}
-                            <span className="flex items-center gap-1 text-xs text-yellow-500/80 font-medium">
-                                ⭐ {repo.stars}
-                            </span>
+                            {/* Star and Commit count */}
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1 text-xs text-yellow-500/80 font-medium">
+                                    ⭐ {repo.stars}
+                                </span>
+                                <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
+                                    🔀 {repo.total_commits || 0} commits
+                                </span>
+                            </div>
                         </div>
 
                         {/* Description */}
