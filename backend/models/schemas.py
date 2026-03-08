@@ -18,7 +18,7 @@ class StackAnalysis(BaseModel):
     domains: List[str]
     profile_summary: str
     strengths: List[str]
-    gaps: List[str]
+
 
 class RoleScores(BaseModel):
     # Refactored to allow a dynamic dictionary of roles scored 0-100.

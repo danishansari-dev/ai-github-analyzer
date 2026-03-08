@@ -3,7 +3,7 @@
  * domains, strengths, and gaps. This is the first card users see
  * after analysis completes, so it needs to feel immediately informative.
  */
-function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, domains, profile_summary, strengths, gaps }) {
+function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, domains, profile_summary, strengths }) {
     return (
         <div className="p-8 rounded-2xl border border-white/5 bg-white/[0.02]">
             {/* Profile header */}
@@ -59,9 +59,8 @@ function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, d
                 </div>
             </div>
 
-            {/* Strengths & Gaps — vertical stack */}
-            <div className="space-y-10">
-                {/* Strengths */}
+            {/* Strengths — vertical stack */}
+            <div className="space-y-6">
                 <div>
                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">STRENGTHS</h3>
                     <div className="space-y-3">
@@ -76,23 +75,8 @@ function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, d
                         ))}
                     </div>
                 </div>
-
-                {/* Gaps */}
-                <div>
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">AREAS TO IMPROVE</h3>
-                    <div className="space-y-3">
-                        {(gaps || []).map((item, i) => (
-                            <div
-                                key={i}
-                                className="flex items-start gap-4 p-4 rounded-xl bg-[#fb923c]/[0.05] border-l-[3px] border-[#fb923c]"
-                            >
-                                <span className="text-[#fb923c] mt-0.5 shrink-0 font-bold text-lg">→</span>
-                                <span className="text-gray-200 leading-relaxed">{item}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
             </div>
+
         </div>
     );
 }

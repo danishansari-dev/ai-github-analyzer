@@ -251,16 +251,9 @@ Projects data:
      Example: 'Built bone fracture CNN classifier using PyTorch achieving 90%+ accuracy'
      NOT: 'Strong in Machine Learning' (too vague, rejected)
 
-   - gaps: array of exactly 3 specific improvement areas.
-     Each gap MUST:
-     - Be actionable and specific
-     - Explain WHY it matters for their career
-     - Suggest what they should build to fill the gap
-     Example: 'No containerization (Docker/K8s) — critical for MLOps roles, build a dockerized ML pipeline'
-     NOT: 'Mobile App Development' (too vague, rejected)
-
 
 2. ROLE FIT ('role_fit' key):
+
    - Score this developer for EVERY possible tech career role that exists.
    - Include ALL of these categories and their sub-roles:
      AI/ML: ml_engineer, data_scientist, data_analyst, nlp_engineer, computer_vision_engineer, ai_researcher, mlops_engineer, prompt_engineer, ai_product_manager
