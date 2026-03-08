@@ -59,32 +59,38 @@ function ProfileCard({ name, username, avatar_url, profile_url, primary_stack, d
                 </div>
             </div>
 
-            {/* Strengths & Gaps — two-column layout */}
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* Strengths & Gaps — vertical stack */}
+            <div className="space-y-10">
                 {/* Strengths */}
                 <div>
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Strengths</h3>
-                    <ul className="space-y-2">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">STRENGTHS</h3>
+                    <div className="space-y-3">
                         {(strengths || []).map((item, i) => (
-                            <li key={i} className="flex items-start gap-2 text-gray-300">
-                                <span className="text-green-400 mt-0.5 shrink-0">✓</span>
-                                <span>{item}</span>
-                            </li>
+                            <div
+                                key={i}
+                                className="flex items-start gap-4 p-4 rounded-xl bg-[#22c55e]/[0.05] border-l-[3px] border-[#22c55e]"
+                            >
+                                <span className="text-[#22c55e] mt-0.5 shrink-0 font-bold text-lg">✦</span>
+                                <span className="text-gray-200 leading-relaxed">{item}</span>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                 </div>
 
                 {/* Gaps */}
                 <div>
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Areas to Improve</h3>
-                    <ul className="space-y-2">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em] mb-4">AREAS TO IMPROVE</h3>
+                    <div className="space-y-3">
                         {(gaps || []).map((item, i) => (
-                            <li key={i} className="flex items-start gap-2 text-gray-300">
-                                <span className="text-amber-400 mt-0.5 shrink-0">⚠</span>
-                                <span>{item}</span>
-                            </li>
+                            <div
+                                key={i}
+                                className="flex items-start gap-4 p-4 rounded-xl bg-[#fb923c]/[0.05] border-l-[3px] border-[#fb923c]"
+                            >
+                                <span className="text-[#fb923c] mt-0.5 shrink-0 font-bold text-lg">→</span>
+                                <span className="text-gray-200 leading-relaxed">{item}</span>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>

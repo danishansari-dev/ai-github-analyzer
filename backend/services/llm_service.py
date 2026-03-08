@@ -243,8 +243,22 @@ Projects data:
    - primary_stack: array of top 5 technologies used
    - domains: array of engineering domains detected
    - profile_summary: 2-sentence summary
-   - strengths: array of exactly 3 specific strengths
-   - gaps: array of exactly 2 notable gaps
+   - strengths: array of exactly 4 specific, evidence-based strengths.
+     Each strength MUST:
+     - Reference a specific project or repo by name
+     - Mention the exact technology used
+     - Include a measurable outcome or complexity indicator
+     Example: 'Built bone fracture CNN classifier using PyTorch achieving 90%+ accuracy'
+     NOT: 'Strong in Machine Learning' (too vague, rejected)
+
+   - gaps: array of exactly 3 specific improvement areas.
+     Each gap MUST:
+     - Be actionable and specific
+     - Explain WHY it matters for their career
+     - Suggest what they should build to fill the gap
+     Example: 'No containerization (Docker/K8s) — critical for MLOps roles, build a dockerized ML pipeline'
+     NOT: 'Mobile App Development' (too vague, rejected)
+
 
 2. ROLE FIT ('role_fit' key):
    - Score this developer for EVERY possible tech career role that exists.
