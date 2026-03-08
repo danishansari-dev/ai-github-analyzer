@@ -157,25 +157,25 @@ function RoleScoreCard({ scores, reasoning }) {
     });
 
     return (
-        <div className="flex flex-col gap-16">
+        <div className="flex flex-col gap-16 pb-12">
             <div className="text-center">
                 <h2 className="text-sm font-bold text-gray-500 uppercase tracking-[0.3em] mb-4">
                     🎯 TOP CAREER MATCHES
                 </h2>
                 <div className="max-w-[600px] mx-auto">
-                    <p className="text-gray-400 italic text-sm leading-relaxed">
+                    <p className="text-gray-400 text-sm leading-relaxed">
                         {reasoning}
                     </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12">
                 {sortedCategories.map(catKey => {
                     const category = ROLE_CATEGORIES[catKey];
                     const roles = groupedRoles[catKey].sort((a, b) => b.score - a.score);
 
                     return (
-                        <div key={catKey} className="p-6 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col h-full">
+                        <div key={catKey} className="p-6 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col">
                             <div className="flex items-center gap-2 mb-6 border-b border-[#1f1f1f] pb-4">
                                 <span className="text-lg">{category.label.split(' ')[0]}</span>
                                 <h4 className="text-[11px] font-bold text-gray-300 uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
