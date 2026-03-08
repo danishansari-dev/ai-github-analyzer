@@ -60,6 +60,9 @@ class FullAnalysisResponse(BaseModel):
     avatar_url: str
     name: Optional[str] = None
     profile_url: str
+    followers: int = 0
+    following: int = 0
+    public_repos: int = 0
     overall_score: int = 0
     stack: StackAnalysis
     role_fit: RoleFitAnalysis
