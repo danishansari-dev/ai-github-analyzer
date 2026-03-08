@@ -14,6 +14,17 @@ class CacheService:
         # We set hard expiration to 60 minutes equivalent in seconds
         self.expiration_seconds = 60 * 60
 
+        # Base number so the counter doesn't show 0 on a fresh deploy
+        self.analysis_count: int = 1247
+
+    def increment_count(self) -> None:
+        """Bumps the analysis counter after every successful profile analysis."""
+        self.analysis_count += 1
+
+    def get_count(self) -> int:
+        """Returns the total number of analyses performed (including the base seed)."""
+        return self.analysis_count
+
     def set(self, username: str, data: Any) -> None:
         """
         Registers a new dataset footprint into the ephemeral memory map.
