@@ -41,8 +41,16 @@ class ResumeBulletProject(BaseModel):
     repo_url: str
     bullets: List[str]
 
+class TopRepoInfo(BaseModel):
+    """Top repository data for the Repo Showcase component."""
+    name: str
+    description: Optional[str] = None
+    language: Optional[str] = None
+    stars: int
+    html_url: str
+
 class FullAnalysisResponse(BaseModel):
-    # This acts as the aggregate payload payload for the analysis.
+    # This acts as the aggregate payload for the analysis.
     # It exists so the front-end can perform a single HTTP GET request
     # and receive the fully populated dashboard state simultaneously.
     username: str
@@ -52,6 +60,8 @@ class FullAnalysisResponse(BaseModel):
     stack: StackAnalysis
     role_fit: RoleFitAnalysis
     resume_bullets: List[ResumeBulletProject]
+    # Optional so older cached responses without this field still deserialize
+    top_repos: List[TopRepoInfo] = []
     analyzed_at: datetime
 
 class ErrorResponse(BaseModel):
