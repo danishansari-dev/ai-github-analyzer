@@ -35,60 +35,56 @@ function RepoShowcase({ repos }) {
     if (!repos || repos.length === 0) return null;
 
     return (
-        <div className="p-8 rounded-2xl border border-white/5 bg-white/[0.02]">
+        <div className="flex flex-col h-full">
             <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">
                     🗂️ Top Repositories
                 </h3>
-                <p className="text-xs text-gray-600 mt-1 uppercase tracking-wider">
+                <p className="text-[10px] text-gray-600 mt-1 uppercase tracking-wider">
                     sorted by stars & commits
                 </p>
             </div>
-            <div className="space-y-3">
-                {repos.map((repo) => (
+
+            <div className="grid grid-cols-1 gap-3">
+                {repos.slice(0, 5).map((repo) => (
                     <a
                         key={repo.name}
                         href={repo.html_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block p-4 rounded-xl bg-white/[0.03] border border-white/5
-                                   hover:bg-white/[0.06] hover:border-white/10
-                                   transition-all duration-200 group"
+                        className="group flex flex-col p-4 rounded-xl bg-[#111111] border border-[#1f1f1f] 
+                                   hover:border-[#2f2f2f] transition-all duration-200"
                     >
                         <div className="flex items-center justify-between mb-2">
-                            {/* Repo name with external-link hint */}
-                            <span className="text-white font-medium group-hover:text-blue-400 transition-colors">
+                            <span className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors truncate pr-4">
                                 {repo.name}
-                                <span className="ml-1 text-gray-600 text-xs">↗</span>
                             </span>
-
-                            {/* Star and Commit count */}
-                            <div className="flex items-center gap-3">
-                                <span className="flex items-center gap-1 text-xs text-yellow-500/80 font-medium">
-                                    ⭐ {repo.stars}
+                            <div className="flex items-center gap-3 shrink-0">
+                                <span className="text-[10px] font-bold text-yellow-500/80">
+                                    ★ {repo.stars}
                                 </span>
-                                <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
-                                    🔀 {repo.total_commits || 0} commits
+                                <span className="text-[10px] font-bold text-gray-500">
+                                    🔀 {repo.total_commits || 0}
                                 </span>
                             </div>
                         </div>
 
-                        {/* Description */}
                         {repo.description && (
-                            <p className="text-sm text-gray-400 leading-relaxed mb-2 line-clamp-2">
+                            <p className="text-xs text-gray-500 leading-relaxed truncate mb-3">
                                 {repo.description}
                             </p>
                         )}
 
-                        {/* Language badge */}
                         {repo.language && (
-                            <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
+                            <div className="flex items-center gap-2 mt-auto">
                                 <span
-                                    className="w-2.5 h-2.5 rounded-full"
+                                    className="w-2 h-2 rounded-full"
                                     style={{ backgroundColor: LANG_COLORS[repo.language] || '#8b949e' }}
                                 />
-                                {repo.language}
-                            </span>
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                    {repo.language}
+                                </span>
+                            </div>
                         )}
                     </a>
                 ))}
