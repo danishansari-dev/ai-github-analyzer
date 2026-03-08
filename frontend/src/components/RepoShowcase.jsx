@@ -29,6 +29,16 @@ const LANG_COLORS = {
     R: '#198CE7',
     Scala: '#c22d40',
     Lua: '#000080',
+    Docker: '#384d54',
+    Bash: '#4EAA25',
+    Make: '#ce692b'
+};
+
+const langMap = {
+    "Jupyter Notebook": "Python",
+    "Dockerfile": "Docker",
+    "Shell": "Bash",
+    "Makefile": "Make"
 };
 
 function RepoShowcase({ repos }) {
@@ -76,7 +86,7 @@ function RepoShowcase({ repos }) {
                         )}
 
                         {repo.language && (() => {
-                            const displayLang = repo.language === 'Jupyter Notebook' ? 'Python' : repo.language;
+                            const displayLang = langMap[repo.language] || repo.language;
                             return (
                                 <div className="flex items-center gap-2 mt-auto">
                                     <span
