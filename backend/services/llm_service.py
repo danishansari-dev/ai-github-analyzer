@@ -199,17 +199,18 @@ Projects data:
         result = self._call_groq_with_retry(system_prompt, user_prompt)
         print("generate_resume_bullets done")
         return result
-    def analyze_all(self, profile_data: Dict[str, Any], repos: List[Dict[str, Any]], repos_with_readmes: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze_all(self, profile_data: Dict[str, Any], repos: List[Dict[str, Any]], repos_with_readmes: List[Dict[str, Any]], roast: bool = False) -> Dict[str, Any]:
         """
-        Combines stack analysis, role fit, and resume bullet generation into ONE Gemini API call.
+        Combines stack analysis, role fit, and resume bullet generation into ONE API call.
         This reduces 3 API round trips to 1, significantly cutting down latency.
         
         @param profile_data - The user profile details from GitHub
         @param repos - A list of the user's top repositories
         @param repos_with_readmes - A list of repos that include a 'readme' field
+        @param roast - When True, generates a comedy roast instead of a professional summary
         @returns A dictionary containing 'stack', 'role_fit', and 'resume_bullets'
         """
-        print("Starting unified analyze_all call...")
+        print(f"Starting unified analyze_all call (roast={roast})...")
 
         system_prompt = "You are a senior technical recruiter and resume expert. Return ONLY valid JSON."
 
@@ -237,20 +238,43 @@ Projects data:
             })
         projects_str = json.dumps(projects_data, indent=2)
 
-        user_prompt = f"""Perform a comprehensive analysis of this GitHub developer profile and return ONE JSON object with exactly these three keys: 'stack', 'role_fit', 'resume_bullets'.
-
-1. STACK ANALYSIS ('stack' key):
-   - primary_stack: array of top 5 technologies used
-   - domains: array of engineering domains detected
-   - profile_summary: 2-sentence summary
-   - strengths: array of exactly 4 specific, evidence-based strengths.
+        # Roast mode overrides the summary and strengths instructions
+        if roast:
+            summary_instruction = """- profile_summary: Write a brutally honest, funny, sarcastic roast of this developer's GitHub profile.
+     Reference their actual repos and embarrassing patterns like: too many unfinished projects,
+     only tutorial repos, no README files, last commit was 6 months ago, etc.
+     Be like a comedy roast — mean but funny. Keep it to 3 sentences. Must reference specific repo names."""
+            strengths_instruction = """- strengths: array of exactly 3 funny roast observations about their code habits.
+     These should be sarcastic one-liners referencing specific repos or patterns.
+     Example: 'Has 12 repos named "test-project" — commitment to naming things is truly inspiring'"""
+        else:
+            summary_instruction = """- profile_summary: Write a 2-sentence profile summary that is specific to THIS developer only.
+     Mention at least 2 actual project names from their repos.
+     Include one specific technical achievement with numbers if possible.
+     Do NOT use generic phrases like 'demonstrates expertise', 'a range of',
+     'strong background', 'passionate developer', or 'various technologies'.
+     The summary should be so specific that it could not apply to any other developer."""
+            strengths_instruction = """- strengths: array of exactly 4 specific, evidence-based strengths.
      Each strength MUST:
      - Reference a specific project or repo by name
      - Mention the exact technology used
      - Include a measurable outcome or complexity indicator
      Example: 'Built bone fracture CNN classifier using PyTorch achieving 90%+ accuracy'
-     NOT: 'Strong in Machine Learning' (too vague, rejected)
+     NOT: 'Strong in Machine Learning' (too vague, rejected)"""
 
+        user_prompt = f"""Perform a comprehensive analysis of this GitHub developer profile and return ONE JSON object with exactly these three keys: 'stack', 'role_fit', 'resume_bullets'.
+
+1. STACK ANALYSIS ('stack' key):
+   - primary_stack: array of top 5 technologies used (languages + frameworks).
+     IMPORTANT: Detect the actual programming languages, frameworks and libraries the developer uses — NOT file formats or tools.
+     For example: if repos contain .ipynb files, the language is Python not Jupyter Notebook.
+     If repos use requirements.txt with torch, include PyTorch.
+     Read the README files and repo descriptions to find actual frameworks used.
+     Never include: Jupyter Notebook, Google Colab, VS Code, Git as stack items.
+     Always prefer: Python, PyTorch, TensorFlow, FastAPI, React, Node.js etc.
+   - domains: array of engineering domains detected
+   {summary_instruction}
+   {strengths_instruction}
 
 2. ROLE FIT ('role_fit' key):
 
@@ -267,8 +291,15 @@ Projects data:
      Research: research_engineer, research_scientist, phd_researcher, academic_researcher
      Product/Design: technical_product_manager, developer_advocate, solutions_architect, technical_writer, ui_ux_engineer
 
-   - Score each 0-100. Be realistic and strict.
-   - Only give scores above 30 if there is actual evidence in their repos.
+   - Give realistic scores that reflect actual evidence.
+     Scores must NOT all end in 0 or 5 — use specific numbers like 73, 67, 84.
+     Base scores strictly on actual repo evidence:
+     - Every ML project adds evidence for ml_engineer, data_scientist
+     - Every deployed project adds evidence for devops, cloud roles
+     - Test files in repos add evidence for quality-focused roles
+     - No evidence for a role = score below 25, do not include it
+     Be strict. A developer cannot be 80% ML Engineer AND 70% Data Scientist
+     AND 50% Data Engineer simultaneously unless they have strong evidence for all.
    - Return object with:
      - scores: object with ALL keys above and their integer scores
      - top_role: key of highest score
