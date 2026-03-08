@@ -25,7 +25,7 @@ const LANG_COLORS = {
     HTML: '#e34c26',
     CSS: '#563d7c',
     Shell: '#89e051',
-    Jupyter: '#DA5B0B',
+    Python: '#3572A5',  // Combined mapping for Jupyter Notebook too
     R: '#198CE7',
     Scala: '#c22d40',
     Lua: '#000080',
@@ -75,17 +75,20 @@ function RepoShowcase({ repos }) {
                             </p>
                         )}
 
-                        {repo.language && (
-                            <div className="flex items-center gap-2 mt-auto">
-                                <span
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: LANG_COLORS[repo.language] || '#8b949e' }}
-                                />
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                                    {repo.language}
-                                </span>
-                            </div>
-                        )}
+                        {repo.language && (() => {
+                            const displayLang = repo.language === 'Jupyter Notebook' ? 'Python' : repo.language;
+                            return (
+                                <div className="flex items-center gap-2 mt-auto">
+                                    <span
+                                        className="w-2 h-2 rounded-full"
+                                        style={{ backgroundColor: LANG_COLORS[displayLang] || '#8b949e' }}
+                                    />
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                                        {displayLang}
+                                    </span>
+                                </div>
+                            );
+                        })()}
                     </a>
                 ))}
             </div>
