@@ -316,8 +316,8 @@ function Results() {
                 {!loading && data && (
                     <div className="space-y-10 animate-in fade-in duration-500">
 
-                        {/* HERO ROW - 4 COL GRID ON DESKTOP */}
-                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
+                        {/* HERO ROW - 3 COL GRID ON DESKTOP (Profile, Score, Top Languages) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
 
                             {/* LEFT: Profile */}
                             <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col h-full">
@@ -378,7 +378,7 @@ function Results() {
                                 </div>
                             </div>
 
-                            {/* CENTER RIGHT: Top Languages Orbit */}
+                            {/* RIGHT: Top Languages Orbit */}
                             {topLanguages.length > 0 && (
                                 <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col items-center justify-center text-center">
                                     <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
@@ -387,21 +387,6 @@ function Results() {
                                     <OrbitingSkills skills={topLanguages} />
                                 </div>
                             )}
-
-                            {/* RIGHT: Strengths */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card self-start flex flex-col h-full">
-                                <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-6">STRENGTHS</h3>
-                                <div className="space-y-4">
-                                    {(data.stack?.strengths || []).slice(0, 4).map((str, i) => (
-                                        <div key={i} className="flex gap-3 items-start overflow-hidden border-l-2 border-green-500/50 pl-3">
-                                            <span className="text-green-400 mt-0.5 text-xs font-black">✦</span>
-                                            <p className="text-gray-300 text-sm leading-relaxed font-medium">
-                                                {str}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
 
                         {/* SECOND ROW - 2 COL GRID */}
