@@ -422,6 +422,7 @@ function Results() {
                                         </p>
                                     </div>
                                 </div>
+                                </div>
                             </GlowCard>
 
                             {/* RIGHT: Top Languages Orbit */}

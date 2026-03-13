@@ -25,7 +25,6 @@ const LANG_COLORS = {
     HTML: '#e34c26',
     CSS: '#563d7c',
     Shell: '#89e051',
-    Python: '#3572A5',  // Combined mapping for Jupyter Notebook too
     R: '#198CE7',
     Scala: '#c22d40',
     Lua: '#000080',
