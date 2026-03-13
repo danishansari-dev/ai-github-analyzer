@@ -155,7 +155,7 @@ function OrbitingSkills({ skills }) {
     return (
         <div className="w-full flex items-center justify-center overflow-hidden">
             <div
-                className="relative w-[360px] h-[360px] md:w-[460px] md:h-[460px]"
+                className="relative w-[300px] h-[300px] md:w-[460px] md:h-[460px]"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >

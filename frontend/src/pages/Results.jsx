@@ -200,6 +200,32 @@ function Results() {
         }
     }
 
+    const [scoreProgress, setScoreProgress] = useState(0);
+
+    useEffect(() => {
+        if (!data) return;
+        setScoreProgress(0);
+        const timeout = setTimeout(() => {
+            setScoreProgress(data.overall_score || 0);
+        }, 50);
+        return () => clearTimeout(timeout);
+    }, [data]);
+
+    const getScoreGradient = (value) => {
+        if (value <= 40) {
+            return { from: '#fb923c', to: '#ef4444' }; // orange -> red
+        }
+        if (value <= 69) {
+            return { from: '#facc15', to: '#fb923c' }; // yellow -> orange
+        }
+        if (value <= 84) {
+            return { from: '#facc15', to: '#22c55e' }; // yellow -> green
+        }
+        return { from: '#22c55e', to: '#22d3ee' }; // green -> cyan
+    };
+
+    const { from: scoreFrom, to: scoreTo } = getScoreGradient(scoreProgress);
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white pb-[60px] scroll-smooth transition-opacity duration-300">
             <style>
@@ -216,6 +242,11 @@ function Results() {
                     .text-gray-400, .text-gray-500, .text-gray-600 { color: #4b5563 !important; }
                     .bg-white\\/\\[0\\.02\\], .bg-\\[\\#111111\\] { background: #f9fafb !important; }
                     .border-white\\/5, .border-\\[\\#1f1f1f\\] { border-color: #e5e7eb !important; }
+                }
+
+                @keyframes fadeUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
                 `}
             </style>
@@ -317,15 +348,21 @@ function Results() {
                     <div className="space-y-10 animate-in fade-in duration-500">
 
                         {/* HERO ROW - 3 COL GRID ON DESKTOP (Profile, Score, Top Languages) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+                        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_1.3fr] gap-4 items-stretch">
 
                             {/* LEFT: Profile */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col h-full">
+                            <div
+                                className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col h-full"
+                                style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '0ms' }}
+                            >
                                 <ProfileCard data={data} username={username} />
                             </div>
 
                             {/* CENTER LEFT: Score & Summary */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card overflow-hidden">
+                            <div
+                                className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card overflow-hidden"
+                                style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '120ms' }}
+                            >
                                 <div className="flex flex-col items-center justify-center flex-grow py-8">
                                     <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-2">
                                         Profile Score
@@ -333,6 +370,12 @@ function Results() {
                                     {/* Circular Score Ring */}
                                     <div className="relative w-44 h-44 flex items-center justify-center mb-10">
                                         <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                            <defs>
+                                                <linearGradient id="score-ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor={scoreFrom} />
+                                                    <stop offset="100%" stopColor={scoreTo} />
+                                                </linearGradient>
+                                            </defs>
                                             <circle
                                                 cx="88" cy="88" r="82"
                                                 fill="none"
@@ -342,30 +385,21 @@ function Results() {
                                             <circle
                                                 cx="88" cy="88" r="82"
                                                 fill="none"
-                                                stroke={data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444'}
+                                                stroke="url(#score-ring-gradient)"
                                                 strokeWidth="10"
                                                 strokeLinecap="round"
                                                 strokeDasharray="515"
-                                                strokeDashoffset={515 - (515 * data.overall_score) / 100}
-                                                className="transition-all duration-[2000ms] ease-out"
+                                                strokeDashoffset={515 - (515 * scoreProgress) / 100}
+                                                style={{ transition: 'stroke-dashoffset 1.2s ease-out' }}
                                             />
                                         </svg>
                                         <div className="z-10 flex flex-col items-center">
                                             <div className="flex items-baseline font-black leading-none">
-                                                <span className="text-6xl tracking-tight" style={{ color: data.overall_score >= 75 ? '#22c55e' : data.overall_score >= 50 ? '#eab308' : '#ef4444' }}>
+                                                <span className="text-6xl tracking-tight" style={{ color: scoreFrom }}>
                                                     {data.overall_score}
                                                 </span>
                                                 <span className="text-xl text-gray-600 ml-1">/100</span>
                                             </div>
-                                            <span className="flex items-center gap-1.5 mt-3">
-                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">PROFILE SCORE</span>
-                                                <span
-                                                    title="Score based on repo quality, tech stack diversity, commit consistency, and project complexity"
-                                                    className="text-gray-600 hover:text-gray-400 cursor-help transition-colors text-xs leading-none"
-                                                >
-                                                    ⓘ
-                                                </span>
-                                            </span>
                                         </div>
                                     </div>
 
@@ -380,7 +414,10 @@ function Results() {
 
                             {/* RIGHT: Top Languages Orbit */}
                             {topLanguages.length > 0 && (
-                                <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col items-center justify-center text-center">
+                                <div
+                                    className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col items-center justify-center text-center min-h-[460px] min-w-0 overflow-visible"
+                                    style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '240ms' }}
+                                >
                                     <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
                                         Top Languages
                                     </p>
