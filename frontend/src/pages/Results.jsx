@@ -6,6 +6,7 @@ import RoleScoreCard from '../components/RoleScoreCard';
 import RepoShowcase from '../components/RepoShowcase';
 import GitHubStats from '../components/GitHubStats';
 import OrbitingSkills from '../components/OrbitingSkills';
+import { GlowCard } from '../components/SpotlightCard';
 
 // 90-second timeout so the loading screen never spins forever
 const FETCH_TIMEOUT_MS = 90000;
@@ -351,19 +352,30 @@ function Results() {
                         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_1.3fr] gap-4 items-stretch">
 
                             {/* LEFT: Profile */}
-                            <div
-                                className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col h-full"
-                                style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '0ms' }}
+                            <GlowCard
+                                customSize
+                                className="print-card"
                             >
-                                <ProfileCard data={data} username={username} />
-                            </div>
+                                <div
+                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col h-full"
+                                    style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '0ms' }}
+                                >
+                                    <div className="p-8">
+                                        <ProfileCard data={data} username={username} />
+                                    </div>
+                                </div>
+                            </GlowCard>
 
                             {/* CENTER LEFT: Score & Summary */}
-                            <div
-                                className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card overflow-hidden"
-                                style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '120ms' }}
+                            <GlowCard
+                                customSize
+                                className="print-card"
                             >
-                                <div className="flex flex-col items-center justify-center flex-grow py-8">
+                                <div
+                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center overflow-hidden"
+                                    style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '120ms' }}
+                                >
+                                    <div className="flex flex-col items-center justify-center flex-grow py-8 px-8">
                                     <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-2">
                                         Profile Score
                                     </p>
@@ -410,36 +422,47 @@ function Results() {
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </GlowCard>
 
                             {/* RIGHT: Top Languages Orbit */}
                             {topLanguages.length > 0 && (
-                                <div
-                                    className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col items-center justify-center text-center min-h-[460px] min-w-0 overflow-visible"
-                                    style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '240ms' }}
+                                <GlowCard
+                                    customSize
+                                    className="print-card"
                                 >
-                                    <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
-                                        Top Languages
-                                    </p>
-                                    <OrbitingSkills skills={topLanguages} />
-                                </div>
+                                    <div
+                                        className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center min-h-[460px] min-w-0 overflow-visible p-8"
+                                        style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '240ms' }}
+                                    >
+                                        <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
+                                            Top Languages
+                                        </p>
+                                        <OrbitingSkills skills={topLanguages} />
+                                    </div>
+                                </GlowCard>
                             )}
                         </div>
 
                         {/* SECOND ROW - 2 COL GRID */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
-                                <RepoShowcase repos={data.top_repos} />
-                            </div>
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card overflow-hidden">
-                                <GitHubStats username={username} />
-                            </div>
+                            <GlowCard customSize className="print-card">
+                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
+                                    <RepoShowcase repos={data.top_repos} />
+                                </div>
+                            </GlowCard>
+                            <GlowCard customSize className="print-card">
+                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8 overflow-hidden">
+                                    <GitHubStats username={username} />
+                                </div>
+                            </GlowCard>
                         </div>
 
                         {/* THIRD ROW - FULL WIDTH */}
-                        <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
-                            <RoleScoreCard scores={data.role_fit?.scores} reasoning={data.role_fit?.reasoning} />
-                        </div>
+                        <GlowCard customSize className="print-card">
+                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
+                                <RoleScoreCard scores={data.role_fit?.scores} reasoning={data.role_fit?.reasoning} />
+                            </div>
+                        </GlowCard>
 
                     </div>
                 )}
