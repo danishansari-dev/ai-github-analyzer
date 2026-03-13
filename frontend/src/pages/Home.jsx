@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import FloatingParticlesBackground from '../components/FloatingParticlesBackground';
 
 // Use production API URL if available, else fallback to empty string (Vite proxy)
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -77,9 +78,19 @@ function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-white">
-            {/* ===== HERO SECTION ===== */}
-            <section className="flex flex-col items-center justify-center min-h-screen px-4 relative overflow-hidden">
+        <div className="relative min-h-screen bg-[#0a0a0f] text-white">
+            {/* Interactive Background */}
+            <FloatingParticlesBackground 
+                particleCount={70}
+                particleColor="#60a5fa"
+                mouseGravity="repel"
+                glowIntensity={8}
+                backgroundColor="transparent"
+            />
+
+            <div className="relative z-10">
+                {/* ===== HERO SECTION ===== */}
+                <section className="flex flex-col items-center justify-center min-h-screen px-4 relative overflow-hidden">
                 {/* Gradient background orbs for visual depth — purely decorative */}
                 <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px]" />
                 <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px]" />
@@ -283,6 +294,7 @@ function Home() {
             <footer className="py-8 px-4 border-t border-white/5 text-center text-gray-500 text-sm">
                 Built with FastAPI, Groq AI, and React.
             </footer>
+            </div>
         </div>
     );
 }
