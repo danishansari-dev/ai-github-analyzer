@@ -316,17 +316,20 @@ function Results() {
                 {!loading && data && (
                     <div className="space-y-10 animate-in fade-in duration-500">
 
-                        {/* HERO ROW - 3 COL GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[0.35fr_0.35fr_0.3fr] gap-4 items-stretch">
+                        {/* HERO ROW - 4 COL GRID ON DESKTOP */}
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
 
                             {/* LEFT: Profile */}
                             <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col h-full">
                                 <ProfileCard data={data} username={username} />
                             </div>
 
-                            {/* CENTER: Score & Summary */}
+                            {/* CENTER LEFT: Score & Summary */}
                             <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card overflow-hidden">
                                 <div className="flex flex-col items-center justify-center flex-grow py-8">
+                                    <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-2">
+                                        Profile Score
+                                    </p>
                                     {/* Circular Score Ring */}
                                     <div className="relative w-44 h-44 flex items-center justify-center mb-10">
                                         <svg className="absolute inset-0 w-full h-full transform -rotate-90">
@@ -366,19 +369,6 @@ function Results() {
                                         </div>
                                     </div>
 
-                                    {/* Top 3 Hero Career Badges */}
-                                    <div className="flex gap-2 mb-8 w-full justify-center">
-                                        {(data.role_fit?.top_3_roles || []).slice(0, 3).map((role, i) => (
-                                            <div key={i} title={role.label} className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5 w-1/3 max-w-[90px] overflow-hidden">
-                                                <span className="text-xl mb-1">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                                                <span className="text-[10px] leading-[1.2] font-bold text-gray-400 uppercase break-words px-1 text-center w-full">
-                                                    {role.label}
-                                                </span>
-                                                <span className="text-xs font-black text-indigo-400 mt-1">{role.score}%</span>
-                                            </div>
-                                        ))}
-                                    </div>
-
                                     {/* Summary */}
                                     <div className="max-w-md">
                                         <p className="text-gray-500 italic text-sm leading-relaxed">
@@ -387,6 +377,16 @@ function Results() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* CENTER RIGHT: Top Languages Orbit */}
+                            {topLanguages.length > 0 && (
+                                <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col items-center justify-center text-center">
+                                    <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
+                                        Top Languages
+                                    </p>
+                                    <OrbitingSkills skills={topLanguages} />
+                                </div>
+                            )}
 
                             {/* RIGHT: Strengths */}
                             <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card self-start flex flex-col h-full">
@@ -403,22 +403,6 @@ function Results() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* TOP LANGUAGES / STACK VISUALIZATION */}
-                        {topLanguages.length > 0 && (
-                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card overflow-hidden py-8 px-8">
-                                <div className="flex flex-col items-center gap-6 w-full">
-                                    <div className="w-full flex items-center justify-between">
-                                        <h3 className="text-xs font-bold text-white/40 uppercase tracking-[0.3em]">
-                                            TOP LANGUAGES
-                                        </h3>
-                                    </div>
-                                    <div className="w-full flex items-center justify-center">
-                                        <OrbitingSkills skills={topLanguages} />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* SECOND ROW - 2 COL GRID */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

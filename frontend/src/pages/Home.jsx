@@ -96,16 +96,11 @@ function Home() {
                 <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px]" />
 
                 <div className="relative z-10 text-center max-w-3xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-8 rounded-full border border-white/10 bg-white/5 text-sm text-gray-400">
-                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        Powered by Groq AI
-                    </div>
-
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
-                        Analyze Your GitHub.
+                        See What Your Code Says
                         <br />
                         <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                            Impress Every Recruiter.
+                            About You.
                         </span>
                     </h1>
 
