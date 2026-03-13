@@ -171,7 +171,7 @@ function RoleScoreCard({ scores, reasoning }) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-12 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-10 items-start">
                 {sortedCategories.map(catKey => {
                     const category = ROLE_CATEGORIES[catKey];
                     const roles = groupedRoles[catKey].sort((a, b) => b.score - a.score);
@@ -192,7 +192,7 @@ function RoleScoreCard({ scores, reasoning }) {
                                             <span className="text-gray-500">
                                                 {ROLE_LABELS[role] || role}
                                             </span>
-                                            <span style={{ color: category.color }}>
+                                            <span style={{ color: category.color }} className="text-right">
                                                 {score}%
                                             </span>
                                         </div>
@@ -201,8 +201,8 @@ function RoleScoreCard({ scores, reasoning }) {
                                                 className="h-full rounded-full transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
                                                 style={{
                                                     width: animated ? `${score}%` : '0%',
-                                                    backgroundColor: category.color,
-                                                    boxShadow: `0 0 10px ${category.color}44`
+                                                    backgroundImage: `linear-gradient(to right, ${category.color}, ${category.color}33)`,
+                                                    boxShadow: `0 0 10px ${category.color}55`
                                                 }}
                                             />
                                         </div>
@@ -214,7 +214,7 @@ function RoleScoreCard({ scores, reasoning }) {
                 })}
             </div>
 
-            <div className="text-center pt-4">
+            <div className="text-center pt-2">
                 <p className="text-[10px] text-gray-700 uppercase tracking-[0.2em]">
                     {totalRolesShown < 6
                         ? 'Only roles with strong evidence are shown'

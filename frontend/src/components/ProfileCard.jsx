@@ -123,7 +123,7 @@ function ProfileCard({ data, username }) {
                 {badges && badges.length > 0 && (
                     <div>
                         <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">ACHIEVEMENTS</h3>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-3 max-h-20 overflow-x-auto overflow-y-hidden pb-1">
                             {badges.map((slug) => (
                                 <div key={slug} className="relative group">
                                     <img

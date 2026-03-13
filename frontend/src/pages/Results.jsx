@@ -184,16 +184,24 @@ function Results() {
     let topLanguages = [];
     const primaryStack = data?.stack?.primary_stack || [];
     if (primaryStack && primaryStack.length > 0) {
-        topLanguages = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
-        if (topLanguages.length === 0) {
+        // Prefer known language-like items but always try to surface at least 3 entries overall (up to 8 max)
+        const languageLike = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
+        if (languageLike.length === 0) {
             topLanguages = primaryStack.slice(0, 8);
         } else {
-            topLanguages = topLanguages.slice(0, 8);
+            topLanguages = languageLike.slice(0, 8);
+            if (topLanguages.length < 3) {
+                for (const item of primaryStack) {
+                    if (topLanguages.includes(item)) continue;
+                    topLanguages.push(item);
+                    if (topLanguages.length >= Math.min(8, Math.max(3, primaryStack.length))) break;
+                }
+            }
         }
     }
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white pb-[60px]">
+        <div className="min-h-screen bg-[#0a0a0a] text-white pb-[60px] scroll-smooth transition-opacity duration-300">
             <style>
                 {`
                 @media print {
@@ -213,7 +221,7 @@ function Results() {
             </style>
 
             {/* TOP BAR */}
-            <header className="sticky top-0 z-40 bg-[#0d0d0d] border-b border-[#1f1f1f] no-print">
+            <header className="sticky top-0 z-40 backdrop-blur-md bg-gray-900/80 border-b border-white/10 no-print">
                 <div className="w-full px-6 py-4 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/')}
@@ -309,16 +317,16 @@ function Results() {
                     <div className="space-y-10 animate-in fade-in duration-500">
 
                         {/* HERO ROW - 3 COL GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[0.35fr_0.35fr_0.3fr] gap-4 items-start">
+                        <div className="grid grid-cols-1 lg:grid-cols-[0.35fr_0.35fr_0.3fr] gap-4 items-stretch">
 
                             {/* LEFT: Profile */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card flex flex-col h-full">
                                 <ProfileCard data={data} username={username} />
                             </div>
 
                             {/* CENTER: Score & Summary */}
                             <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center print-card overflow-hidden">
-                                <div className="flex flex-col items-center justify-center flex-grow py-4">
+                                <div className="flex flex-col items-center justify-center flex-grow py-8">
                                     {/* Circular Score Ring */}
                                     <div className="relative w-44 h-44 flex items-center justify-center mb-10">
                                         <svg className="absolute inset-0 w-full h-full transform -rotate-90">
@@ -381,12 +389,12 @@ function Results() {
                             </div>
 
                             {/* RIGHT: Strengths */}
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card self-start">
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card self-start flex flex-col h-full">
                                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-6">STRENGTHS</h3>
                                 <div className="space-y-4">
                                     {(data.stack?.strengths || []).slice(0, 4).map((str, i) => (
-                                        <div key={i} className="p-5 rounded-xl bg-[#22c55e]/[0.05] border-l-[3px] border-[#22c55e] flex gap-4 items-start overflow-hidden">
-                                            <span className="text-[#22c55e] mt-1 text-sm font-black">✦</span>
+                                        <div key={i} className="flex gap-3 items-start overflow-hidden border-l-2 border-green-500/50 pl-3">
+                                            <span className="text-green-400 mt-0.5 text-xs font-black">✦</span>
                                             <p className="text-gray-300 text-sm leading-relaxed font-medium">
                                                 {str}
                                             </p>
@@ -398,14 +406,16 @@ function Results() {
 
                         {/* TOP LANGUAGES / STACK VISUALIZATION */}
                         {topLanguages.length > 0 && (
-                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card overflow-hidden">
-                                <div className="flex flex-col items-center gap-4 w-full">
-                                    <div className="w-full flex items-center justify-between mb-2">
-                                        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">
+                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card overflow-hidden py-8 px-8">
+                                <div className="flex flex-col items-center gap-6 w-full">
+                                    <div className="w-full flex items-center justify-between">
+                                        <h3 className="text-xs font-bold text-white/40 uppercase tracking-[0.3em]">
                                             TOP LANGUAGES
                                         </h3>
                                     </div>
-                                    <OrbitingSkills skills={topLanguages} />
+                                    <div className="w-full flex items-center justify-center">
+                                        <OrbitingSkills skills={topLanguages} />
+                                    </div>
                                 </div>
                             </div>
                         )}

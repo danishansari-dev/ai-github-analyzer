@@ -182,7 +182,8 @@ const FloatingParticlesBackground = ({
                 ref={canvasRef}
                 style={{ 
                     display: 'block',
-                    pointerEvents: 'auto' // Re-enable pointer events for mouse hover detection
+                    pointerEvents: 'auto', // Re-enable pointer events for mouse hover detection
+                    cursor: 'crosshair'
                 }}
             />
         </div>

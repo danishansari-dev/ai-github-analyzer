@@ -6,11 +6,11 @@
  * @param {Array} repos - Array of top repo objects from the API
  */
 
-// GitHub-style language colors for badge display
+// GitHub-style language colors for badge display (with brand-aligned accents)
 const LANG_COLORS = {
-    Python: '#3572A5',
-    JavaScript: '#f1e05a',
-    TypeScript: '#3178c6',
+    Python: '#3776AB',
+    JavaScript: '#F7DF1E',
+    TypeScript: '#3178C6',
     Java: '#b07219',
     'C++': '#f34b7d',
     C: '#555555',
@@ -63,17 +63,17 @@ function RepoShowcase({ repos }) {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="group flex flex-col p-4 rounded-xl bg-[#111111] border border-[#1f1f1f] 
-                                   hover:border-[#2f2f2f] transition-all duration-200"
+                                   hover:border-[#2f2f2f] hover:bg-white/5 transition-all duration-200"
                     >
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors truncate pr-4">
                                 {repo.name}
                             </span>
-                            <div className="flex items-center gap-3 shrink-0">
-                                <span className="text-[10px] font-bold text-yellow-500/80">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] font-bold text-yellow-500/90 bg-white/5 rounded px-1.5 py-0.5">
                                     ★ {repo.stars}
                                 </span>
-                                <span className="text-[10px] font-bold text-gray-500">
+                                <span className="text-[10px] font-bold text-gray-400 bg-white/5 rounded px-1.5 py-0.5">
                                     🔀 {repo.total_commits || 0}
                                 </span>
                             </div>
