@@ -5,6 +5,7 @@ import ProfileCard from '../components/ProfileCard';
 import RoleScoreCard from '../components/RoleScoreCard';
 import RepoShowcase from '../components/RepoShowcase';
 import GitHubStats from '../components/GitHubStats';
+import OrbitingSkills from '../components/OrbitingSkills';
 
 // 90-second timeout so the loading screen never spins forever
 const FETCH_TIMEOUT_MS = 90000;
@@ -151,6 +152,45 @@ function Results() {
     const handlePrint = () => {
         window.print();
     };
+
+    const KNOWN_LANGUAGE_LIKE = new Set([
+        'JavaScript',
+        'TypeScript',
+        'Python',
+        'React',
+        'Vue',
+        'Node.js',
+        'HTML',
+        'CSS',
+        'Tailwind',
+        'Go',
+        'Rust',
+        'Java',
+        'C++',
+        'Docker',
+        'Git',
+        'Jupyter Notebook',
+        'Shell',
+        'Ruby',
+        'PHP',
+        'Swift',
+        'Kotlin',
+        'Dart',
+        'Scala',
+        'R',
+        'SCSS'
+    ]);
+
+    let topLanguages = [];
+    const primaryStack = data?.stack?.primary_stack || [];
+    if (primaryStack && primaryStack.length > 0) {
+        topLanguages = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
+        if (topLanguages.length === 0) {
+            topLanguages = primaryStack.slice(0, 8);
+        } else {
+            topLanguages = topLanguages.slice(0, 8);
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white pb-[60px]">
@@ -355,6 +395,20 @@ function Results() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* TOP LANGUAGES / STACK VISUALIZATION */}
+                        {topLanguages.length > 0 && (
+                            <div className="p-8 rounded-2xl bg-[#111111] border border-[#1f1f1f] print-card overflow-hidden">
+                                <div className="flex flex-col items-center gap-4 w-full">
+                                    <div className="w-full flex items-center justify-between mb-2">
+                                        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">
+                                            TOP LANGUAGES
+                                        </h3>
+                                    </div>
+                                    <OrbitingSkills skills={topLanguages} />
+                                </div>
+                            </div>
+                        )}
 
                         {/* SECOND ROW - 2 COL GRID */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
