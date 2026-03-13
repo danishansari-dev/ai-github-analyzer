@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FloatingParticlesBackground from '../components/FloatingParticlesBackground';
+import { renderCanvas } from '../components/ui/canvas';
 
 // Use production API URL if available, else fallback to empty string (Vite proxy)
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -64,6 +65,11 @@ function Home() {
 
         return () => clearInterval(timer);
     }, [totalAnalyzed, totalVisitors]);
+
+    // Initialize hero canvas trailing-lines effect
+    useEffect(() => {
+        renderCanvas();
+    }, []);
 
     /**
      * Navigates the user to the results page when the form is submitted.
@@ -167,6 +173,10 @@ function Home() {
                             <span>Roast Me</span>
                         </span>
                     </div>
+                    <canvas
+                        className="pointer-events-none absolute inset-0 mx-auto"
+                        id="canvas"
+                    />
                 </div>
             </section>
 
