@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 
 const glowColorMap = {
     blue: { base: 220, spread: 200 },
@@ -26,21 +26,14 @@ function GlowCard({
     const cardRef = useRef(null);
     const innerRef = useRef(null);
 
-    useEffect(() => {
-        const syncPointer = (e) => {
-            const { clientX: x, clientY: y } = e;
-
-            if (cardRef.current) {
-                cardRef.current.style.setProperty('--x', x.toFixed(2));
-                cardRef.current.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
-                cardRef.current.style.setProperty('--y', y.toFixed(2));
-                cardRef.current.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
-            }
-        };
-
-        document.addEventListener('pointermove', syncPointer);
-        return () => document.removeEventListener('pointermove', syncPointer);
-    }, []);
+    const handlePointerMove = (e) => {
+        if (cardRef.current) {
+            cardRef.current.style.setProperty('--x', e.clientX.toFixed(2));
+            cardRef.current.style.setProperty('--xp', (e.clientX / window.innerWidth).toFixed(2));
+            cardRef.current.style.setProperty('--y', e.clientY.toFixed(2));
+            cardRef.current.style.setProperty('--yp', (e.clientY / window.innerHeight).toFixed(2));
+        }
+    };
 
     const { base, spread } = glowColorMap[glowColor] || glowColorMap.blue;
 
@@ -151,6 +144,7 @@ function GlowCard({
             <div
                 ref={cardRef}
                 data-glow
+                onPointerMove={handlePointerMove}
                 style={getInlineStyles()}
                 className={`
           ${getSizeClasses()}
