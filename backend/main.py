@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -43,15 +43,21 @@ def root():
     }
 
 @app.get("/og/{username}", response_class=HTMLResponse)
-async def get_og_tags(username: str):
+async def get_og_tags(username: str, mode: str = Query("normal", description="Analysis mode: 'normal' or 'roast'")):
     """
     Open Graph dynamic endpoint for social sharing.
     Generates an HTML page with meta tags that redirects to the real frontend result page.
     """
     from routers.analyze import cache_service
-    
+
+    is_roast = mode == "roast"
+    redirect_url = f"https://ai-github-analyzer.vercel.app/results/{username}"
+    if is_roast:
+        redirect_url += "?mode=roast"
+
     # Try to fetch cached analysis data (defaulting to normal professional mode)
-    data = cache_service.get(username)
+    cache_key = f"{username}:roast" if is_roast else username
+    data = cache_service.get(cache_key)
     
     # Default fallback values
     name = username
@@ -85,16 +91,16 @@ async def get_og_tags(username: str):
     <meta property="og:title" content="{name}'s GitHub Analysis" />
     <meta property="og:description" content="Top role: {top_role_label} — {score}%. Analyzed by AI GitHub Analyzer" />
     <meta property="og:image" content="https://opengraph.githubassets.com/1/{username}" />
-    <meta property="og:url" content="https://ai-github-analyzer.vercel.app/results/{username}" />
+    <meta property="og:url" content="{redirect_url}" />
     <meta name="twitter:card" content="summary_large_image">
     
     <!-- Redirect users to the actual frontend page -->
-    <meta http-equiv="refresh" content="0; url=https://ai-github-analyzer.vercel.app/results/{username}" />
+    <meta http-equiv="refresh" content="0; url={redirect_url}" />
 </head>
 <body style="background: #0a0a0f; color: white; text-align: center; font-family: sans-serif; padding-top: 50px;">
     <p>Redirecting to analysis...</p>
     <script>
-        window.location.href = "https://ai-github-analyzer.vercel.app/results/{username}";
+        window.location.href = "{redirect_url}";
     </script>
 </body>
 </html>'''
