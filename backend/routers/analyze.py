@@ -118,8 +118,9 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         readme_contact = await asyncio.to_thread(github_svc.get_readme_contact_info, username)
         if readme_contact.get('phone'):
             import re
-            cleaned = re.sub(r'[^+\d]', '', readme_contact['phone'])
-            social_links['phone'] = f"tel:{cleaned}"
+            # Extract digits only for wa.me URL
+            cleaned = re.sub(r'\D', '', readme_contact['phone'])
+            social_links['phone'] = f"https://wa.me/{cleaned}"
             social_links['phone_display'] = readme_contact['phone'].strip()
         
         # Only add readme email if GitHub profile email is missing
