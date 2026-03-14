@@ -5,7 +5,7 @@ import { useState } from 'react';
  * Renders AI-generated resume bullet points grouped by project,
  * each with individual copy buttons and a global "Copy All" action.
  */
-function ResumeBullets({ resume_bullets }) {
+function ResumeBullets({ resume_bullets, onCopy }) {
     // Track which individual bullet was just copied so we can show a checkmark
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [copiedAll, setCopiedAll] = useState(false);
@@ -19,6 +19,7 @@ function ResumeBullets({ resume_bullets }) {
         await navigator.clipboard.writeText(text);
         setCopiedIndex(index);
         setTimeout(() => setCopiedIndex(null), 2000);
+        onCopy?.();
     };
 
     /**
@@ -37,6 +38,7 @@ function ResumeBullets({ resume_bullets }) {
         await navigator.clipboard.writeText(allText);
         setCopiedAll(true);
         setTimeout(() => setCopiedAll(false), 2000);
+        onCopy?.();
     };
 
     return (
