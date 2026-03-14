@@ -30,9 +30,9 @@ const SKILL_COLORS = {
 
 const FALLBACK_COLOR = '#60a5fa'; // blue-400
 
-const INNER_RADIUS = 95;
+const INNER_RADIUS = 130;
 const MID_RADIUS = 155;
-const OUTER_RADIUS = 215;
+const OUTER_RADIUS = 220;
 
 const deviconMap = {
   "JavaScript": "javascript",
@@ -244,9 +244,9 @@ function OrbitingSkills({ skills }) {
     }, [isPaused, total]);
 
     return (
-        <div className="w-full flex items-center justify-center overflow-hidden">
+        <div className="w-full h-full flex items-center justify-center overflow-hidden">
             <div
-                className="relative w-[300px] h-[300px] md:w-[460px] md:h-[460px]"
+                className="relative w-full h-full min-h-[420px] max-w-[520px] mx-auto"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >
@@ -380,7 +380,7 @@ function OrbitingSkills({ skills }) {
                                 )}
 
                                 {isHovered && (
-                                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900/95 rounded text-xs text-white whitespace-nowrap pointer-events-none">
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900/95 rounded text-xs text-white whitespace-nowrap pointer-events-none z-50">
                                         {item.name}
                                     </div>
                                 )}
