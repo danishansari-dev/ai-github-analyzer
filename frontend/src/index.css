@@ -1,3 +1,47 @@
 @import "tailwindcss";
 
 /* You can add custom CSS below, but Tailwind handles most of the resets and utilities! */
+
+@layer layout {
+
+  @layer ring-particles {
+    @supports (background: paint(something)) {
+
+      @layer particles {
+        #welcome {
+          --ring-radius: 100;
+          --ring-thickness: 600;
+          --particle-count: 80;
+          --particle-rows: 25;
+          --particle-size: 2;
+          --particle-color: #60a5fa;
+          --particle-min-alpha: 0.1;
+          --particle-max-alpha: 1.0;
+          --seed: 200;
+          background-image: paint(ring-particles);
+        }
+      }
+
+      @layer animation {
+        @property --animation-tick { syntax: '<number>'; inherits: false; initial-value: 0; }
+        @property --ring-radius { syntax: '<number> | auto'; inherits: false; initial-value: auto; }
+        @keyframes ripple { 0% { --animation-tick: 0; } 100% { --animation-tick: 1; } }
+        @keyframes ring { 0% { --ring-radius: 150; } 100% { --ring-radius: 250; } }
+        #welcome {
+          animation: ripple 6s linear infinite, ring 6s ease-in-out infinite alternate;
+        }
+      }
+
+      @layer follow-mouse {
+        @property --ring-x { syntax: '<number>'; inherits: false; initial-value: 50; }
+        @property --ring-y { syntax: '<number>'; inherits: false; initial-value: 50; }
+        @property --ring-interactive { syntax: '<number>'; inherits: false; initial-value: 0; }
+
+        #welcome {
+          transition: --ring-x 3s ease,
+                      --ring-y 3s ease;
+        }
+      }
+    }
+  }
+}

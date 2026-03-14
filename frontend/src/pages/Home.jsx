@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ConfettiBackground from '../components/ConfettiBackground';
 
 // Use production API URL if available, else fallback to empty string (Vite proxy)
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -77,12 +76,54 @@ function Home() {
         }
     };
 
+    /**
+     * Registers the CSS Houdini PaintWorklet and implements mouse tracking
+     * for the ring particles background effect.
+     */
+    useEffect(() => {
+        // Register the Houdini PaintWorklet
+        if ('paintWorklet' in CSS) {
+            CSS.paintWorklet.addModule(
+                'https://unpkg.com/css-houdini-ringparticles/dist/ringparticles.js'
+            );
+
+            let isInteractive = false;
+            const $welcome = document.querySelector('#welcome');
+            if (!$welcome) return;
+
+            const onPointerMove = (e) => {
+                if (!isInteractive) {
+                    $welcome.classList.add('interactive');
+                    isInteractive = true;
+                }
+                $welcome.style.setProperty('--ring-x', (e.clientX / window.innerWidth) * 100);
+                $welcome.style.setProperty('--ring-y', (e.clientY / window.innerHeight) * 100);
+                $welcome.style.setProperty('--ring-interactive', 1);
+            };
+
+            const onPointerLeave = () => {
+                $welcome.classList.remove('interactive');
+                isInteractive = false;
+                $welcome.style.setProperty('--ring-x', 50);
+                $welcome.style.setProperty('--ring-y', 50);
+                $welcome.style.setProperty('--ring-interactive', 0);
+            };
+
+            $welcome.addEventListener('pointermove', onPointerMove);
+            $welcome.addEventListener('pointerleave', onPointerLeave);
+
+            return () => {
+                $welcome.removeEventListener('pointermove', onPointerMove);
+                $welcome.removeEventListener('pointerleave', onPointerLeave);
+            };
+        }
+    }, []);
+
     return (
         <div className="relative min-h-screen bg-[#0a0a0f] text-white">
             <div className="relative z-10">
                 {/* ===== HERO SECTION — background scoped here so sections below are not covered */}
-                <section className="relative overflow-hidden w-full flex flex-col items-center justify-center text-center min-h-screen px-6 cursor-crosshair">
-                    <ConfettiBackground count={130} />
+                <section id="welcome" className="relative min-h-screen overflow-hidden w-full flex flex-col items-center justify-center text-center px-6 cursor-crosshair">
                     {/* Gradient background orbs for visual depth — purely decorative */}
                     <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
                     <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
@@ -105,13 +146,13 @@ function Home() {
                         <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm font-medium tracking-wide">
                             {totalVisitors > 0 && (
                                 <p className="text-gray-400">
-                                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block mr-1.5" />
+                                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block mr-1.5" />
                                     {displayVisitors.toLocaleString()} developers visited
                                 </p>
                             )}
                             {totalAnalyzed > 0 && (
                                 <p className="text-gray-500">
-                                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block mr-1.5" />
+                                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block mr-1.5" />
                                     {displayAnalyzed.toLocaleString()} profiles analyzed
                                 </p>
                             )}
