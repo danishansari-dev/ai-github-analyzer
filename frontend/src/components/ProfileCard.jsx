@@ -168,7 +168,6 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
                                 : meta.label;
 
                             return (
-                                <a
                                     key={platform}
                                     href={url}
                                     target={platform === 'email' ? '_self' : '_blank'}
