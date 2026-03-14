@@ -16,6 +16,9 @@ const ScoreRing = ({ score }) => {
 
     const { from: scoreFrom, to: scoreTo } = getScoreGradient(score);
     
+    // Generate a unique ID to prevent gradient clashing if multiple rings are rendered
+    const gradientId = useMemo(() => `score-ring-gradient-${Math.random().toString(36).substr(2, 9)}`, [score]);
+    
     // SVG values
     const radius = 82;
     const circumference = 2 * Math.PI * radius; // ~515
@@ -24,7 +27,7 @@ const ScoreRing = ({ score }) => {
         <div className="relative w-44 h-44 flex items-center justify-center">
             <svg className="absolute inset-0 w-full h-full transform -rotate-90">
                 <defs>
-                    <linearGradient id="score-ring-gradient-comp" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor={scoreFrom} />
                         <stop offset="100%" stopColor={scoreTo} />
                     </linearGradient>
@@ -38,7 +41,7 @@ const ScoreRing = ({ score }) => {
                 <circle
                     cx="88" cy="88" r={radius}
                     fill="none"
-                    stroke="url(#score-ring-gradient-comp)"
+                    stroke={`url(#${gradientId})`}
                     strokeWidth="10"
                     strokeLinecap="round"
                     strokeDasharray={circumference}
