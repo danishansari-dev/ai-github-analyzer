@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
 import ProfileCard from '../components/ProfileCard';
-import RoleScoreCard from '../components/RoleScoreCard';
 import RepoShowcase from '../components/RepoShowcase';
 import ResumeBullets from '../components/ResumeBullets';
 import GitHubStats from '../components/GitHubStats';
@@ -358,13 +357,6 @@ function Results() {
                                 </div>
                             </GlowCard>
                         </div>
-
-                        {/* THIRD ROW - FULL WIDTH */}
-                        <GlowCard customSize className="print-card">
-                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
-                                <RoleScoreCard scores={data.role_fit?.scores} reasoning={data.role_fit?.reasoning} />
-                            </div>
-                        </GlowCard>
 
                         {/* Resume bullets section */}
                         {data?.resume_bullets?.length > 0 && (
