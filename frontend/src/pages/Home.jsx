@@ -83,9 +83,13 @@ function Home() {
     useEffect(() => {
         // Register the Houdini PaintWorklet
         if ('paintWorklet' in CSS) {
-            CSS.paintWorklet.addModule(
-                'https://unpkg.com/css-houdini-ringparticles/dist/ringparticles.js'
-            );
+            // Guard to prevent multiple registrations
+            if (!window.hasOwnProperty('ringParticlesRegistered')) {
+                CSS.paintWorklet.addModule(
+                    'https://unpkg.com/css-houdini-ringparticles/dist/ringparticles.js'
+                );
+                window.ringParticlesRegistered = true;
+            }
 
             let isInteractive = false;
             const $welcome = document.querySelector('#welcome');
@@ -160,20 +164,26 @@ function Home() {
                     )}
 
                     {/* Search form */}
-                    <form onSubmit={handleAnalyze} className="mt-10 max-w-xl w-full mx-auto group">
-                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-2 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-300">
+                    <form onSubmit={handleAnalyze} className="mt-10 max-w-xl w-full mx-auto group relative">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-500" />
+                        <div className="relative flex items-center gap-2 bg-[#0d0d12]/80 backdrop-blur-xl rounded-2xl border border-white/10 p-2 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-500 shadow-2xl">
+                            <div className="pl-4 text-gray-400 group-focus-within:text-blue-400 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                                </svg>
+                            </div>
                             <input
                                 id="github-username-input"
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="Enter GitHub username..."
-                                className="bg-transparent flex-1 px-4 py-3 text-base md:text-lg text-white placeholder-gray-500 outline-none"
+                                className="bg-transparent flex-1 px-2 py-3 text-base md:text-lg text-white placeholder-gray-500 outline-none"
                             />
                             <button
                                 id="analyze-button"
                                 type="submit"
-                                className="rounded-xl px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] cursor-pointer whitespace-nowrap active:scale-95"
+                                className="rounded-xl px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base transition-all duration-300 hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] cursor-pointer whitespace-nowrap active:scale-95"
                             >
                                 Analyze →
                             </button>
