@@ -128,8 +128,8 @@ function Home() {
                     <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
                     <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
 
-                    <div className="relative z-10 text-center w-full max-w-3xl mx-auto">
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight text-center bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+                    <div className="relative z-10 text-center w-full max-w-4xl mx-auto">
+                        <h1 className="text-6xl md:text-7xl lg:text-8xl font-black leading-[1.1] text-center bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-transparent tracking-tight">
                             See What Your Code Says
                             <br />
                             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
@@ -160,20 +160,20 @@ function Home() {
                     )}
 
                     {/* Search form */}
-                    <form onSubmit={handleAnalyze} className="mt-8 max-w-lg w-full mx-auto">
-                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 p-1.5">
+                    <form onSubmit={handleAnalyze} className="mt-10 max-w-xl w-full mx-auto group">
+                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-2 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-300">
                             <input
                                 id="github-username-input"
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="Enter GitHub username..."
-                                className="bg-transparent flex-1 px-4 py-2 text-sm md:text-base text-white placeholder-gray-500 outline-none"
+                                className="bg-transparent flex-1 px-4 py-3 text-base md:text-lg text-white placeholder-gray-500 outline-none"
                             />
                             <button
                                 id="analyze-button"
                                 type="submit"
-                                className="rounded-full px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm md:text-base transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 cursor-pointer whitespace-nowrap"
+                                className="rounded-xl px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] cursor-pointer whitespace-nowrap active:scale-95"
                             >
                                 Analyze →
                             </button>
@@ -235,15 +235,15 @@ function Home() {
                         ].map((item) => (
                             <div
                                 key={item.step}
-                                className="group relative p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:-translate-y-1 hover:border-white/20 transition-all duration-300 overflow-hidden"
+                                className="group relative p-10 rounded-[2rem] border border-white/5 bg-[#0f0f15] hover:bg-[#15151e] hover:-translate-y-2 hover:border-white/10 transition-all duration-500 overflow-hidden"
                             >
-                                <span className="text-5xl font-black text-white/5 absolute top-3 right-4 select-none">
-                                    {item.step}
-                                </span>
-                                <span className="text-xs font-mono text-gray-500 mb-4 block relative z-10">{item.step}</span>
-                                <span className="text-4xl block mb-4">{item.icon}</span>
-                                <h3 className="text-xl font-semibold mb-2 text-white">{item.title}</h3>
-                                <p className="text-gray-400 leading-relaxed">{item.desc}</p>
+                                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                                    <span className="text-8xl font-black italic">{item.step}</span>
+                                </div>
+                                <span className="text-xs font-mono tracking-widest text-blue-400 mb-6 block uppercase">{item.step} — Process</span>
+                                <span className="text-5xl block mb-6 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">{item.icon}</span>
+                                <h3 className="text-2xl font-bold mb-3 text-white tracking-tight">{item.title}</h3>
+                                <p className="text-gray-400 leading-relaxed text-sm md:text-base">{item.desc}</p>
                             </div>
                         ))}
                         </div>

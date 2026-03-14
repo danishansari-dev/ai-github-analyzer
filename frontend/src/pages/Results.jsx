@@ -270,26 +270,26 @@ function Results() {
                         </div>
 
                         {/* GitHub Statistics — full width */}
-                        <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 overflow-hidden print-card">
+                        <div className="rounded-[2.5rem] bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 w-full p-10 overflow-hidden print-card hover:border-white/10 transition-all duration-500 shadow-2xl">
                             <GitHubStats username={username} userId={data?.github_user_id ?? data?.user_id ?? ''} />
                         </div>
 
                         {/* Top Repositories — full width below */}
-                        <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 print-card">
+                        <div className="rounded-[2.5rem] bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 w-full p-10 print-card hover:border-white/10 transition-all duration-500 shadow-2xl">
                             <RepoShowcase repos={data.top_repos} />
                         </div>
 
                         {/* Resume bullets section */}
                         {data?.resume_bullets?.length > 0 && (
-                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8 print-card">
-                                    <ResumeBullets
-                                        resume_bullets={data.resume_bullets}
-                                        onCopy={() => {
-                                            setToast('Copied to clipboard!');
-                                            setTimeout(() => setToast(''), 2500);
-                                        }}
-                                    />
-                                </div>
+                            <div className="rounded-[2.5rem] bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 h-full p-10 print-card hover:border-white/10 transition-all duration-500 shadow-2xl">
+                                <ResumeBullets
+                                    resume_bullets={data.resume_bullets}
+                                    onCopy={() => {
+                                        setToast('Copied to clipboard!');
+                                        setTimeout(() => setToast(''), 2500);
+                                    }}
+                                />
+                            </div>
                         )}
 
                     </div>
@@ -298,26 +298,29 @@ function Results() {
 
             {/* STAR GATE OVERLAY */}
             {starRequired && (
-                <div className="fixed inset-0 z-[100] bg-black/98 flex items-center justify-center p-6">
-                    <div className="max-w-md w-full text-center p-12 rounded-[2rem] bg-[#0d0d0d] border border-[#1f1f1f] shadow-2xl">
-                        <div className="text-6xl mb-8 animate-pulse text-yellow-500">⭐</div>
-                        <h2 className="text-3xl font-black text-white mb-4 tracking-tight">One small step...</h2>
-                        <p className="text-gray-500 mb-10 text-lg leading-relaxed font-medium">
-                            Star our repo to unlock this free premium analysis. It helps us keep the servers running!
-                        </p>
-                        <div className="space-y-4">
-                            <button
-                                onClick={handleStarRepo}
-                                className="w-full py-5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg transition-all transform hover:scale-[1.02] active:scale-95"
-                            >
-                                ⭐ Star on GitHub
-                            </button>
-                            <button
-                                onClick={handleAlreadyStarred}
-                                className="w-full py-3 rounded-xl bg-white/5 border border-white/5 text-gray-500 font-bold hover:text-gray-300 transition-all text-xs uppercase tracking-widest"
-                            >
-                                I already starred it
-                            </button>
+                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-6">
+                    <div className="max-w-md w-full text-center p-12 rounded-[3rem] bg-[#0d0d12] border border-white/10 shadow-[0_0_50px_rgba(0,0,0,1)] relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent pointer-events-none" />
+                        <div className="relative z-10">
+                            <div className="text-6xl mb-8 animate-bounce text-yellow-500 bg-yellow-500/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto border border-yellow-500/20">⭐</div>
+                            <h2 className="text-4xl font-black text-white mb-4 tracking-tighter">One small step...</h2>
+                            <p className="text-white/50 mb-10 text-lg leading-relaxed font-medium">
+                                Star our repo to unlock this free premium analysis. It helps us keep the project alive!
+                            </p>
+                            <div className="space-y-4">
+                                <button
+                                    onClick={handleStarRepo}
+                                    className="w-full py-5 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-black font-black text-lg transition-all transform hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(234,179,8,0.2)]"
+                                >
+                                    ⭐ Star on GitHub
+                                </button>
+                                <button
+                                    onClick={handleAlreadyStarred}
+                                    className="w-full py-3 rounded-xl bg-white/5 border border-white/5 text-white/40 font-bold hover:text-white/60 transition-all text-xs uppercase tracking-[0.2em]"
+                                >
+                                    I already starred it
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
