@@ -157,24 +157,26 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
                     <div className="mb-3">
                         <p className="text-xs tracking-widest text-white/40 uppercase mb-2">Socials</p>
                         <div className="flex flex-wrap gap-2">
-                            {Object.entries(socialLinks).map(([platform, url]) => {
+                            {Object.entries(socialLinks).map(([platform, value]) => {
+                                if (!value || platform === 'phone_display') return null;
+                                
+                                const url = typeof value === 'object' ? value.url : value;
                                 const meta = socialIcons[platform] || { label: platform, color: '#60a5fa' };
+                                const displayLabel = platform === 'phone' && typeof value === 'object'
+                                    ? value.display
+                                    : meta.label;
+
                                 return (
                                     <a
                                         key={platform}
                                         href={url}
-                                        target="_blank"
+                                        target={platform === 'email' || platform === 'phone' ? '_self' : '_blank'}
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 cursor-pointer"
                                         style={{ color: meta.color }}
                                     >
                                         <SocialIcon platform={platform} size={12} color={meta.color} />
-                                        <span className="text-white/70">
-                                            {platform === 'phone' 
-                                                ? (socialLinks['phone_display'] || meta.label)
-                                                : meta.label
-                                            }
-                                        </span>
+                                        <span className="text-white/70">{displayLabel}</span>
                                     </a>
                                 );
                             })}
