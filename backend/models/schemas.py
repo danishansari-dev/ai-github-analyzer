@@ -70,6 +70,7 @@ class FullAnalysisResponse(BaseModel):
     # Optional so older cached responses without this field still deserialize
     top_repos: List[TopRepoInfo] = []
     badges: List[str] = []
+    social_links: Dict[str, str] = Field(default_factory=dict)
     analyzed_at: datetime
     github_user_id: Optional[int] = None
 
