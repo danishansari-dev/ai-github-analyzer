@@ -113,7 +113,19 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         # Use g.get_user(username) to get the PyGithub user object required by get_social_links
         github_user_obj = await asyncio.to_thread(github_svc.g.get_user, username)
         social_links = await asyncio.to_thread(github_svc.get_social_links, github_user_obj)
-        print(f"[analyze] Social links fetched: {len(social_links)} found")
+        
+        # 5e. Extract phone and email from public README
+        readme_contact = await asyncio.to_thread(github_svc.get_readme_contact_info, username)
+        if readme_contact.get('phone'):
+            import re
+            social_links['phone'] = f"tel:{re.sub(r'[^+\d]', '', readme_contact['phone'])}"
+            social_links['phone_display'] = readme_contact['phone'].strip()
+        
+        # Only add readme email if GitHub profile email is missing
+        if readme_contact.get('readme_email') and not social_links.get('email'):
+            social_links['email'] = f"mailto:{readme_contact['readme_email']}"
+
+        print(f"[analyze] Social links fetched: {len(social_links)} found (including README contact)")
 
         # 6. Run LLM call — combined analysis in one prompt
         print(f"[analyze] Starting combined LLM analysis...")
