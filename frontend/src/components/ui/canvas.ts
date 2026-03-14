@@ -20,17 +20,16 @@ n.prototype = {
   },
   // @ts-ignore
   update: function (this: any) {
-    return (
-      // @ts-ignore
-      (this.phase += this.frequency),
-      // @ts-ignore
-      (e = this.offset + Math.sin(this.phase) * this.amplitude)
-    );
+    this.phase += this.frequency;
+    const val = this.offset + Math.sin(this.phase) * this.amplitude;
+    // @ts-ignore
+    _hueValue = val;
+    return val;
   },
   // @ts-ignore
   value: function () {
     // @ts-ignore
-    return e;
+    return _hueValue;
   },
 };
 
@@ -174,6 +173,9 @@ function onMousemove(e: any) {
   render();
 }
 
+// @ts-ignore
+let _canvasRafId: number | null = null;
+
 function render() {
   // @ts-ignore
   if (ctx && ctx.running) {
@@ -196,7 +198,7 @@ function render() {
     }
     // @ts-ignore
     ctx.frame++;
-    window.requestAnimationFrame(render);
+    _canvasRafId = window.requestAnimationFrame(render);
   }
 }
 
@@ -210,9 +212,10 @@ function resizeCanvas() {
 }
 
 // @ts-ignore
+let _hueValue = 0;
+// @ts-ignore
 var ctx: any,
   f: any,
-  e = 0,
   pos: any = {},
   // @ts-ignore
   lines: any[] = [],
@@ -232,13 +235,13 @@ function Node(this: any) {
   this.vx = 0;
 }
 
-export const renderCanvas = function () {
+export const renderCanvas = function (): (() => void) | undefined {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
-  if (!canvas) return;
+  if (!canvas) return undefined;
 
   // @ts-ignore
   ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) return undefined;
 
   // @ts-ignore
   ctx.running = true;
@@ -254,18 +257,35 @@ export const renderCanvas = function () {
   document.addEventListener("touchstart", onMousemove);
   document.body.addEventListener("orientationchange", resizeCanvas);
   window.addEventListener("resize", resizeCanvas);
-  window.addEventListener("focus", () => {
+  const handleFocus = () => {
     // @ts-ignore
     if (ctx && !ctx.running) {
       // @ts-ignore
       ctx.running = true;
       render();
     }
-  });
-  window.addEventListener("blur", () => {
+  };
+  const handleBlur = () => {
     // @ts-ignore
     if (ctx) ctx.running = false;
-  });
+  };
+  window.addEventListener("focus", handleFocus);
+  window.addEventListener("blur", handleBlur);
   resizeCanvas();
+
+  return () => {
+    // @ts-ignore
+    if (ctx) ctx.running = false;
+    if (_canvasRafId != null) {
+      cancelAnimationFrame(_canvasRafId);
+      _canvasRafId = null;
+    }
+    document.removeEventListener("mousemove", onMousemove);
+    document.removeEventListener("touchstart", onMousemove);
+    document.body.removeEventListener("orientationchange", resizeCanvas);
+    window.removeEventListener("resize", resizeCanvas);
+    window.removeEventListener("focus", handleFocus);
+    window.removeEventListener("blur", handleBlur);
+  };
 };
 
