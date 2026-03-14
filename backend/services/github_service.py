@@ -195,8 +195,8 @@ class GitHubService:
         for repo in top_3:
             # Fetch and attach readme content
             repo["readme"] = self.get_repo_readme(username, repo["name"])
-            
 
+        return top_3
 
     def get_user_badges(self, username: str) -> list:
         """
