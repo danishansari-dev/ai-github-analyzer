@@ -251,17 +251,22 @@ class GitHubService:
             content = repo.get_contents("README.md")
             readme_text = content.decoded_content.decode('utf-8', errors='ignore')
 
-            # Extract phone numbers - matches formats like:
-            # +91 9876543210, +1-234-567-8900, (123) 456-7890, 9876543210, etc.
-            phone_pattern = r'(?:📞|📱|☎️|Tel|Phone|Contact|ph|mobile|call)?[\s:]*(\+?[\d][\d\s\-().]{7,15}\d)'
-            phones = re.findall(phone_pattern, readme_text, re.IGNORECASE)
-            
-            # Clean and validate - must be 7-15 digits
-            for p in phones:
-                digits_only = re.sub(r'\D', '', p)
-                if 7 <= len(digits_only) <= 15:
-                    contact['phone'] = p.strip()
-                    break  # take first valid one only
+            # Strict phone patterns only - must start with + country code or be 10 digits
+            phone_patterns = [
+                r'\+\d{1,3}[\s\-]?\d{5,10}[\s\-]?\d{0,5}',  # +91 9876543210
+                r'\+\d{1,3}[\s\-]\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}',  # +1 (234) 567-8900
+                r'\b[6-9]\d{9}\b',  # Indian mobile: 10 digits starting 6-9
+            ]
+
+            for pattern in phone_patterns:
+                matches = re.findall(pattern, readme_text)
+                for match in matches:
+                    digits = re.sub(r'\D', '', match)
+                    if 10 <= len(digits) <= 13:  # valid phone length
+                        contact['phone'] = match.strip()
+                        break
+                if contact.get('phone'):
+                    break
 
             # Also extract email if not already in GitHub profile
             email_pattern = r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}'
