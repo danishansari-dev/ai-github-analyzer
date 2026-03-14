@@ -180,7 +180,6 @@ function OrbitingSkills({ skills }) {
     const frameRef = useRef(null);
     const containerRef = useRef(null);
     
-    // Initialize with a reasonable default to prevent 0-radius on first frame
     const [dimensions, setDimensions] = useState({ width: 460, height: 460 });
     const [dimensionsReady, setDimensionsReady] = useState(false);
 
@@ -188,7 +187,6 @@ function OrbitingSkills({ skills }) {
         const el = containerRef.current;
         if (!el) return;
 
-        // Use ResizeObserver to get accurate dimensions after paint
         const observer = new ResizeObserver(([entry]) => {
             const { width, height } = entry.contentRect;
             if (width > 0 && height > 0) {
@@ -201,80 +199,92 @@ function OrbitingSkills({ skills }) {
         return () => observer.disconnect();
     }, []);
 
-    // Derive radii relative to container size
     const minSide = Math.min(dimensions.width, dimensions.height);
-    const INNER_RADIUS = minSide * 0.22;
-    const OUTER_RADIUS = minSide * 0.38;
+    
+    // TIER RADII - Optimized for 3 layers without crowding
+    const RADII = {
+        INNER: minSide * 0.18,
+        MID: minSide * 0.30,
+        OUTER: minSide * 0.42
+    };
 
-    const innerSkills = (skills || []).slice(0, 4);
-    const outerSkills = (skills || []).slice(4, 12);
-    const total = innerSkills.length + outerSkills.length;
+    // TIER COUNTS: 3 + 7 + 10 = 20 skills total
+    const innerSkills = (skills || []).slice(0, 3);
+    const midSkills = (skills || []).slice(3, 10);
+    const outerSkills = (skills || []).slice(10, 20);
+    const total = innerSkills.length + midSkills.length + outerSkills.length;
 
-    // Only compute items if we have dimensions (prevents stacking at 0,0)
     const items = useMemo(() => {
         if (!dimensionsReady) return [];
         
-        return [...innerSkills.map((name, index) => {
-            const radius = INNER_RADIUS;
-            const speed = 0.4;
-            const phaseStep = (2 * Math.PI) / (innerSkills.length || 1);
-            const phaseShift = phaseStep * index;
-            const size = Math.max(38, minSide * 0.08); // responsive size
-            const config = getSkillConfig(name);
-            const slug = deviconMap[name] || null;
+        const allItems = [];
+        
+        // Inner Orbit (3 items, fastest)
+        innerSkills.forEach((name, index) => {
+            allItems.push({
+                name,
+                radius: RADII.INNER,
+                speed: 0.5,
+                phaseShift: (index / (innerSkills.length || 1)) * Math.PI * 2,
+                size: Math.max(34, minSide * 0.07),
+                ...getSkillConfig(name),
+                slug: deviconMap[name] || null,
+                index: allItems.length
+            });
+        });
 
-            return {
-                name, radius, speed, phaseShift, size, slug, ...config, index
-            };
-        }), ...outerSkills.map((name, index) => {
-            const radius = OUTER_RADIUS;
-            const speed = 0.18;
-            const phaseStep = (2 * Math.PI) / (outerSkills.length || 1);
-            const phaseShift = phaseStep * index;
-            const size = Math.max(44, minSide * 0.1); // responsive size
-            const config = getSkillConfig(name);
-            const slug = deviconMap[name] || null;
+        // Middle Orbit (7 items, moderate)
+        midSkills.forEach((name, index) => {
+            allItems.push({
+                name,
+                radius: RADII.MID,
+                speed: -0.25, // Counter-rotation for visual complexity
+                phaseShift: (index / (midSkills.length || 1)) * Math.PI * 2,
+                size: Math.max(38, minSide * 0.085),
+                ...getSkillConfig(name),
+                slug: deviconMap[name] || null,
+                index: allItems.length
+            });
+        });
 
-            return {
-                name, radius, speed, phaseShift, size, slug, ...config, index: index + innerSkills.length
-            };
-        })];
-    }, [innerSkills, outerSkills, INNER_RADIUS, OUTER_RADIUS, dimensionsReady, minSide]);
+        // Outer Orbit (10 items, slowest)
+        outerSkills.forEach((name, index) => {
+            allItems.push({
+                name,
+                radius: RADII.OUTER,
+                speed: 0.15,
+                phaseShift: (index / (outerSkills.length || 1)) * Math.PI * 2,
+                size: Math.max(42, minSide * 0.1),
+                ...getSkillConfig(name),
+                slug: deviconMap[name] || null,
+                index: allItems.length
+            });
+        });
+
+        return allItems;
+    }, [innerSkills, midSkills, outerSkills, RADII.INNER, RADII.MID, RADII.OUTER, dimensionsReady, minSide]);
 
     useEffect(() => {
         if (isPaused || total === 0 || !dimensionsReady) {
-            if (frameRef.current) {
-                cancelAnimationFrame(frameRef.current);
-                frameRef.current = null;
-            }
+            cancelAnimationFrame(frameRef.current);
             lastTimeRef.current = null;
             return;
         }
 
         const step = (timestamp) => {
-            if (lastTimeRef.current == null) {
-                lastTimeRef.current = timestamp;
-            }
+            if (lastTimeRef.current == null) lastTimeRef.current = timestamp;
             const delta = (timestamp - lastTimeRef.current) / 1000;
             lastTimeRef.current = timestamp;
-
             setTime(prev => prev + delta);
             frameRef.current = requestAnimationFrame(step);
         };
 
         frameRef.current = requestAnimationFrame(step);
-
-        return () => {
-            if (frameRef.current) {
-                cancelAnimationFrame(frameRef.current);
-                frameRef.current = null;
-            }
-            lastTimeRef.current = null;
-        };
+        return () => cancelAnimationFrame(frameRef.current);
     }, [isPaused, total, dimensionsReady]);
 
     return (
-        <div className="w-full h-full min-h-[420px] flex items-center justify-center relative overflow-hidden">
+        <div className="w-full h-full min-h-[460px] flex items-center justify-center relative overflow-hidden">
             <div
                 ref={containerRef}
                 className="relative w-full h-full flex items-center justify-center"
@@ -286,61 +296,38 @@ function OrbitingSkills({ skills }) {
                     <div className="absolute inset-0 pointer-events-none">
                         {innerSkills.length > 0 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.1)] bg-radial-gradient(circle, transparent 70%, rgba(6,182,212,0.03) 100%)"
-                                style={{
-                                    width: INNER_RADIUS * 2,
-                                    height: INNER_RADIUS * 2,
-                                }}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-500/10 shadow-[0_0_30px_rgba(6,182,212,0.05)]"
+                                style={{ width: RADII.INNER * 2, height: RADII.INNER * 2 }}
                             />
                         )}
-
+                        {midSkills.length > 0 && (
+                            <div
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple-500/10 shadow-[0_0_40px_rgba(168,85,247,0.05)]"
+                                style={{ width: RADII.MID * 2, height: RADII.MID * 2 }}
+                            />
+                        )}
                         {outerSkills.length > 0 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/20 shadow-[0_0_50px_rgba(236,72,153,0.1)] bg-radial-gradient(circle, transparent 70%, rgba(236,72,153,0.03) 100%)"
-                                style={{
-                                    width: OUTER_RADIUS * 2,
-                                    height: OUTER_RADIUS * 2,
-                                }}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/10 shadow-[0_0_50px_rgba(236,72,153,0.05)]"
+                                style={{ width: RADII.OUTER * 2, height: RADII.OUTER * 2 }}
                             />
                         )}
                     </div>
                 )}
 
-                {/* Central node - guaranteed center */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center relative shadow-2xl border border-white/10 z-20">
-                    <div className="absolute inset-0 rounded-full blur-xl animate-pulse bg-cyan-500/20" />
-                    <svg width="32" height="32" viewBox="0 0 36 36" className="relative z-10">
+                {/* Central node */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-slate-900 to-black flex items-center justify-center relative shadow-[0_0_50px_rgba(6,182,212,0.15)] border border-white/10 z-20">
+                    <div className="absolute inset-0 rounded-full blur-2xl animate-pulse bg-cyan-500/10" />
+                    <svg width="28" height="28" viewBox="0 0 36 36" className="relative z-10 transition-transform duration-500 group-hover:scale-110">
                         <defs>
                             <linearGradient id="orbiting-skills-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stopColor="#22d3ee" />
                                 <stop offset="100%" stopColor="#a855f7" />
                             </linearGradient>
                         </defs>
-                        <polyline
-                            points="10,11 6,18 10,25"
-                            fill="none"
-                            stroke="url(#orbiting-skills-gradient)"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                        <line
-                            x1="15"
-                            y1="11"
-                            x2="21"
-                            y2="25"
-                            stroke="url(#orbiting-skills-gradient)"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                        />
-                        <polyline
-                            points="26,11 30,18 26,25"
-                            fill="none"
-                            stroke="url(#orbiting-skills-gradient)"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
+                        <polyline points="10,11 6,18 10,25" fill="none" stroke="url(#orbiting-skills-gradient)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="15" y1="11" x2="21" y2="25" stroke="url(#orbiting-skills-gradient)" strokeWidth="2.5" strokeLinecap="round" />
+                        <polyline points="26,11 30,18 26,25" fill="none" stroke="url(#orbiting-skills-gradient)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </div>
 
@@ -349,52 +336,37 @@ function OrbitingSkills({ skills }) {
                     const angle = time * item.speed + item.phaseShift;
                     const x = Math.cos(angle) * item.radius;
                     const y = Math.sin(angle) * item.radius;
-
                     const isHovered = hoveredIndex === item.index;
-                    const scale = isHovered ? 1.25 : 1;
                     
-                    // Centered positioning formula
-                    const transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`;
-                    const boxShadow = isHovered
-                        ? `0 0 30px ${item.color}50, 0 0 60px ${item.color}25`
-                        : '0 4px 12px rgba(0,0,0,0.5)';
-
                     return (
                         <button
                             type="button"
                             key={item.index}
-                            aria-label={item.name}
-                            className="absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-900/90 backdrop-blur-md cursor-pointer transition-all duration-300 border border-white/10 z-10"
+                            className="absolute top-1/2 left-1/2 transition-shadow duration-300 z-10 group/item"
                             style={{
                                 width: `${item.size}px`,
                                 height: `${item.size}px`,
-                                transform,
-                                boxShadow,
-                                borderColor: isHovered ? `${item.color}80` : 'rgba(255,255,255,0.1)'
+                                transform: `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${isHovered ? 1.3 : 1})`,
+                                boxShadow: isHovered ? `0 0 40px ${item.color}66` : '0 4px 12px rgba(0,0,0,0.5)',
                             }}
                             onMouseEnter={() => setHoveredIndex(item.index)}
                             onMouseLeave={() => setHoveredIndex(null)}
                         >
-                            <div className="flex items-center justify-center relative w-full h-full p-2">
+                            <div 
+                                className="w-full h-full rounded-full bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-2 border border-white/5 transition-colors group-hover/item:border-white/20"
+                                style={{ borderColor: isHovered ? `${item.color}80` : undefined }}
+                            >
                                 {item.slug ? (
                                     <DevIcon slug={item.slug} name={item.name} color={item.color} />
                                 ) : (
                                     <div className="flex flex-col items-center justify-center">
-                                        <div
-                                            className="w-2 h-2 rounded-full mb-1"
-                                            style={{ backgroundColor: item.color }}
-                                        />
-                                        <span
-                                            className="text-[8px] font-black uppercase tracking-tighter"
-                                            style={{ color: item.textColor }}
-                                        >
-                                            {item.abbrev}
-                                        </span>
+                                        <div className="w-1.5 h-1.5 rounded-full mb-0.5" style={{ backgroundColor: item.color }} />
+                                        <span className="text-[7px] font-black tracking-tighter" style={{ color: item.textColor }}>{item.abbrev}</span>
                                     </div>
                                 )}
-
+                                
                                 {isHovered && (
-                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-950/95 border border-white/10 rounded-lg text-xs font-bold text-white whitespace-nowrap pointer-events-none z-50 shadow-2xl animate-in fade-in zoom-in duration-200">
+                                    <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-black/90 border border-white/10 rounded-md text-[10px] font-bold text-white whitespace-nowrap pointer-events-none z-50 shadow-2xl animate-in fade-in zoom-in duration-150">
                                         {item.name}
                                     </div>
                                 )}
@@ -408,4 +380,5 @@ function OrbitingSkills({ skills }) {
 }
 
 export default OrbitingSkills;
+
 
