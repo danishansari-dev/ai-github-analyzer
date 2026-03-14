@@ -344,19 +344,19 @@ function Results() {
                             )}
                         </div>
 
-                        {/* SECOND ROW - 2 COL GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <GlowCard customSize className="print-card">
-                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
-                                    <RepoShowcase repos={data.top_repos} />
-                                </div>
-                            </GlowCard>
-                            <GlowCard customSize className="print-card">
-                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8 overflow-hidden">
-                                    <GitHubStats username={username} />
-                                </div>
-                            </GlowCard>
-                        </div>
+                        {/* GitHub Statistics — full width */}
+                        <GlowCard customSize className="print-card w-full">
+                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 overflow-hidden">
+                                <GitHubStats username={username} />
+                            </div>
+                        </GlowCard>
+
+                        {/* Top Repositories — full width below */}
+                        <GlowCard customSize className="print-card w-full">
+                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8">
+                                <RepoShowcase repos={data.top_repos} />
+                            </div>
+                        </GlowCard>
 
                         {/* Resume bullets section */}
                         {data?.resume_bullets?.length > 0 && (

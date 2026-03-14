@@ -35,12 +35,12 @@ const GitHubStats = ({ username }) => {
     const baseUrl = 'https://github-profile-summary-cards.vercel.app/api/cards';
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col w-full">
             <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                 📊 GitHub Statistics
             </h2>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 w-full">
                 {/* Full Width OSS Insight */}
                 {userId && (
                     <div className="w-full">
@@ -63,8 +63,8 @@ const GitHubStats = ({ username }) => {
                     />
                 </div>
 
-                {/* 2x2 Sub-grid */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Summary cards — wider grid for full-width layout */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
                     <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
                         <img
                             src={`${baseUrl}/repos-per-language?username=${username}&theme=github_dark`}

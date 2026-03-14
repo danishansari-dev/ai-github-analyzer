@@ -44,7 +44,7 @@ function RepoShowcase({ repos }) {
     if (!repos || repos.length === 0) return null;
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col w-full">
             <div className="mb-6">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">
                     🗂️ Top Repositories
