@@ -135,18 +135,18 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         
         # Normalization: Groq often returns scores flattened instead of nested.
         # We ensure they are nested under the 'scores' key to match the Pydantic schema.
+        _meta_keys = {"top_role", "top_role_label", "reasoning", "top_3_roles", "summary"}
         if role_fit and "scores" not in role_fit:
+            scores = {
+                k: v for k, v in role_fit.items()
+                if k not in _meta_keys and isinstance(v, (int, float))
+            }
             role_fit = {
-                "scores": {
-                    "ml_engineer": role_fit.get("ml_engineer", 0),
-                    "backend_developer": role_fit.get("backend_developer", 0),
-                    "frontend_developer": role_fit.get("frontend_developer", 0),
-                    "mlops_engineer": role_fit.get("mlops_engineer", 0),
-                    "full_stack_developer": role_fit.get("full_stack_developer", 0),
-                },
+                "scores": scores,
                 "top_role": role_fit.get("top_role", ""),
                 "top_role_label": role_fit.get("top_role_label", ""),
-                "reasoning": role_fit.get("reasoning", "")
+                "reasoning": role_fit.get("reasoning", ""),
+                "top_3_roles": role_fit.get("top_3_roles", []),
             }
 
         analysis_response = FullAnalysisResponse(
