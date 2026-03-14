@@ -233,7 +233,12 @@ function Results() {
                             {/* LEFT COLUMN — Profile Card, full height */}
                             <div className="lg:w-[40%]">
                                 <SpotlightCard glowColor="blue" className="p-6 h-full print-card">
-                                    <ProfileCard data={data} username={username} isRoast={isRoast} />
+                                    <ProfileCard
+                                        data={data}
+                                        username={username}
+                                        isRoast={isRoast}
+                                        socialLinks={data?.social_links || {}}
+                                    />
                                 </SpotlightCard>
                             </div>
 
@@ -253,9 +258,22 @@ function Results() {
                                         {/* Bio Summary - fills the empty right space */}
                                         <div className="flex-1 flex flex-col justify-center gap-3">
                                             <p className="text-xs tracking-widest text-white/40 uppercase">Summary</p>
-                                            <p className="text-sm text-white/60 italic leading-relaxed text-center sm:text-left">
-                                                {data.summary}
-                                            </p>
+                                            {(() => {
+                                                const summaryText = data?.summary
+                                                    || data?.stack?.profile_summary
+                                                    || data?.ai_summary
+                                                    || data?.stack?.summary
+                                                    || data?.analysis?.summary
+                                                    || '';
+
+                                                return summaryText ? (
+                                                    <p className="text-sm text-white/65 italic leading-relaxed text-center sm:text-left">
+                                                        {summaryText}
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-sm text-white/25 italic">No summary available.</p>
+                                                );
+                                            })()}
                                         </div>
 
                                     </div>
