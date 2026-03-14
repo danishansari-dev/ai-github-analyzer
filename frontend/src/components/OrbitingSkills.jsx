@@ -250,8 +250,11 @@ function OrbitingSkills({ skills }) {
                     const sizeClass = item.isInner ? 'w-12 h-12' : 'w-13 h-13';
 
                     return (
-                        <div
+                        <button
+                            type="button"
                             key={item.index}
+                            aria-label={item.name}
+                            tabIndex={0}
                             className={`absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-800/90 backdrop-blur-sm cursor-pointer transition-all duration-200 shadow-lg border border-white/10 ${sizeClass}`}
                             style={{
                                 transform,
@@ -297,7 +300,7 @@ function OrbitingSkills({ skills }) {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </button>
                     );
                 })}
             </div>

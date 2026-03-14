@@ -17,7 +17,7 @@ const GitHubStats = ({ username }) => {
             .then(data => {
                 if (data.id) setUserId(data.id);
             })
-            .catch(err => console.error("Error fetching GitHub user_id:", err));
+            .catch(() => {});
     }, [username]);
 
     if (!username) return null;
@@ -32,7 +32,7 @@ const GitHubStats = ({ username }) => {
 
     const theme = 'custom'; // Custom theme to match our #111111 background
     const themeColor = '111111';
-    const baseUrl = 'http://github-profile-summary-cards.vercel.app/api/cards';
+    const baseUrl = 'https://github-profile-summary-cards.vercel.app/api/cards';
 
     return (
         <div className="flex flex-col h-full">
