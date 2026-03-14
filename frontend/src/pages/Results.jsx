@@ -280,8 +280,7 @@ function Results() {
                                 </SpotlightCard>
 
                                 {/* BOTTOM ROW — Orbiting Skills / Tech Stack */}
-                                <SpotlightCard glowColor="cyan" className="p-6 flex flex-col items-center justify-center flex-1 bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] shadow-2xl print-card">
-                                    <p className="text-xs tracking-widest text-white/40 uppercase mb-4">TECH STACK</p>
+                                <SpotlightCard glowColor="cyan" className="p-2 flex items-center justify-center w-full flex-1 overflow-hidden bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] shadow-2xl print-card">
                                     <OrbitingSkills skills={techStack} />
                                 </SpotlightCard>
 
