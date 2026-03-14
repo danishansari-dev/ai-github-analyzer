@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
 import ProfileCard from '../components/ProfileCard';
 import RoleScoreCard from '../components/RoleScoreCard';
 import RepoShowcase from '../components/RepoShowcase';
+import ResumeBullets from '../components/ResumeBullets';
 import GitHubStats from '../components/GitHubStats';
 import OrbitingSkills from '../components/OrbitingSkills';
 import { GlowCard } from '../components/SpotlightCard';
@@ -24,9 +25,13 @@ function Results() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
-    const username = rawUsername.split('#')[0].trim();
+    const username = rawUsername ? String(rawUsername).split('#')[0].trim() : '';
     const mode = searchParams.get('mode') || 'normal';
     const isRoast = mode === 'roast';
+
+    useEffect(() => {
+        if (!username) navigate('/');
+    }, [username, navigate]);
 
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -37,6 +42,10 @@ function Results() {
     const [startTrigger, setStartTrigger] = useState(0);
 
     useEffect(() => {
+        if (!username) {
+            setLoading(false);
+            return;
+        }
         if (!localStorage.getItem('has_starred')) {
             setStarRequired(true);
             setLoading(false);
@@ -143,24 +152,21 @@ function Results() {
         'SCSS'
     ]);
 
-    let topLanguages = [];
-    const primaryStack = data?.stack?.primary_stack || [];
-    if (primaryStack && primaryStack.length > 0) {
-        // Prefer known language-like items but always try to surface at least 3 entries overall (up to 8 max)
+    const topLanguages = useMemo(() => {
+        const primaryStack = data?.stack?.primary_stack || [];
+        if (!primaryStack || primaryStack.length === 0) return [];
         const languageLike = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
-        if (languageLike.length === 0) {
-            topLanguages = primaryStack.slice(0, 8);
-        } else {
-            topLanguages = languageLike.slice(0, 8);
-            if (topLanguages.length < 3) {
-                for (const item of primaryStack) {
-                    if (topLanguages.includes(item)) continue;
-                    topLanguages.push(item);
-                    if (topLanguages.length >= Math.min(8, Math.max(3, primaryStack.length))) break;
-                }
+        if (languageLike.length === 0) return primaryStack.slice(0, 8);
+        let result = languageLike.slice(0, 8);
+        if (result.length < 3) {
+            for (const item of primaryStack) {
+                if (result.includes(item)) continue;
+                result.push(item);
+                if (result.length >= Math.min(8, Math.max(3, primaryStack.length))) break;
             }
         }
-    }
+        return result;
+    }, [data?.stack?.primary_stack]);
 
     const [scoreProgress, setScoreProgress] = useState(0);
 
@@ -173,20 +179,16 @@ function Results() {
         return () => clearTimeout(timeout);
     }, [data]);
 
-    const getScoreGradient = (value) => {
-        if (value <= 40) {
-            return { from: '#fb923c', to: '#ef4444' }; // orange -> red
-        }
-        if (value <= 69) {
-            return { from: '#facc15', to: '#fb923c' }; // yellow -> orange
-        }
-        if (value <= 84) {
-            return { from: '#facc15', to: '#22c55e' }; // yellow -> green
-        }
-        return { from: '#22c55e', to: '#22d3ee' }; // green -> cyan
-    };
+    const getScoreGradient = useMemo(() => (value) => {
+        if (value <= 40) return { from: '#fb923c', to: '#ef4444' };
+        if (value <= 69) return { from: '#facc15', to: '#fb923c' };
+        if (value <= 84) return { from: '#facc15', to: '#22c55e' };
+        return { from: '#22c55e', to: '#22d3ee' };
+    }, []);
 
     const { from: scoreFrom, to: scoreTo } = getScoreGradient(scoreProgress);
+
+    if (!username) return null;
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white pb-[60px] scroll-smooth transition-opacity duration-300">
@@ -260,7 +262,7 @@ function Results() {
                                     style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '0ms' }}
                                 >
                                     <div className="p-8">
-                                        <ProfileCard data={data} username={username} />
+                                        <ProfileCard data={data} username={username} isRoast={isRoast} />
                                     </div>
                                 </div>
                             </GlowCard>
@@ -363,6 +365,21 @@ function Results() {
                                 <RoleScoreCard scores={data.role_fit?.scores} reasoning={data.role_fit?.reasoning} />
                             </div>
                         </GlowCard>
+
+                        {/* Resume bullets section */}
+                        {data?.resume_bullets?.length > 0 && (
+                            <GlowCard customSize className="print-card">
+                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
+                                    <ResumeBullets
+                                        resume_bullets={data.resume_bullets}
+                                        onCopy={() => {
+                                            setToast('Copied to clipboard!');
+                                            setTimeout(() => setToast(''), 2500);
+                                        }}
+                                    />
+                                </div>
+                            </GlowCard>
+                        )}
 
                     </div>
                 )}
