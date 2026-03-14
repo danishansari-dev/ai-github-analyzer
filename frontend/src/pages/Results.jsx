@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
 import ProfileCard from '../components/ProfileCard';
@@ -35,18 +35,6 @@ function Results() {
     const [toast, setToast] = useState(null);
     const [starRequired, setStarRequired] = useState(false);
     const [startTrigger, setStartTrigger] = useState(0);
-    const shareDropdownRef = useRef(null);
-    const [isShareOpen, setIsShareOpen] = useState(false);
-
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (shareDropdownRef.current && !shareDropdownRef.current.contains(e.target)) {
-                setIsShareOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
 
     useEffect(() => {
         if (!localStorage.getItem('has_starred')) {
@@ -125,33 +113,6 @@ function Results() {
         localStorage.setItem('has_starred', 'true');
         setStarRequired(false);
         setStartTrigger(prev => prev + 1);
-    };
-
-    const handleCopyLink = async () => {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            setToast('Link copied!');
-            setTimeout(() => setToast(null), 3000);
-        } catch (err) {
-            console.error('Failed to copy link:', err);
-        }
-    };
-
-    const topRoleLabel = data?.role_fit?.top_role_label || 'Developer';
-    const score = data?.overall_score || 0;
-    const stackItems = data?.stack?.primary_stack?.slice(0, 3).join(', ') || '';
-
-    const shareUrl = apiUrl ? `${apiUrl}/og/${username}` : window.location.href;
-    const encodedURL = encodeURIComponent(shareUrl);
-
-    const linkedInText = `I just analyzed my GitHub profile with AI!\n🎯 Top Role: ${topRoleLabel} — ${score}%\n🛠️ Stack: ${stackItems}\nCheck yours 👇`;
-    const encodedLinkedInText = encodeURIComponent(linkedInText);
-
-    const whatsappText = `Check out my GitHub analysis! 🚀\nTop Role: ${topRoleLabel} — ${score}%\nStack: ${stackItems}\nAnalyze yours: ${shareUrl}`;
-    const encodedWhatsAppText = encodeURIComponent(whatsappText);
-
-    const handlePrint = () => {
-        window.print();
     };
 
     const KNOWN_LANGUAGE_LIKE = new Set([
@@ -251,68 +212,6 @@ function Results() {
                 }
                 `}
             </style>
-
-            {/* TOP BAR */}
-            <header className="sticky top-0 z-40 backdrop-blur-md bg-gray-900/80 border-b border-white/10 no-print">
-                <div className="w-full px-6 py-4 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-medium"
-                    >
-                        <span>←</span> Back
-                    </button>
-
-                    <h1 className="text-sm font-medium text-gray-500">
-                        Analysis for <span className="text-white font-bold tracking-tight">@{username}</span>
-                    </h1>
-
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={handlePrint}
-                            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white/10 transition-all flex items-center gap-2"
-                        >
-                            📄 Full Report
-                        </button>
-
-                        <div className="relative" ref={shareDropdownRef}>
-                            <button
-                                onClick={() => setIsShareOpen(!isShareOpen)}
-                                className="px-4 py-2 rounded-lg bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-500 transition-all flex items-center gap-2"
-                            >
-                                Share <span className="text-[10px]">▼</span>
-                            </button>
-
-                            {isShareOpen && (
-                                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-[#111111] border border-[#1f1f1f] shadow-2xl overflow-hidden z-50">
-                                    <div className="py-1">
-                                        <button
-                                            onClick={handleCopyLink}
-                                            className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 flex items-center gap-3"
-                                        >
-                                            🔗 Copy Link
-                                        </button>
-                                        <div className="h-px bg-[#1f1f1f] mx-2"></div>
-                                        <a
-                                            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedURL}&summary=${encodedLinkedInText}`}
-                                            target="_blank" rel="noopener noreferrer"
-                                            className="block px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 flex items-center gap-3"
-                                        >
-                                            💼 Share on LinkedIn
-                                        </a>
-                                        <a
-                                            href={`https://wa.me/?text=${encodedWhatsAppText}`}
-                                            target="_blank" rel="noopener noreferrer"
-                                            className="block px-4 py-3 text-xs font-bold text-gray-300 hover:bg-white/5 flex items-center gap-3"
-                                        >
-                                            📱 Share on WhatsApp
-                                        </a>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </header>
 
             <main className="w-full max-w-[1400px] mx-auto px-6 py-10 space-y-10">
                 {loading && !error && <LoadingScreen />}
