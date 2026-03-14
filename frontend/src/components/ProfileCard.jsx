@@ -35,22 +35,15 @@ function ProfileCard({ data, username, isRoast = false }) {
 
     const formatBadgeName = (slug) => slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-    const getTechClasses = (tech) => {
-        switch (tech) {
-            case 'JavaScript':
-                return 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300';
-            case 'Python':
-                return 'bg-blue-500/10 border-blue-500/30 text-blue-300';
-            case 'TypeScript':
-                return 'bg-blue-600/10 border-blue-600/30 text-blue-400';
-            case 'React':
-                return 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300';
-            case 'Node.js':
-                return 'bg-green-500/10 border-green-500/30 text-green-300';
-            default:
-                return 'bg-white/5 border-white/15 text-white/70';
-        }
+    const techColors = {
+        JavaScript: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
+        Python: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
+        TypeScript: 'bg-blue-600/10 border-blue-600/30 text-blue-400',
+        React: 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300',
+        Vite: 'bg-purple-500/10 border-purple-500/30 text-purple-300',
+        'Node.js': 'bg-green-500/10 border-green-500/30 text-green-300',
     };
+    const getTechClasses = (tech) => techColors[tech] || 'bg-white/5 border-white/10 text-white/60';
 
     return (
         <div className="flex flex-col h-full">
@@ -164,14 +157,14 @@ function ProfileCard({ data, username, isRoast = false }) {
 
                 {/* Strengths / Roast */}
                 {stack?.strengths?.length > 0 && (
-                    <div className="mt-3">
-                        <p className="text-xs tracking-widest text-white/40 uppercase mb-2">
+                    <div className="mt-4">
+                        <p className="text-[10px] tracking-widest text-white/40 uppercase mb-2">
                             {isRoast ? '🔥 Roast' : '✦ Strengths'}
                         </p>
-                        <ul className="space-y-1">
+                        <ul className="space-y-2">
                             {stack.strengths.map((s, i) => (
-                                <li key={i} className="text-xs text-white/60 flex gap-2">
-                                    <span className="text-green-400 mt-0.5">+</span>
+                                <li key={i} className="flex gap-2 text-xs text-white/65 leading-relaxed">
+                                    <span className="text-green-400 mt-0.5 shrink-0">+</span>
                                     <span>{s}</span>
                                 </li>
                             ))}
@@ -183,19 +176,19 @@ function ProfileCard({ data, username, isRoast = false }) {
                 {badges && badges.length > 0 && (
                     <div>
                         <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">ACHIEVEMENTS</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {badges.map((slug) => (
-                                <div key={slug} className="relative group">
+                        <div className="flex flex-wrap gap-2 mt-3">
+                            {badges.map((slug) => {
+                                const badgeName = formatBadgeName(slug);
+                                return (
                                     <img
+                                        key={slug}
                                         src={`https://github.githubassets.com/images/modules/profile/achievements/${slug}-default.png`}
-                                        alt={formatBadgeName(slug)}
-                                        className="w-12 h-12 rounded-full border border-white/10 hover:border-white/30 hover:scale-110 transition-all duration-200 cursor-pointer"
+                                        alt={badgeName}
+                                        title={badgeName}
+                                        className="w-12 h-12 rounded-full border border-white/10 hover:border-white/30 hover:scale-110 transition-all duration-200 cursor-pointer overflow-hidden"
                                     />
-                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-gray-900 text-gray-200 text-[10px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 z-10">
-                                        {formatBadgeName(slug)}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}

@@ -214,7 +214,21 @@ function Results() {
                 `}
             </style>
 
-            <main className="w-full max-w-[1400px] mx-auto px-6 py-10 space-y-10">
+            {/* Sticky top bar */}
+            {!loading && data && (
+                <header className="sticky top-0 z-50 backdrop-blur-md bg-gray-950/80 border-b border-white/10 px-6 py-3 flex items-center justify-between no-print">
+                    <span className="text-sm font-medium text-white/90 truncate">@{username}</span>
+                    <button
+                        type="button"
+                        onClick={() => navigate('/')}
+                        className="text-xs text-white/60 hover:text-white transition-colors"
+                    >
+                        ← New search
+                    </button>
+                </header>
+            )}
+
+            <main className="w-full max-w-6xl mx-auto px-4 py-6 space-y-6">
                 {loading && !error && <LoadingScreen />}
 
                 {error && (
@@ -246,36 +260,29 @@ function Results() {
                 )}
 
                 {!loading && data && (
-                    <div className="space-y-10 animate-in fade-in duration-500">
+                    <div className="space-y-6 animate-in fade-in duration-500">
 
-                        {/* HERO ROW - 3 COL GRID ON DESKTOP (Profile, Score, Top Languages) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_1.3fr] gap-4 items-stretch">
-
-                            {/* LEFT: Profile */}
-                            <GlowCard
-                                customSize
-                                className="print-card"
-                            >
+                        {/* HERO ROW — 3 equal-height cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+                            {/* Profile */}
+                            <GlowCard customSize className="print-card p-6 flex flex-col h-full">
                                 <div
-                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col h-full"
+                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col justify-between h-full"
                                     style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '0ms' }}
                                 >
-                                    <div className="p-8">
+                                    <div className="p-8 flex flex-col justify-between h-full">
                                         <ProfileCard data={data} username={username} isRoast={isRoast} />
                                     </div>
                                 </div>
                             </GlowCard>
 
-                            {/* CENTER LEFT: Score & Summary */}
-                            <GlowCard
-                                customSize
-                                className="print-card"
-                            >
+                            {/* Score & Summary */}
+                            <GlowCard customSize className="print-card p-6 flex flex-col h-full">
                                 <div
-                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center overflow-hidden"
+                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center h-full text-center overflow-hidden"
                                     style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '120ms' }}
                                 >
-                                    <div className="flex flex-col items-center justify-center flex-grow py-8 px-8">
+                                    <div className="flex flex-col items-center justify-center flex-grow py-8 px-8 h-full">
                                     <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-2">
                                         Profile Score
                                     </p>
@@ -325,42 +332,36 @@ function Results() {
                                 </div>
                             </GlowCard>
 
-                            {/* RIGHT: Top Languages Orbit */}
+                            {/* Top Languages Orbit */}
                             {topLanguages.length > 0 && (
-                                <GlowCard
-                                    customSize
-                                    className="print-card"
-                                >
+                                <GlowCard customSize className="print-card p-6 flex flex-col h-full">
                                     <div
-                                        className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center min-h-[460px] min-w-0 overflow-visible p-8"
+                                        className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center h-full min-w-0 overflow-visible p-8"
                                         style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '240ms' }}
                                     >
-                                        <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
-                                            Top Languages
-                                        </p>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="text-lg">🪐</span>
+                                            <h2 className="text-[10px] tracking-widest text-white/40 uppercase font-semibold">Top Languages</h2>
+                                        </div>
                                         <OrbitingSkills skills={topLanguages} />
                                     </div>
                                 </GlowCard>
                             )}
                         </div>
 
-                        {/* SECOND ROW - 2 COL GRID */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <GlowCard customSize className="print-card">
+                        {/* Second row — Top Repos + GitHub Stats */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <GlowCard customSize glowColor="purple" className="print-card">
                                 <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
-                                    <RepoShowcase repos={data.top_repos} />
+                                    <RepoShowcase repos={data.top_repos} username={username} />
                                 </div>
                             </GlowCard>
-                            <GlowCard customSize className="print-card">
-                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8 overflow-hidden">
-                                    <GitHubStats username={username} />
-                                </div>
-                            </GlowCard>
+                            <GitHubStats username={username} />
                         </div>
 
                         {/* Resume bullets section */}
                         {data?.resume_bullets?.length > 0 && (
-                            <GlowCard customSize className="print-card">
+                            <GlowCard customSize glowColor="green" className="print-card">
                                 <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
                                     <ResumeBullets
                                         resume_bullets={data.resume_bullets}
