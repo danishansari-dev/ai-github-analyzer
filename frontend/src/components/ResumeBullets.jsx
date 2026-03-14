@@ -42,18 +42,13 @@ function ResumeBullets({ resume_bullets, onCopy }) {
     };
 
     return (
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02]">
-            {/* Section header */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2 mb-0">
-                    <span className="text-lg">📝</span>
-                    <h2 className="text-[10px] tracking-widest text-white/40 uppercase font-semibold">
-                        Your Resume Bullets — Ready to Copy
-                    </h2>
-                </div>
+        <div className="p-8 rounded-2xl border border-white/5 bg-white/[0.02]">
+            {/* Header row with title and copy-all button */}
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-white">📝 Your Resume Bullets — Ready to Copy</h2>
                 <button
                     onClick={copyAll}
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-xs px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer text-white/80 hover:text-white"
+                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
                 >
                     {copiedAll ? '✓ Copied!' : 'Copy All Bullets'}
                 </button>
@@ -63,19 +58,19 @@ function ResumeBullets({ resume_bullets, onCopy }) {
             <div className="space-y-8">
                 {(resume_bullets || []).map((project, projectIndex) => (
                     <div key={projectIndex}>
-                        <h3 className="font-mono text-sm text-blue-400 flex items-center gap-2 mb-2">
+                        {/* Project name links to the GitHub repo */}
+                        <h3 className="text-lg font-semibold text-white mb-4">
                             <a
                                 href={project.repo_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:underline"
+                                className="hover:text-blue-400 transition-colors"
                             >
-                                {project.project_name}
+                                {project.project_name} <span className="text-gray-600">↗</span>
                             </a>
-                            <span className="text-gray-500">↗</span>
                         </h3>
 
-                        <ul className="space-y-0">
+                        <ul className="space-y-3">
                             {(project.bullets || []).map((bullet, bulletIndex) => {
                                 const uniqueKey = `${projectIndex}-${bulletIndex}`;
                                 const isCopied = copiedIndex === uniqueKey;
@@ -83,13 +78,12 @@ function ResumeBullets({ resume_bullets, onCopy }) {
                                 return (
                                     <li
                                         key={bulletIndex}
-                                        className="group flex items-start gap-2 text-xs text-white/65 leading-relaxed py-1 border-b border-white/5 last:border-0"
+                                        className="group flex items-start gap-3 pl-4 border-l-2 border-blue-500/30 hover:border-blue-500 transition-colors"
                                     >
-                                        <span className="text-green-400/60 shrink-0">▸</span>
-                                        <span className="flex-1">{bullet}</span>
+                                        <span className="flex-1 text-gray-300 leading-relaxed">{bullet}</span>
                                         <button
                                             onClick={() => copyBullet(bullet, uniqueKey)}
-                                            className="shrink-0 px-2 py-1 rounded text-xs text-gray-500 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer"
+                                            className="shrink-0 mt-0.5 px-2 py-1 rounded text-xs text-gray-500 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer"
                                         >
                                             {isCopied ? '✓' : 'Copy'}
                                         </button>
