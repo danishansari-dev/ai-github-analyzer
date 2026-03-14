@@ -1,4 +1,4 @@
-import { Github, Twitter, Linkedin, Youtube, Globe, Mail, Twitch, Instagram } from 'lucide-react';
+import { Github, Twitter, Linkedin, Youtube, Globe, Mail, Twitch, Instagram, Phone } from 'lucide-react';
 
 function SocialIcon({ platform, size, color }) {
     const props = { size, color };
@@ -10,6 +10,7 @@ function SocialIcon({ platform, size, color }) {
         case 'twitch': return <Twitch {...props} />;
         case 'instagram': return <Instagram {...props} />;
         case 'email': return <Mail {...props} />;
+        case 'phone': return <Phone {...props} />;
         default: return <Globe {...props} />;
     }
 }
@@ -47,6 +48,7 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
         instagram: { icon: 'instagram', label: 'Instagram', color: '#E4405F' },
         website: { icon: 'globe', label: 'Website', color: '#60a5fa' },
         email: { icon: 'mail', label: 'Email', color: '#34d399' },
+        phone: { icon: 'phone', label: 'Phone', color: '#34d399' },
         mastodon: { icon: 'globe', label: 'Mastodon', color: '#6364FF' },
     };
 
@@ -167,7 +169,12 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
                                         style={{ color: meta.color }}
                                     >
                                         <SocialIcon platform={platform} size={12} color={meta.color} />
-                                        <span className="text-white/70">{meta.label}</span>
+                                        <span className="text-white/70">
+                                            {platform === 'phone' 
+                                                ? (socialLinks['phone_display'] || meta.label)
+                                                : meta.label
+                                            }
+                                        </span>
                                     </a>
                                 );
                             })}
