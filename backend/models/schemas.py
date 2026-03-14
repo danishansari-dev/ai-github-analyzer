@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field
 
 # These schemas exist to enforce a strict type contract between our backend 
@@ -70,7 +70,7 @@ class FullAnalysisResponse(BaseModel):
     # Optional so older cached responses without this field still deserialize
     top_repos: List[TopRepoInfo] = []
     badges: List[str] = []
-    social_links: Dict[str, str] = Field(default_factory=dict)
+    social_links: Dict[str, Union[str, dict]] = Field(default_factory=dict)
     analyzed_at: datetime
     github_user_id: Optional[int] = None
 
