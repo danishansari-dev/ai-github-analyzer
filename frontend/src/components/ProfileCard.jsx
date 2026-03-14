@@ -3,7 +3,7 @@
  * domains, strengths, and gaps. This is the first card users see
  * after analysis completes, so it needs to feel immediately informative.
  */
-function ProfileCard({ data, username }) {
+function ProfileCard({ data, username, isRoast = false }) {
     if (!data) return null;
 
     const {
@@ -161,6 +161,23 @@ function ProfileCard({ data, username }) {
                         ))}
                     </div>
                 </div>
+
+                {/* Strengths / Roast */}
+                {stack?.strengths?.length > 0 && (
+                    <div className="mt-3">
+                        <p className="text-xs tracking-widest text-white/40 uppercase mb-2">
+                            {isRoast ? '🔥 Roast' : '✦ Strengths'}
+                        </p>
+                        <ul className="space-y-1">
+                            {stack.strengths.map((s, i) => (
+                                <li key={i} className="text-xs text-white/60 flex gap-2">
+                                    <span className="text-green-400 mt-0.5">+</span>
+                                    <span>{s}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {/* Badges */}
                 {badges && badges.length > 0 && (
