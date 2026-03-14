@@ -68,8 +68,7 @@ function GlowCard({
             backgroundPosition: '50% 50%',
             backgroundAttachment: 'fixed',
             border: 'var(--border-size) solid var(--backup-border)',
-            position: 'relative',
-            touchAction: 'none'
+            position: 'relative'
         };
 
         if (width !== undefined) {
