@@ -30,9 +30,7 @@ const SKILL_COLORS = {
 
 const FALLBACK_COLOR = '#60a5fa'; // blue-400
 
-const INNER_RADIUS = 130;
-const MID_RADIUS = 155;
-const OUTER_RADIUS = 220;
+
 
 const deviconMap = {
   "JavaScript": "javascript",
@@ -180,6 +178,26 @@ function OrbitingSkills({ skills }) {
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const lastTimeRef = useRef(null);
     const frameRef = useRef(null);
+    const containerRef = useRef(null);
+    const [dimensions, setDimensions] = useState({ width: 460, height: 460 });
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+            setDimensions({ width, height });
+        });
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const minSide = Math.min(dimensions.width, dimensions.height);
+    const INNER_RADIUS = minSide * 0.22;
+    const MID_RADIUS = minSide * 0.30; // added for consistent mapping although items only use INNER/OUTER
+    const OUTER_RADIUS = minSide * 0.38;
 
     const innerSkills = (skills || []).slice(0, 4);
     const outerSkills = (skills || []).slice(4, 12);
@@ -246,35 +264,30 @@ function OrbitingSkills({ skills }) {
     return (
         <div className="w-full h-full flex items-center justify-center overflow-hidden">
             <div
-                className="relative w-full h-full min-h-[420px] max-w-[520px] mx-auto"
+                ref={containerRef}
+                className="relative w-full h-full min-h-[420px] max-w-[520px] mx-auto flex items-center justify-center"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >
                 {/* Orbit rings */}
                 {total > 0 && (
-                    <div>
+                    <div className="absolute inset-0 pointer-events-none">
                         {innerSkills.length > 0 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)] bg-radial-gradient(circle, transparent 70%, rgba(6,182,212,0.05) 100%)"
                                 style={{
                                     width: INNER_RADIUS * 2,
                                     height: INNER_RADIUS * 2,
-                                    border: '1px solid rgba(34,211,238,0.3)',
-                                    boxShadow: '0 0 30px rgba(6,182,212,0.15)',
-                                    background: 'radial-gradient(circle, transparent 70%, rgba(6,182,212,0.05) 100%)'
                                 }}
                             />
                         )}
 
                         {outerSkills.length > 0 && (
                             <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/30 shadow-[0_0_50px_rgba(236,72,153,0.15)] bg-radial-gradient(circle, transparent 70%, rgba(236,72,153,0.05) 100%)"
                                 style={{
                                     width: OUTER_RADIUS * 2,
                                     height: OUTER_RADIUS * 2,
-                                    border: '1px solid rgba(236,72,153,0.3)',
-                                    boxShadow: '0 0 50px rgba(236,72,153,0.15)',
-                                    background: 'radial-gradient(circle, transparent 70%, rgba(236,72,153,0.05) 100%)'
                                 }}
                             />
                         )}
@@ -282,7 +295,7 @@ function OrbitingSkills({ skills }) {
                 )}
 
                 {/* Central node */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-18 h-18 md:w-[72px] md:h-[72px] rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-18 h-18 md:w-[72px] md:h-[72px] rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center relative overflow-hidden z-20">
                     <div className="absolute inset-0 rounded-full blur-xl animate-pulse bg-cyan-500/30" />
                     <svg width="36" height="36" viewBox="0 0 36 36">
                         <defs>
@@ -325,19 +338,12 @@ function OrbitingSkills({ skills }) {
                     const x = Math.cos(angle) * item.radius;
                     const y = Math.sin(angle) * item.radius;
 
-                    const baseTranslate = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
                     const isHovered = hoveredIndex === item.index;
-
-                    const transform = isHovered
-                        ? `${baseTranslate} scale(1.2)`
-                        : baseTranslate;
-
+                    const scale = isHovered ? 1.2 : 1;
+                    const transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`;
                     const boxShadow = isHovered
                         ? `0 0 30px ${item.color}40, 0 0 60px ${item.color}20`
                         : 'none';
-
-                    const sizePx = item.radius === INNER_RADIUS ? 44 : (item.radius === MID_RADIUS ? 48 : 52);
-                    const sizeClass = `w-[${sizePx}px] h-[${sizePx}px]`;
 
                     return (
                         <button
@@ -345,10 +351,10 @@ function OrbitingSkills({ skills }) {
                             key={item.index}
                             aria-label={item.name}
                             tabIndex={0}
-                            className="absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-800/90 backdrop-blur-sm cursor-pointer transition-all duration-200 shadow-lg border border-white/10"
+                            className="absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-800/90 backdrop-blur-sm cursor-pointer transition-all duration-200 shadow-lg border border-white/10 z-10"
                             style={{
-                                width: `${sizePx}px`,
-                                height: `${sizePx}px`,
+                                width: `${item.size}px`,
+                                height: `${item.size}px`,
                                 transform,
                                 boxShadow
                             }}
