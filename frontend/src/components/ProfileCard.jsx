@@ -158,7 +158,7 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
                         <p className="text-xs tracking-widest text-white/40 uppercase mb-2">Socials</p>
                         <div className="flex flex-wrap gap-2">
                     {Object.entries(socialLinks)
-                        .filter(([platform]) => platform !== 'phone_display') // skip raw display key
+                        .filter(([platform]) => platform !== 'phone_display' && platform !== 'github') // skip raw display key and redundant github link
                         .map(([platform, url]) => {
                             const meta = socialIcons[platform] || { label: platform, color: '#60a5fa' };
                             
@@ -168,10 +168,9 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
                                 : meta.label;
 
                             return (
-                                <a
                                     key={platform}
                                     href={url}
-                                    target={platform === 'email' || platform === 'phone' ? '_self' : '_blank'}
+                                    target={platform === 'email' ? '_self' : '_blank'}
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all text-[11px] font-medium group"
                                 >
