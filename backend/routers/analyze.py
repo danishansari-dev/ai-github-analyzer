@@ -109,6 +109,12 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         readme_skills = await asyncio.to_thread(github_svc.get_readme_skills, username)
         print(f"[analyze] README skills fetched: {len(readme_skills)} found")
 
+        # 5d. Fetch social links from GitHub profile
+        # Use g.get_user(username) to get the PyGithub user object required by get_social_links
+        github_user_obj = await asyncio.to_thread(github_svc.g.get_user, username)
+        social_links = await asyncio.to_thread(github_svc.get_social_links, github_user_obj)
+        print(f"[analyze] Social links fetched: {len(social_links)} found")
+
         # 6. Run LLM call — combined analysis in one prompt
         print(f"[analyze] Starting combined LLM analysis...")
 
@@ -180,6 +186,7 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             resume_bullets=llm_result.get('resume_bullets'),
             top_repos=top_repos,
             badges=badges,
+            social_links=social_links,
             analyzed_at=datetime.now(timezone.utc),
             github_user_id=profile.get('github_user_id')
         )
