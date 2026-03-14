@@ -156,12 +156,16 @@ function Results() {
     const techStack = useMemo(() => {
         const primaryStack = data?.stack?.primary_stack || [];
         if (!primaryStack || primaryStack.length === 0) return [];
+        
+        // Prioritize language-like ones but keep others to reach up to 20
         const languageLike = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
-        if (languageLike.length === 0) return primaryStack;
-        let result = [...languageLike];
+        
+        const result = [...languageLike];
         for (const item of primaryStack) {
-            if (result.includes(item)) continue;
-            result.push(item);
+            if (result.length >= 20) break;
+            if (!result.includes(item)) {
+                result.push(item);
+            }
         }
         return result;
     }, [data?.stack?.primary_stack]);
