@@ -113,197 +113,301 @@ const deviconMap = {
   "Groovy": "groovy",
 };
 
-/**
- * Returns the Devicon slug for a given skill name
- * @param {string} name - Skill name
- * @returns {string|null} Devicon slug or null
- */
-function getDeviconSlug(name) {
-  return deviconMap[name] || null;
-}
-
-/**
- * Renders a single skill badge at specific coordinates
- * @param {string} skill - Skill name 
- * @param {number} x - Absolute x position within container
- * @param {number} y - Absolute y position within container
- * @param {number} size - Square size of the badge
- */
-function SkillBadge({ skill, x, y, size }) {
-  const [hovered, setHovered] = useState(false);
-  const slug = getDeviconSlug(skill);
-
-  return (
-    <div
-      className="absolute z-10 flex flex-col items-center"
-      style={{
-        width: size,
-        height: size,
-        top: y - size / 2,
-        left: x - size / 2,
-        transition: 'transform 0.2s',
-        transform: hovered ? 'scale(1.3)' : 'scale(1)',
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div
-        className="w-full h-full rounded-full bg-gray-800/90 backdrop-blur-sm border border-white/10 flex items-center justify-center p-1.5 cursor-pointer"
-        style={{ boxShadow: hovered ? `0 0 20px rgba(96,165,250,0.4)` : undefined }}
-      >
-        {slug ? (
-          <DevIcon slug={slug} name={skill} />
-        ) : (
-          <span className="text-[9px] font-bold text-white/80 text-center leading-tight">
-            {skill.slice(0, 3).toUpperCase()}
-          </span>
-        )}
-      </div>
-      {hovered && (
-        <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 border border-white/10 rounded text-[10px] text-white whitespace-nowrap z-50">
-          {skill}
-        </div>
-      )}
-    </div>
+function DevIcon({ slug, name, color }) {
+  const [src, setSrc] = useState(
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`
   );
-}
+  const [fallbackIndex, setFallbackIndex] = useState(0);
 
-function OrbitingSkills({ skills = [] }) {
-  const [time, setTime] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [size, setSize] = useState(460); // default non-zero fallback
-  const containerRef = useRef(null);
-  const rafRef = useRef(null);
+  const fallbacks = [
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`,
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain.svg`,
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original-wordmark.svg`,
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain-wordmark.svg`,
+  ];
 
-  // Robust size measurement
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const measure = () => {
-      const rect = el.getBoundingClientRect();
-      const s = Math.min(rect.width, rect.height);
-      // Only set size if we have a real measurement (avoids 0-size initialization collapse)
-      if (s > 100) setSize(s);
-    };
-
-    measure();
-    // Fire measurements at various stages of layout settling
-    const t1 = setTimeout(measure, 50);
-    const t2 = setTimeout(measure, 200);
-
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      ro.disconnect();
-    };
-  }, []);
-
-  // Animation loop logic
-  useEffect(() => {
-    if (isPaused) {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      return;
+  const handleError = () => {
+    const next = fallbackIndex + 1;
+    if (next < fallbacks.length) {
+      setFallbackIndex(next);
+      setSrc(fallbacks[next]);
+    } else {
+      setSrc(null); // triggers text fallback
     }
-    
-    let last = performance.now();
-    const loop = (now) => {
-      setTime(t => t + (now - last) / 1000);
-      last = now;
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    rafRef.current = requestAnimationFrame(loop);
-    
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [isPaused]);
+  };
 
-  const capped = (skills || []).slice(0, 12);
-  const innerSkills = capped.slice(0, 4);
-  const outerSkills = capped.slice(4);
-
-  // Proportional orbit math
-  const INNER_R = size * 0.24;
-  const OUTER_R = size * 0.40;
-  const CENTER = size / 2;
-
-  if (!skills || skills.length === 0) return null;
+  if (!src) {
+    return (
+      <div
+        className="w-full h-full rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+        style={{ backgroundColor: color + '33', border: `1px solid ${color}66` }}
+      >
+        {name.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full mx-auto"
-      style={{ 
-        height: `${size}px`, 
-        minHeight: '400px',
-        maxWidth: '520px' 
-      }}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      {/* Orbit paths visualization */}
-      {[{ r: INNER_R, color: 'cyan' }, { r: OUTER_R, color: 'purple' }].map(({ r, color }) => (
-        <div
-          key={r}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            width: r * 2,
-            height: r * 2,
-            top: CENTER - r,
-            left: CENTER - r,
-            border: `1px solid ${color === 'cyan' ? 'rgba(6,182,212,0.3)' : 'rgba(147,51,234,0.3)'}`,
-            boxShadow: color === 'cyan'
-              ? '0 0 30px rgba(6,182,212,0.15), inset 0 0 30px rgba(6,182,212,0.08)'
-              : '0 0 40px rgba(147,51,234,0.2), inset 0 0 40px rgba(147,51,234,0.1)',
-          }}
-        />
-      ))}
-
-      {/* Central code branding node */}
-      <div
-        className="absolute rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center z-10"
-        style={{
-          width: 64,
-          height: 64,
-          top: CENTER - 32,
-          left: CENTER - 32,
-          boxShadow: '0 0 20px rgba(96,165,250,0.4)',
-        }}
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#cg)" strokeWidth="2" strokeLinecap="round">
-          <defs>
-            <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#06B6D4" />
-              <stop offset="100%" stopColor="#9333EA" />
-            </linearGradient>
-          </defs>
-          <polyline points="16 18 22 12 16 6" />
-          <polyline points="8 6 2 12 8 18" />
-        </svg>
-      </div>
-
-      {/* Dynamic Inner orbit badges */}
-      {innerSkills.map((skill, i) => {
-        const angle = time * 0.5 + (i * (2 * Math.PI / innerSkills.length));
-        const x = CENTER + Math.cos(angle) * INNER_R;
-        const y = CENTER + Math.sin(angle) * INNER_R;
-        return <SkillBadge key={skill} skill={skill} x={x} y={y} size={46} />;
-      })}
-
-      {/* Dynamic Outer orbit badges */}
-      {outerSkills.map((skill, i) => {
-        const angle = -time * 0.35 + (i * (2 * Math.PI / outerSkills.length));
-        const x = CENTER + Math.cos(angle) * OUTER_R;
-        const y = CENTER + Math.sin(angle) * OUTER_R;
-        return <SkillBadge key={skill} skill={skill} x={x} y={y} size={50} />;
-      })}
-    </div>
+    <img
+      src={src}
+      alt={name}
+      className="w-full h-full object-contain p-1"
+      onError={handleError}
+    />
   );
 }
+
+function getSkillConfig(name) {
+    const base = SKILL_COLORS[name] || {};
+    const color = base.color || FALLBACK_COLOR;
+    const textColor = base.textColor || '#FFFFFF';
+    let abbrev = base.abbrev;
+
+    if (!abbrev && typeof name === 'string' && name.length >= 2) {
+        abbrev = name.slice(0, 2).toUpperCase();
+    } else if (!abbrev) {
+        abbrev = '??';
+    }
+
+    return { color, textColor, abbrev };
+}
+
+function OrbitingSkills({ skills }) {
+    const [time, setTime] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+    const lastTimeRef = useRef(null);
+    const frameRef = useRef(null);
+    const containerRef = useRef(null);
+    
+    // Initialize with a reasonable default to prevent 0-radius on first frame
+    const [dimensions, setDimensions] = useState({ width: 460, height: 460 });
+    const [dimensionsReady, setDimensionsReady] = useState(false);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        // Use ResizeObserver to get accurate dimensions after paint
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+            if (width > 0 && height > 0) {
+                setDimensions({ width, height });
+                setDimensionsReady(true);
+            }
+        });
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    // Derive radii relative to container size
+    const minSide = Math.min(dimensions.width, dimensions.height);
+    const INNER_RADIUS = minSide * 0.22;
+    const OUTER_RADIUS = minSide * 0.38;
+
+    const innerSkills = (skills || []).slice(0, 4);
+    const outerSkills = (skills || []).slice(4, 12);
+    const total = innerSkills.length + outerSkills.length;
+
+    // Only compute items if we have dimensions (prevents stacking at 0,0)
+    const items = useMemo(() => {
+        if (!dimensionsReady) return [];
+        
+        return [...innerSkills.map((name, index) => {
+            const radius = INNER_RADIUS;
+            const speed = 0.4;
+            const phaseStep = (2 * Math.PI) / (innerSkills.length || 1);
+            const phaseShift = phaseStep * index;
+            const size = Math.max(38, minSide * 0.08); // responsive size
+            const config = getSkillConfig(name);
+            const slug = deviconMap[name] || null;
+
+            return {
+                name, radius, speed, phaseShift, size, slug, ...config, index
+            };
+        }), ...outerSkills.map((name, index) => {
+            const radius = OUTER_RADIUS;
+            const speed = 0.18;
+            const phaseStep = (2 * Math.PI) / (outerSkills.length || 1);
+            const phaseShift = phaseStep * index;
+            const size = Math.max(44, minSide * 0.1); // responsive size
+            const config = getSkillConfig(name);
+            const slug = deviconMap[name] || null;
+
+            return {
+                name, radius, speed, phaseShift, size, slug, ...config, index: index + innerSkills.length
+            };
+        })];
+    }, [innerSkills, outerSkills, INNER_RADIUS, OUTER_RADIUS, dimensionsReady, minSide]);
+
+    useEffect(() => {
+        if (isPaused || total === 0 || !dimensionsReady) {
+            if (frameRef.current) {
+                cancelAnimationFrame(frameRef.current);
+                frameRef.current = null;
+            }
+            lastTimeRef.current = null;
+            return;
+        }
+
+        const step = (timestamp) => {
+            if (lastTimeRef.current == null) {
+                lastTimeRef.current = timestamp;
+            }
+            const delta = (timestamp - lastTimeRef.current) / 1000;
+            lastTimeRef.current = timestamp;
+
+            setTime(prev => prev + delta);
+            frameRef.current = requestAnimationFrame(step);
+        };
+
+        frameRef.current = requestAnimationFrame(step);
+
+        return () => {
+            if (frameRef.current) {
+                cancelAnimationFrame(frameRef.current);
+                frameRef.current = null;
+            }
+            lastTimeRef.current = null;
+        };
+    }, [isPaused, total, dimensionsReady]);
+
+    return (
+        <div className="w-full h-full min-h-[420px] flex items-center justify-center relative overflow-hidden">
+            <div
+                ref={containerRef}
+                className="relative w-full h-full flex items-center justify-center"
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+            >
+                {/* Orbit rings */}
+                {dimensionsReady && total > 0 && (
+                    <div className="absolute inset-0 pointer-events-none">
+                        {innerSkills.length > 0 && (
+                            <div
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.1)] bg-radial-gradient(circle, transparent 70%, rgba(6,182,212,0.03) 100%)"
+                                style={{
+                                    width: INNER_RADIUS * 2,
+                                    height: INNER_RADIUS * 2,
+                                }}
+                            />
+                        )}
+
+                        {outerSkills.length > 0 && (
+                            <div
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-pink-500/20 shadow-[0_0_50px_rgba(236,72,153,0.1)] bg-radial-gradient(circle, transparent 70%, rgba(236,72,153,0.03) 100%)"
+                                style={{
+                                    width: OUTER_RADIUS * 2,
+                                    height: OUTER_RADIUS * 2,
+                                }}
+                            />
+                        )}
+                    </div>
+                )}
+
+                {/* Central node - guaranteed center */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center relative shadow-2xl border border-white/10 z-20">
+                    <div className="absolute inset-0 rounded-full blur-xl animate-pulse bg-cyan-500/20" />
+                    <svg width="32" height="32" viewBox="0 0 36 36" className="relative z-10">
+                        <defs>
+                            <linearGradient id="orbiting-skills-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#22d3ee" />
+                                <stop offset="100%" stopColor="#a855f7" />
+                            </linearGradient>
+                        </defs>
+                        <polyline
+                            points="10,11 6,18 10,25"
+                            fill="none"
+                            stroke="url(#orbiting-skills-gradient)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                        <line
+                            x1="15"
+                            y1="11"
+                            x2="21"
+                            y2="25"
+                            stroke="url(#orbiting-skills-gradient)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                        />
+                        <polyline
+                            points="26,11 30,18 26,25"
+                            fill="none"
+                            stroke="url(#orbiting-skills-gradient)"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </div>
+
+                {/* Skill badges */}
+                {items.map(item => {
+                    const angle = time * item.speed + item.phaseShift;
+                    const x = Math.cos(angle) * item.radius;
+                    const y = Math.sin(angle) * item.radius;
+
+                    const isHovered = hoveredIndex === item.index;
+                    const scale = isHovered ? 1.25 : 1;
+                    
+                    // Centered positioning formula
+                    const transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`;
+                    const boxShadow = isHovered
+                        ? `0 0 30px ${item.color}50, 0 0 60px ${item.color}25`
+                        : '0 4px 12px rgba(0,0,0,0.5)';
+
+                    return (
+                        <button
+                            type="button"
+                            key={item.index}
+                            aria-label={item.name}
+                            className="absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-900/90 backdrop-blur-md cursor-pointer transition-all duration-300 border border-white/10 z-10"
+                            style={{
+                                width: `${item.size}px`,
+                                height: `${item.size}px`,
+                                transform,
+                                boxShadow,
+                                borderColor: isHovered ? `${item.color}80` : 'rgba(255,255,255,0.1)'
+                            }}
+                            onMouseEnter={() => setHoveredIndex(item.index)}
+                            onMouseLeave={() => setHoveredIndex(null)}
+                        >
+                            <div className="flex items-center justify-center relative w-full h-full p-2">
+                                {item.slug ? (
+                                    <DevIcon slug={item.slug} name={item.name} color={item.color} />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center">
+                                        <div
+                                            className="w-2 h-2 rounded-full mb-1"
+                                            style={{ backgroundColor: item.color }}
+                                        />
+                                        <span
+                                            className="text-[8px] font-black uppercase tracking-tighter"
+                                            style={{ color: item.textColor }}
+                                        >
+                                            {item.abbrev}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {isHovered && (
+                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-950/95 border border-white/10 rounded-lg text-xs font-bold text-white whitespace-nowrap pointer-events-none z-50 shadow-2xl animate-in fade-in zoom-in duration-200">
+                                        {item.name}
+                                    </div>
+                                )}
+                            </div>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+export default OrbitingSkills;
 
 export default OrbitingSkills;
 
