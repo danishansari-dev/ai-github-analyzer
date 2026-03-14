@@ -16,10 +16,10 @@ class RepoInfo(BaseModel):
 class StackAnalysis(BaseModel):
     developer_type: Optional[str] = None
     profile_tag: Optional[str] = None
-    primary_stack: List[str]
-    domains: List[str]
-    profile_summary: str
-    strengths: List[str]
+    primary_stack: List[str] = Field(default_factory=list)
+    domains: List[str] = Field(default_factory=list)
+    profile_summary: str = ""
+    strengths: List[str] = Field(default_factory=list)
 
 
 class RoleScores(BaseModel):
@@ -30,11 +30,11 @@ class RoleScores(BaseModel):
 
 class RoleFitAnalysis(BaseModel):
     # This stores the scores for all possible roles.
-    scores: Dict[str, int]
-    top_role: str
-    top_role_label: str
+    scores: Dict[str, int] = Field(default_factory=dict)
+    top_role: str = ""
+    top_role_label: str = ""
     top_3_roles: List[Dict[str, Any]] = Field(default_factory=list)
-    reasoning: str
+    reasoning: str = ""
 
 
 
