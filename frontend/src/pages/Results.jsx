@@ -240,30 +240,31 @@ function Results() {
                             {/* RIGHT COLUMN — split into 2 rows */}
                             <div className="lg:w-[60%] flex flex-col gap-4">
 
-                                {/* TOP ROW — Orbiting Skills / Tech Stack */}
-                                <SpotlightCard glowColor="cyan" className="p-6 flex flex-col items-center justify-center flex-1 print-card">
-                                    <p className="text-xs tracking-widest text-white/40 uppercase mb-4">TECH STACK</p>
-                                    <OrbitingSkills skills={techStack} />
-                                </SpotlightCard>
-
-                                {/* BOTTOM ROW — Score Ring + Bio side by side */}
-                                <SpotlightCard glowColor="purple" className="p-6 print-card" style={{ minHeight: '140px' }}>
+                                {/* TOP ROW — Score Ring + Bio Summary side by side */}
+                                <SpotlightCard glowColor="purple" className="p-6 bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] shadow-2xl print-card">
                                     <div className="flex flex-col sm:flex-row items-center gap-6 h-full">
 
-                                        {/* Score Ring */}
-                                        <div className="flex flex-col items-center gap-2 shrink-0">
-                                            <p className="text-xs tracking-widest text-white/40 uppercase">Profile Score</p>
+                                        {/* Score Ring - left side */}
+                                        <div className="flex flex-col items-center gap-2 shrink-0" style={{ minWidth: '180px' }}>
+                                            <p className="text-xs tracking-widest text-white/40 uppercase mb-1">Profile Score</p>
                                             <ScoreRing score={data.overall_score} />
                                         </div>
 
-                                        {/* Bio text */}
-                                        <div className="flex-1">
+                                        {/* Bio Summary - fills the empty right space */}
+                                        <div className="flex-1 flex flex-col justify-center gap-3">
+                                            <p className="text-xs tracking-widest text-white/40 uppercase">Summary</p>
                                             <p className="text-sm text-white/60 italic leading-relaxed text-center sm:text-left">
                                                 {data.summary}
                                             </p>
                                         </div>
 
                                     </div>
+                                </SpotlightCard>
+
+                                {/* BOTTOM ROW — Orbiting Skills / Tech Stack */}
+                                <SpotlightCard glowColor="cyan" className="p-6 flex flex-col items-center justify-center flex-1 bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] shadow-2xl print-card">
+                                    <p className="text-xs tracking-widest text-white/40 uppercase mb-4">TECH STACK</p>
+                                    <OrbitingSkills skills={techStack} />
                                 </SpotlightCard>
 
                             </div>
