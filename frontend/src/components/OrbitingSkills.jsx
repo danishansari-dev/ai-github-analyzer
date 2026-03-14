@@ -30,8 +30,9 @@ const SKILL_COLORS = {
 
 const FALLBACK_COLOR = '#60a5fa'; // blue-400
 
-const INNER_RADIUS = 110;
-const OUTER_RADIUS = 190;
+const INNER_RADIUS = 95;
+const MID_RADIUS = 155;
+const OUTER_RADIUS = 215;
 
 const deviconMap = {
     "JavaScript": "javascript",
@@ -88,28 +89,44 @@ function OrbitingSkills({ skills }) {
     const lastTimeRef = useRef(null);
     const frameRef = useRef(null);
 
-    const cappedSkills = (skills || []).slice(0, 8);
-    const total = cappedSkills.length;
+    const allSkills = (skills || []);
+    const total = allSkills.length;
 
+    // Distribute skills across three rings
     const innerCount = Math.min(3, total);
-    const outerCount = total > innerCount ? total - innerCount : 0;
+    const midCount = total > innerCount ? Math.min(6, total - innerCount) : 0;
+    const outerCount = total > (innerCount + midCount) ? total - (innerCount + midCount) : 0;
 
-    const items = cappedSkills.map((name, index) => {
-        const isInner = index < innerCount;
-        const ringIndex = isInner ? index : index - innerCount;
-        const countInRing = isInner ? innerCount : outerCount;
-        const radius = isInner ? INNER_RADIUS : OUTER_RADIUS;
-        const speed = isInner ? 0.5 : -0.35;
+    const items = allSkills.map((name, index) => {
+        let radius, speed, countInRing, ringIndex, isInner = false, isMid = false;
+        
+        if (index < innerCount) {
+            radius = INNER_RADIUS;
+            speed = 0.4;
+            countInRing = innerCount;
+            ringIndex = index;
+            isInner = true;
+        } else if (index < innerCount + midCount) {
+            radius = MID_RADIUS;
+            speed = -0.25;
+            countInRing = midCount;
+            ringIndex = index - innerCount;
+            isMid = true;
+        } else {
+            radius = OUTER_RADIUS;
+            speed = 0.18;
+            countInRing = outerCount;
+            ringIndex = index - innerCount - midCount;
+        }
+
         const phaseStep = countInRing > 0 ? (2 * Math.PI) / countInRing : 0;
         const phaseShift = phaseStep * ringIndex;
-        const size = isInner ? 48 : 52;
+        const size = isInner ? 44 : (isMid ? 48 : 52);
         const config = getSkillConfig(name);
-
         const slug = deviconMap[name] || null;
 
         return {
             name,
-            isInner,
             radius,
             speed,
             phaseShift,
@@ -168,10 +185,22 @@ function OrbitingSkills({ skills }) {
                                 style={{
                                     width: INNER_RADIUS * 2,
                                     height: INNER_RADIUS * 2,
-                                    border: '1px solid rgba(34,211,238,0.4)',
-                                    boxShadow: '0 0 40px rgba(6,182,212,0.25), inset 0 0 40px rgba(6,182,212,0.1)',
-                                    background:
-                                        'radial-gradient(circle, transparent 40%, rgba(6,182,212,0.08) 70%, rgba(6,182,212,0.15) 100%)'
+                                    border: '1px solid rgba(34,211,238,0.3)',
+                                    boxShadow: '0 0 30px rgba(6,182,212,0.15)',
+                                    background: 'radial-gradient(circle, transparent 70%, rgba(6,182,212,0.05) 100%)'
+                                }}
+                            />
+                        )}
+
+                        {midCount > 0 && (
+                            <div
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+                                style={{
+                                    width: MID_RADIUS * 2,
+                                    height: MID_RADIUS * 2,
+                                    border: '1px solid rgba(168,85,247,0.3)',
+                                    boxShadow: '0 0 40px rgba(147,51,234,0.15)',
+                                    background: 'radial-gradient(circle, transparent 70%, rgba(147,51,234,0.05) 100%)'
                                 }}
                             />
                         )}
@@ -182,10 +211,9 @@ function OrbitingSkills({ skills }) {
                                 style={{
                                     width: OUTER_RADIUS * 2,
                                     height: OUTER_RADIUS * 2,
-                                    border: '1px solid rgba(168,85,247,0.4)',
-                                    boxShadow: '0 0 60px rgba(147,51,234,0.3), inset 0 0 60px rgba(147,51,234,0.15)',
-                                    background:
-                                        'radial-gradient(circle, transparent 40%, rgba(147,51,234,0.08) 70%, rgba(147,51,234,0.18) 100%)'
+                                    border: '1px solid rgba(236,72,153,0.3)',
+                                    boxShadow: '0 0 50px rgba(236,72,153,0.15)',
+                                    background: 'radial-gradient(circle, transparent 70%, rgba(236,72,153,0.05) 100%)'
                                 }}
                             />
                         )}
@@ -247,7 +275,8 @@ function OrbitingSkills({ skills }) {
                         ? `0 0 30px ${item.color}40, 0 0 60px ${item.color}20`
                         : 'none';
 
-                    const sizeClass = item.isInner ? 'w-12 h-12' : 'w-13 h-13';
+                    const sizePx = item.radius === INNER_RADIUS ? 44 : (item.radius === MID_RADIUS ? 48 : 52);
+                    const sizeClass = `w-[${sizePx}px] h-[${sizePx}px]`;
 
                     return (
                         <button
@@ -255,8 +284,10 @@ function OrbitingSkills({ skills }) {
                             key={item.index}
                             aria-label={item.name}
                             tabIndex={0}
-                            className={`absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-800/90 backdrop-blur-sm cursor-pointer transition-all duration-200 shadow-lg border border-white/10 ${sizeClass}`}
+                            className="absolute top-1/2 left-1/2 flex items-center justify-center rounded-full bg-gray-800/90 backdrop-blur-sm cursor-pointer transition-all duration-200 shadow-lg border border-white/10"
                             style={{
+                                width: `${sizePx}px`,
+                                height: `${sizePx}px`,
                                 transform,
                                 boxShadow
                             }}

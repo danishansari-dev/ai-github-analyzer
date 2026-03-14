@@ -6,7 +6,9 @@ import RepoShowcase from '../components/RepoShowcase';
 import ResumeBullets from '../components/ResumeBullets';
 import GitHubStats from '../components/GitHubStats';
 import OrbitingSkills from '../components/OrbitingSkills';
-import { GlowCard } from '../components/SpotlightCard';
+import SpotlightCard from '../components/SpotlightCard';
+import ScoreRing from '../components/ScoreRing';
+
 
 // 90-second timeout so the loading screen never spins forever
 const FETCH_TIMEOUT_MS = 90000;
@@ -151,41 +153,18 @@ function Results() {
         'SCSS'
     ]);
 
-    const topLanguages = useMemo(() => {
+    const techStack = useMemo(() => {
         const primaryStack = data?.stack?.primary_stack || [];
         if (!primaryStack || primaryStack.length === 0) return [];
         const languageLike = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
-        if (languageLike.length === 0) return primaryStack.slice(0, 8);
-        let result = languageLike.slice(0, 8);
-        if (result.length < 3) {
-            for (const item of primaryStack) {
-                if (result.includes(item)) continue;
-                result.push(item);
-                if (result.length >= Math.min(8, Math.max(3, primaryStack.length))) break;
-            }
+        if (languageLike.length === 0) return primaryStack;
+        let result = [...languageLike];
+        for (const item of primaryStack) {
+            if (result.includes(item)) continue;
+            result.push(item);
         }
         return result;
     }, [data?.stack?.primary_stack]);
-
-    const [scoreProgress, setScoreProgress] = useState(0);
-
-    useEffect(() => {
-        if (!data) return;
-        setScoreProgress(0);
-        const timeout = setTimeout(() => {
-            setScoreProgress(data.overall_score || 0);
-        }, 50);
-        return () => clearTimeout(timeout);
-    }, [data]);
-
-    const getScoreGradient = useMemo(() => (value) => {
-        if (value <= 40) return { from: '#fb923c', to: '#ef4444' };
-        if (value <= 69) return { from: '#facc15', to: '#fb923c' };
-        if (value <= 84) return { from: '#facc15', to: '#22c55e' };
-        return { from: '#22c55e', to: '#22d3ee' };
-    }, []);
-
-    const { from: scoreFrom, to: scoreTo } = getScoreGradient(scoreProgress);
 
     if (!username) return null;
 
@@ -248,120 +227,61 @@ function Results() {
                 {!loading && data && (
                     <div className="space-y-10 animate-in fade-in duration-500">
 
-                        {/* HERO ROW - 3 COL GRID ON DESKTOP (Profile, Score, Top Languages) */}
-                        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr_1.3fr] gap-4 items-stretch">
+                        {/* NEW HERO LAYOUT: 2-Column */}
+                        <div className="flex flex-col lg:flex-row gap-4 w-full">
 
-                            {/* LEFT: Profile */}
-                            <GlowCard
-                                customSize
-                                className="print-card"
-                            >
-                                <div
-                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col h-full"
-                                    style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '0ms' }}
-                                >
-                                    <div className="p-8">
-                                        <ProfileCard data={data} username={username} isRoast={isRoast} />
-                                    </div>
-                                </div>
-                            </GlowCard>
+                            {/* LEFT COLUMN — Profile Card, full height */}
+                            <div className="lg:w-[40%]">
+                                <SpotlightCard glowColor="blue" className="p-6 h-full print-card">
+                                    <ProfileCard data={data} username={username} isRoast={isRoast} />
+                                </SpotlightCard>
+                            </div>
 
-                            {/* CENTER LEFT: Score & Summary */}
-                            <GlowCard
-                                customSize
-                                className="print-card"
-                            >
-                                <div
-                                    className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center overflow-hidden"
-                                    style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '120ms' }}
-                                >
-                                    <div className="flex flex-col items-center justify-center flex-grow py-8 px-8">
-                                    <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-2">
-                                        Profile Score
-                                    </p>
-                                    {/* Circular Score Ring */}
-                                    <div className="relative w-44 h-44 flex items-center justify-center mb-10">
-                                        <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                            <defs>
-                                                <linearGradient id="score-ring-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor={scoreFrom} />
-                                                    <stop offset="100%" stopColor={scoreTo} />
-                                                </linearGradient>
-                                            </defs>
-                                            <circle
-                                                cx="88" cy="88" r="82"
-                                                fill="none"
-                                                className="stroke-gray-800/50"
-                                                strokeWidth="10"
-                                            />
-                                            <circle
-                                                cx="88" cy="88" r="82"
-                                                fill="none"
-                                                stroke="url(#score-ring-gradient)"
-                                                strokeWidth="10"
-                                                strokeLinecap="round"
-                                                strokeDasharray="515"
-                                                strokeDashoffset={515 - (515 * scoreProgress) / 100}
-                                                style={{ transition: 'stroke-dashoffset 1.2s ease-out' }}
-                                            />
-                                        </svg>
-                                        <div className="z-10 flex flex-col items-center">
-                                            <div className="flex items-baseline font-black leading-none">
-                                                <span className="text-6xl tracking-tight" style={{ color: scoreFrom }}>
-                                                    {data.overall_score}
-                                                </span>
-                                                <span className="text-xl text-gray-600 ml-1">/100</span>
-                                            </div>
+                            {/* RIGHT COLUMN — split into 2 rows */}
+                            <div className="lg:w-[60%] flex flex-col gap-4">
+
+                                {/* TOP ROW — Orbiting Skills / Tech Stack */}
+                                <SpotlightCard glowColor="cyan" className="p-6 flex flex-col items-center justify-center flex-1 print-card">
+                                    <p className="text-xs tracking-widest text-white/40 uppercase mb-4">TECH STACK</p>
+                                    <OrbitingSkills skills={techStack} />
+                                </SpotlightCard>
+
+                                {/* BOTTOM ROW — Score Ring + Bio side by side */}
+                                <SpotlightCard glowColor="purple" className="p-6 print-card" style={{ minHeight: '140px' }}>
+                                    <div className="flex flex-col sm:flex-row items-center gap-6 h-full">
+
+                                        {/* Score Ring */}
+                                        <div className="flex flex-col items-center gap-2 shrink-0">
+                                            <p className="text-xs tracking-widest text-white/40 uppercase">Profile Score</p>
+                                            <ScoreRing score={data.overall_score} />
                                         </div>
-                                    </div>
 
-                                    {/* Summary */}
-                                    <div className="max-w-md">
-                                        <p className="text-gray-500 italic text-sm leading-relaxed">
-                                            {data.stack?.profile_summary}
-                                        </p>
-                                    </div>
-                                </div>
-                                </div>
-                            </GlowCard>
+                                        {/* Bio text */}
+                                        <div className="flex-1">
+                                            <p className="text-sm text-white/60 italic leading-relaxed text-center sm:text-left">
+                                                {data.summary}
+                                            </p>
+                                        </div>
 
-                            {/* RIGHT: Top Languages Orbit */}
-                            {topLanguages.length > 0 && (
-                                <GlowCard
-                                    customSize
-                                    className="print-card"
-                                >
-                                    <div
-                                        className="rounded-2xl bg-[#111111] border border-[#1f1f1f] flex flex-col items-center justify-center text-center min-h-[460px] min-w-0 overflow-visible p-8"
-                                        style={{ animation: 'fadeUp 0.6s ease-out forwards', opacity: 0, animationDelay: '240ms' }}
-                                    >
-                                        <p className="text-xs font-bold tracking-[0.2em] text-white/40 uppercase mb-4">
-                                            Top Languages
-                                        </p>
-                                        <OrbitingSkills skills={topLanguages} />
                                     </div>
-                                </GlowCard>
-                            )}
+                                </SpotlightCard>
+
+                            </div>
                         </div>
 
                         {/* GitHub Statistics — full width */}
-                        <GlowCard customSize className="print-card w-full">
-                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 overflow-hidden">
-                                <GitHubStats username={username} userId={data?.github_user_id ?? data?.user_id ?? ''} />
-                            </div>
-                        </GlowCard>
+                        <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 overflow-hidden print-card">
+                            <GitHubStats username={username} userId={data?.github_user_id ?? data?.user_id ?? ''} />
+                        </div>
 
                         {/* Top Repositories — full width below */}
-                        <GlowCard customSize className="print-card w-full">
-                            <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8">
-                                <RepoShowcase repos={data.top_repos} />
-                            </div>
-                        </GlowCard>
+                        <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 print-card">
+                            <RepoShowcase repos={data.top_repos} />
+                        </div>
 
                         {/* Resume bullets section */}
                         {data?.resume_bullets?.length > 0 && (
-                            <GlowCard customSize className="print-card">
-                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8">
+                                <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] h-full p-8 print-card">
                                     <ResumeBullets
                                         resume_bullets={data.resume_bullets}
                                         onCopy={() => {
@@ -370,7 +290,6 @@ function Results() {
                                         }}
                                     />
                                 </div>
-                            </GlowCard>
                         )}
 
                     </div>
