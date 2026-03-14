@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 const SKILL_COLORS = {
     'JavaScript': { color: '#F7DF1E', textColor: '#000000', abbrev: 'JS' },
@@ -406,8 +406,6 @@ function OrbitingSkills({ skills }) {
         </div>
     );
 }
-
-export default OrbitingSkills;
 
 export default OrbitingSkills;
 
