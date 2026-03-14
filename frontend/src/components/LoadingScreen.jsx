@@ -5,130 +5,111 @@ import { useState, useEffect } from 'react';
  * Features a 4-step stepper, cycling messages, a timed progress bar, and premium dark theme styling.
  */
 
-const LOADING_MESSAGES = [
-    "Fetching your GitHub repos...",
-    "Reading your READMEs and code...",
-    "Detecting your tech stack...",
-    "Scoring 50+ career roles...",
-    "Mapping your developer profile...",
-    "Almost there..."
-];
-
-// 4 discrete pipeline steps shown as a horizontal stepper
-const STEPS = [
-    "Fetching GitHub profile",
-    "Reading repositories",
-    "Running AI analysis",
-    "Building your report"
+const steps = [
+    { label: 'Fetching GitHub Profile', message: 'Reading your GitHub profile...' },
+    { label: 'Reading Repositories', message: 'Scanning your repositories & READMEs...' },
+    { label: 'Running AI Analysis', message: 'Mapping your developer profile...' },
+    { label: 'Building Your Report', message: 'Generating career insights...' },
 ];
 
 function LoadingScreen() {
-    const [messageIndex, setMessageIndex] = useState(0);
-    const [progress, setProgress] = useState(0);
-    const [stepIndex, setStepIndex] = useState(0);
+    const [currentStep, setCurrentStep] = useState(0);
 
-    // Cycle through messages every 2.5 seconds as requested
+    /**
+     * Auto-advance the stepper every ~4 seconds as originally implemented.
+     * We preserve the timing logic while switching to the new steps array.
+     */
     useEffect(() => {
         const interval = setInterval(() => {
-            setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-        }, 2500);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Auto-advance the stepper every ~4 seconds (capped at last step)
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setStepIndex((prev) => (prev < STEPS.length - 1 ? prev + 1 : prev));
+            setCurrentStep((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
         }, 4000);
         return () => clearInterval(interval);
     }, []);
 
-    // Animate progress bar from 0% to 90% over 30 seconds
-    useEffect(() => {
-        const duration = 30000;
-        const intervalTime = 100;
-        const totalSteps = duration / intervalTime;
-        const increment = 90 / totalSteps;
-
-        const interval = setInterval(() => {
-            setProgress((prev) => {
-                const next = prev + increment;
-                return next >= 90 ? 90 : next;
-            });
-        }, intervalTime);
-
-        return () => clearInterval(interval);
-    }, []);
-
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a0a0f] text-white">
+        <div className="fixed inset-0 z-[100] bg-[#0a0a0f] flex flex-col items-center justify-center gap-10 px-6">
             {/* Background ambient glow for premium feel */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col items-center max-w-lg w-full px-6 text-center">
-                {/* Modern Spinner */}
-                <div className="relative w-16 h-16 mb-10">
-                    <div className="absolute inset-0 rounded-full border-4 border-white/5" />
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 animate-spin" />
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-violet-500/30 animate-spin-slow" />
+            {/* Animated spinner - improved */}
+            <div className="relative w-24 h-24">
+                {/* Outer ring - slow rotate */}
+                <div className="absolute inset-0 rounded-full border-2 border-white/5" />
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 border-r-purple-500 animate-spin" style={{ animationDuration: '1.2s' }} />
+                {/* Inner ring - counter rotate */}
+                <div className="absolute inset-3 rounded-full border border-transparent border-b-cyan-400 animate-spin" style={{ animationDuration: '0.8s', animationDirection: 'reverse' }} />
+                {/* Center dot */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
                 </div>
+            </div>
 
-                {/* 4-Step Stepper — shows pipeline progress visually */}
-                <div className="flex items-start justify-between w-full mb-10 px-2">
-                    {STEPS.map((label, i) => (
-                        <div key={i} className="flex flex-col items-center flex-1 relative">
-                            {/* Connecting line between dots (skip for the first step) */}
-                            {i > 0 && (
+            {/* Step progress timeline */}
+            <div className="flex items-start gap-0 relative">
+                {steps.map((step, i) => (
+                    <div key={i} className="flex flex-col items-center relative">
+                        {/* Connector line */}
+                        {i < steps.length - 1 && (
+                            <div className="absolute top-[14px] left-[50%] w-[120px] md:w-[160px] h-[2px] z-0">
+                                <div className="w-full h-full bg-white/10 rounded" />
                                 <div
-                                    className={`absolute top-[10px] right-1/2 w-full h-[2px] transition-all duration-500 ${i <= stepIndex ? 'bg-blue-500' : 'bg-white/10'
-                                        }`}
+                                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded transition-all duration-700"
+                                    style={{ width: currentStep > i ? '100%' : '0%' }}
                                 />
-                            )}
-
-                            {/* Step dot */}
-                            <div
-                                className={`relative z-10 w-5 h-5 rounded-full border-2 transition-all duration-500 flex items-center justify-center ${i < stepIndex
-                                        ? 'bg-blue-500 border-blue-500'
-                                        : i === stepIndex
-                                            ? 'bg-blue-500 border-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.5)]'
-                                            : 'bg-transparent border-white/20'
-                                    }`}
-                            >
-                                {/* Checkmark for completed steps */}
-                                {i < stepIndex && (
-                                    <span className="text-[10px] text-white font-bold">✓</span>
-                                )}
                             </div>
+                        )}
 
-                            {/* Step label */}
-                            <span
-                                className={`mt-2 text-[10px] font-bold uppercase tracking-wider leading-tight transition-colors duration-500 ${i <= stepIndex ? 'text-gray-300' : 'text-gray-600'
-                                    }`}
-                            >
-                                {label}
-                            </span>
+                        {/* Step dot */}
+                        <div className={`
+                relative z-10 w-7 h-7 rounded-full flex items-center justify-center
+                border-2 transition-all duration-500
+                ${currentStep > i
+                                ? 'bg-blue-500 border-blue-500 shadow-[0_0_12px_rgba(96,165,250,0.6)]'
+                                : currentStep === i
+                                    ? 'bg-transparent border-blue-400 animate-pulse'
+                                    : 'bg-transparent border-white/20'
+                            }
+              `}>
+                            {currentStep > i
+                                ? <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                : currentStep === i
+                                    ? <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                    : <div className="w-2 h-2 rounded-full bg-white/20" />
+                            }
                         </div>
-                    ))}
-                </div>
 
-                {/* Status Message — cycles through descriptive text */}
-                <h2 className="text-xl font-medium text-white mb-6 h-8 animate-pulse">
-                    {LOADING_MESSAGES[messageIndex]}
-                </h2>
+                        {/* Step label */}
+                        <p className={`
+                mt-3 text-[10px] tracking-widest uppercase text-center w-[100px] md:w-[130px]
+                transition-colors duration-300
+                ${currentStep >= i ? 'text-white/70' : 'text-white/25'}
+              `}>
+                            {step.label}
+                        </p>
+                    </div>
+                ))}
+            </div>
 
-                {/* Progress bar container */}
-                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden mb-6">
+            {/* Dynamic status message */}
+            <div className="flex flex-col items-center gap-4">
+                <p className="text-white/80 text-lg font-light tracking-wide animate-pulse">
+                    {steps[currentStep]?.message || 'Finalizing...'}
+                </p>
+
+                {/* Progress bar */}
+                <div className="w-[280px] md:w-[380px] h-[3px] bg-white/10 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-violet-500 transition-all duration-300 ease-out"
-                        style={{ width: `${progress}%` }}
+                        className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-400 rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
                     />
                 </div>
-
-                {/* Subtitle */}
-                <p className="text-xs text-gray-400 uppercase tracking-[0.25em] font-bold mt-2">
-                    Powered by Groq LLaMA 3.3 70B
-                </p>
             </div>
+
+            {/* Bottom label - replacing "Powered By" */}
+            <p className="text-[10px] tracking-[0.3em] text-white/25 uppercase">
+                Analysis by Groq LLaMA 3.3 70B
+            </p>
+
         </div>
     );
 }
