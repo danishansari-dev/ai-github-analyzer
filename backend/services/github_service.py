@@ -232,6 +232,49 @@ class GitHubService:
 
         return unlocked
 
+    async def get_readme_skills(self, username: str) -> List[str]:
+        """Fetch and parse README for additional skill/language mentions."""
+        # implementation details here...
+        # (keeping existing method, just finding place to insert new one)
+        pass
+
+    def get_readme_contact_info(self, username: str) -> dict:
+        """
+        Extract contact info (phone, email, etc.) from profile README.
+        Only extracting from public README - user chose to make this public.
+        """
+        import re
+        contact = {}
+        try:
+            # The profile README is always in a repo named after the username
+            repo = self.g.get_repo(f"{username}/{username}")
+            content = repo.get_contents("README.md")
+            readme_text = content.decoded_content.decode('utf-8', errors='ignore')
+
+            # Extract phone numbers - matches formats like:
+            # +91 9876543210, +1-234-567-8900, (123) 456-7890, 9876543210, etc.
+            phone_pattern = r'(?:📞|📱|☎️|Tel|Phone|Contact|ph|mobile|call)?[\s:]*(\+?[\d][\d\s\-().]{7,15}\d)'
+            phones = re.findall(phone_pattern, readme_text, re.IGNORECASE)
+            
+            # Clean and validate - must be 7-15 digits
+            for p in phones:
+                digits_only = re.sub(r'\D', '', p)
+                if 7 <= len(digits_only) <= 15:
+                    contact['phone'] = p.strip()
+                    break  # take first valid one only
+
+            # Also extract email if not already in GitHub profile
+            email_pattern = r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}'
+            emails = re.findall(email_pattern, readme_text)
+            if emails:
+                contact['readme_email'] = emails[0]
+
+        except Exception:
+            # Silent fail for private repos or missing README
+            pass
+
+        return contact
+
     def get_social_links(self, user) -> Dict[str, str]:
         """Extract all available social/contact links from GitHub profile."""
         links = {}
