@@ -231,3 +231,30 @@ class GitHubService:
                 pass
 
         return unlocked
+
+    def get_readme_skills(self, username: str) -> List[str]:
+        """Fetch username/username README and extract programming language mentions."""
+        try:
+            time.sleep(0.5)
+            repo = self.g.get_repo(f"{username}/{username}")
+            content = repo.get_contents("README.md")
+            readme_text = content.decoded_content.decode('utf-8', errors='ignore').lower()
+            
+            # Match against known language names
+            known_languages = [
+                "javascript", "typescript", "python", "java", "c++", "c#", "go",
+                "rust", "ruby", "php", "swift", "kotlin", "dart", "scala", "r",
+                "react", "vue", "angular", "svelte", "node.js", "django", "flask",
+                "fastapi", "docker", "kubernetes", "mongodb", "postgresql", "mysql",
+                "redis", "firebase", "aws", "pytorch", "tensorflow", "next.js",
+                "tailwind", "graphql", "linux", "bash", "shell", "html", "css",
+            ]
+            
+            found = []
+            for lang in known_languages:
+                if lang in readme_text and lang not in found:
+                    found.append(lang.title())
+            
+            return found[:10]  # max 10 from README
+        except Exception:
+            return []

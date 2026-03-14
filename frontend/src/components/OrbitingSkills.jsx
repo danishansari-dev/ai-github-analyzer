@@ -35,37 +35,129 @@ const MID_RADIUS = 155;
 const OUTER_RADIUS = 215;
 
 const deviconMap = {
-    "JavaScript": "javascript",
-    "TypeScript": "typescript",
-    "Python": "python",
-    "React": "react",
-    "Vue": "vuejs",
-    "Node.js": "nodejs",
-    "HTML": "html5",
-    "CSS": "css3",
-    "Tailwind": "tailwindcss",
-    "Go": "go",
-    "Rust": "rust",
-    "Java": "java",
-    "C++": "cplusplus",
-    "C": "c",
-    "C#": "csharp",
-    "Docker": "docker",
-    "Git": "git",
-    "Ruby": "ruby",
-    "PHP": "php",
-    "Swift": "swift",
-    "Kotlin": "kotlin",
-    "Dart": "dart",
-    "Scala": "scala",
-    "R": "r",
-    "Shell": "bash",
-    "SCSS": "sass",
-    "Jupyter Notebook": "jupyter",
-    "Svelte": "svelte",
-    "Electron": "electron",
-    "PyTorch": "pytorch",
+  "JavaScript": "javascript",
+  "TypeScript": "typescript",
+  "Python": "python",
+  "Java": "java",
+  "C": "c",
+  "C++": "cplusplus",
+  "C#": "csharp",
+  "Go": "go",
+  "Rust": "rust",
+  "Ruby": "ruby",
+  "PHP": "php",
+  "Swift": "swift",
+  "Kotlin": "kotlin",
+  "Dart": "dart",
+  "Scala": "scala",
+  "R": "r",
+  "MATLAB": "matlab",
+  "Shell": "bash",
+  "Bash": "bash",
+  "PowerShell": "powershell",
+  "HTML": "html5",
+  "CSS": "css3",
+  "SCSS": "sass",
+  "Sass": "sass",
+  "Less": "less",
+  "React": "react",
+  "Vue": "vuejs",
+  "Angular": "angularjs",
+  "Svelte": "svelte",
+  "Node.js": "nodejs",
+  "NodeJs": "nodejs",
+  "Express": "express",
+  "Django": "django",
+  "Flask": "flask",
+  "FastAPI": "fastapi",
+  "Spring": "spring",
+  "Laravel": "laravel",
+  "Rails": "rails",
+  "Docker": "docker",
+  "Kubernetes": "kubernetes",
+  "Git": "git",
+  "GraphQL": "graphql",
+  "MongoDB": "mongodb",
+  "PostgreSQL": "postgresql",
+  "MySQL": "mysql",
+  "Redis": "redis",
+  "Firebase": "firebase",
+  "AWS": "amazonwebservices",
+  "GCP": "googlecloud",
+  "Azure": "azure",
+  "Linux": "linux",
+  "Ubuntu": "ubuntu",
+  "Electron": "electron",
+  "Jupyter Notebook": "jupyter",
+  "Lua": "lua",
+  "Perl": "perl",
+  "Haskell": "haskell",
+  "Elixir": "elixir",
+  "Clojure": "clojure",
+  "Erlang": "erlang",
+  "OCaml": "ocaml",
+  "F#": "fsharp",
+  "Vite": "vitejs",
+  "Tailwind": "tailwindcss",
+  "Next.js": "nextjs",
+  "Nuxt.js": "nuxtjs",
+  "PyTorch": "pytorch",
+  "TensorFlow": "tensorflow",
+  "OpenCV": "opencv",
+  "Pandas": "pandas",
+  "NumPy": "numpy",
+  "Unity": "unity",
+  "Godot": "godot",
+  "Solidity": "solidity",
+  "WebAssembly": "wasm",
+  "Zig": "zig",
+  "CoffeeScript": "coffeescript",
+  "Groovy": "groovy",
 };
+
+function DevIcon({ slug, name, color }) {
+  const [src, setSrc] = useState(
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`
+  );
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+
+  const fallbacks = [
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`,
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain.svg`,
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original-wordmark.svg`,
+    `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain-wordmark.svg`,
+  ];
+
+  const handleError = () => {
+    const next = fallbackIndex + 1;
+    if (next < fallbacks.length) {
+      setFallbackIndex(next);
+      setSrc(fallbacks[next]);
+    } else {
+      setSrc(null); // triggers text fallback
+    }
+  };
+
+  if (!src) {
+    return (
+      <div
+        className="w-full h-full rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+        style={{ backgroundColor: color + '33', border: `1px solid ${color}66` }}
+      >
+        {name.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name}
+      className="w-full h-full object-contain p-1"
+      onError={handleError}
+    />
+  );
+}
 
 function getSkillConfig(name) {
     const base = SKILL_COLORS[name] || {};
@@ -89,53 +181,35 @@ function OrbitingSkills({ skills }) {
     const lastTimeRef = useRef(null);
     const frameRef = useRef(null);
 
-    const allSkills = (skills || []);
-    const total = allSkills.length;
+    const innerSkills = (skills || []).slice(0, 4);
+    const outerSkills = (skills || []).slice(4, 12);
+    const total = innerSkills.length + outerSkills.length;
 
-    // Distribute skills across three rings
-    const innerCount = Math.min(3, total);
-    const midCount = total > innerCount ? Math.min(6, total - innerCount) : 0;
-    const outerCount = total > (innerCount + midCount) ? total - (innerCount + midCount) : 0;
-
-    const items = allSkills.map((name, index) => {
-        let radius, speed, countInRing, ringIndex, isInner = false, isMid = false;
-        
-        if (index < innerCount) {
-            radius = INNER_RADIUS;
-            speed = 0.4;
-            countInRing = innerCount;
-            ringIndex = index;
-            isInner = true;
-        } else if (index < innerCount + midCount) {
-            radius = MID_RADIUS;
-            speed = -0.25;
-            countInRing = midCount;
-            ringIndex = index - innerCount;
-            isMid = true;
-        } else {
-            radius = OUTER_RADIUS;
-            speed = 0.18;
-            countInRing = outerCount;
-            ringIndex = index - innerCount - midCount;
-        }
-
-        const phaseStep = countInRing > 0 ? (2 * Math.PI) / countInRing : 0;
-        const phaseShift = phaseStep * ringIndex;
-        const size = isInner ? 44 : (isMid ? 48 : 52);
+    const items = [...innerSkills.map((name, index) => {
+        const radius = INNER_RADIUS;
+        const speed = 0.4;
+        const phaseStep = (2 * Math.PI) / innerSkills.length;
+        const phaseShift = phaseStep * index;
+        const size = 44;
         const config = getSkillConfig(name);
         const slug = deviconMap[name] || null;
 
         return {
-            name,
-            radius,
-            speed,
-            phaseShift,
-            size,
-            slug,
-            ...config,
-            index
+            name, radius, speed, phaseShift, size, slug, ...config, index
         };
-    });
+    }), ...outerSkills.map((name, index) => {
+        const radius = OUTER_RADIUS;
+        const speed = 0.18;
+        const phaseStep = (2 * Math.PI) / outerSkills.length;
+        const phaseShift = phaseStep * index;
+        const size = 52;
+        const config = getSkillConfig(name);
+        const slug = deviconMap[name] || null;
+
+        return {
+            name, radius, speed, phaseShift, size, slug, ...config, index: index + innerSkills.length
+        };
+    })];
 
     useEffect(() => {
         if (isPaused || total === 0) {
@@ -179,7 +253,7 @@ function OrbitingSkills({ skills }) {
                 {/* Orbit rings */}
                 {total > 0 && (
                     <div>
-                        {innerCount > 0 && (
+                        {innerSkills.length > 0 && (
                             <div
                                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
                                 style={{
@@ -192,20 +266,7 @@ function OrbitingSkills({ skills }) {
                             />
                         )}
 
-                        {midCount > 0 && (
-                            <div
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-                                style={{
-                                    width: MID_RADIUS * 2,
-                                    height: MID_RADIUS * 2,
-                                    border: '1px solid rgba(168,85,247,0.3)',
-                                    boxShadow: '0 0 40px rgba(147,51,234,0.15)',
-                                    background: 'radial-gradient(circle, transparent 70%, rgba(147,51,234,0.05) 100%)'
-                                }}
-                            />
-                        )}
-
-                        {outerCount > 0 && (
+                        {outerSkills.length > 0 && (
                             <div
                                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
                                 style={{
@@ -302,14 +363,7 @@ function OrbitingSkills({ skills }) {
                         >
                             <div className="flex items-center justify-center relative w-full h-full">
                                 {item.slug ? (
-                                    <img
-                                        src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${item.slug}/${item.slug}-original.svg`}
-                                        alt={item.name}
-                                        className="w-full h-full object-contain p-1.5"
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                        }}
-                                    />
+                                    <DevIcon slug={item.slug} name={item.name} color={item.color} />
                                 ) : (
                                     <div className="flex items-center justify-center relative">
                                         <div

@@ -132,20 +132,6 @@ function ProfileCard({ data, username, isRoast = false }) {
 
             {/* Sections */}
             <div className="space-y-8">
-                {/* Tech Stack */}
-                <div>
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-3">TECH STACK</h3>
-                    <div className="flex flex-wrap gap-1.5">
-                        {(primary_stack || []).map((tech) => (
-                            <span
-                                key={tech}
-                                className={`px-2.5 py-1 rounded text-[11px] font-medium border transform hover:scale-105 transition-transform duration-150 cursor-default ${getTechClasses(tech)}`}
-                            >
-                                {tech}
-                            </span>
-                        ))}
-                    </div>
-                </div>
 
                 {/* Domains */}
                 <div>

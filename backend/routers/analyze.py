@@ -105,6 +105,10 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         badges = await asyncio.to_thread(github_svc.get_user_badges, username)
         print(f"[analyze] Badges fetched: {len(badges)} unlocked")
 
+        # 5c. Fetch README skills
+        readme_skills = await asyncio.to_thread(github_svc.get_readme_skills, username)
+        print(f"[analyze] README skills fetched: {len(readme_skills)} found")
+
         # 6. Run LLM call — combined analysis in one prompt
         print(f"[analyze] Starting combined LLM analysis...")
 
@@ -148,6 +152,19 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
                 "reasoning": role_fit.get("reasoning", ""),
                 "top_3_roles": role_fit.get("top_3_roles", []),
             }
+
+        # 8b. Merge README skills into primary stack
+        if readme_skills:
+            current_stack = llm_result.get('stack', {})
+            primary_stack = current_stack.get('primary_stack', [])
+            
+            # Deduplicate and merge
+            for skill in readme_skills:
+                if skill not in primary_stack:
+                    primary_stack.append(skill)
+            
+            current_stack['primary_stack'] = primary_stack
+            llm_result['stack'] = current_stack
 
         analysis_response = FullAnalysisResponse(
             username=username,
