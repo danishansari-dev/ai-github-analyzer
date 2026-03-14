@@ -22,3 +22,5 @@ tmp/
 backend/data.json
 backend/visitors.json
 backend/*.lock
+
+.cursor
