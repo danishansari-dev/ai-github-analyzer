@@ -45,12 +45,12 @@ function LoadingScreen() {
             </div>
 
             {/* Step progress timeline */}
-            <div className="flex items-start gap-0 relative">
+            <div className="flex items-start gap-0 relative w-full max-w-2xl px-4">
                 {steps.map((step, i) => (
-                    <div key={i} className="flex flex-col items-center relative">
+                    <div key={i} className="flex flex-col items-center relative flex-1 min-w-[80px]">
                         {/* Connector line */}
                         {i < steps.length - 1 && (
-                            <div className="absolute top-[14px] left-[50%] w-[120px] md:w-[160px] h-[2px] z-0">
+                            <div className="absolute top-[14px] left-[50%] w-full h-[2px] z-0">
                                 <div className="w-full h-full bg-white/10 rounded" />
                                 <div
                                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded transition-all duration-700"
@@ -80,7 +80,7 @@ function LoadingScreen() {
 
                         {/* Step label */}
                         <p className={`
-                mt-3 text-[10px] tracking-widest uppercase text-center w-[100px] md:w-[130px]
+                mt-3 text-[10px] tracking-widest uppercase text-center px-1
                 transition-colors duration-300
                 ${currentStep >= i ? 'text-white/70' : 'text-white/25'}
               `}>
