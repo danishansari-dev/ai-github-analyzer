@@ -347,7 +347,7 @@ function Results() {
                         {/* GitHub Statistics — full width */}
                         <GlowCard customSize className="print-card w-full">
                             <div className="rounded-2xl bg-[#111111] border border-[#1f1f1f] w-full p-8 overflow-hidden">
-                                <GitHubStats username={username} />
+                                <GitHubStats username={username} userId={data?.github_user_id ?? data?.user_id ?? ''} />
                             </div>
                         </GlowCard>
 

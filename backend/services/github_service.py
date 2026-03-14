@@ -40,7 +40,8 @@ class GitHubService:
                 "public_repos": user.public_repos,
                 "followers": user.followers,
                 "following": user.following,
-                "html_url": user.html_url
+                "html_url": user.html_url,
+                "github_user_id": user.id
             }
         except UnknownObjectException:
             # Raise ValueError as per user request for "user not found"

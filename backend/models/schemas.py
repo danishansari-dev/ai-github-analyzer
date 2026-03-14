@@ -71,6 +71,7 @@ class FullAnalysisResponse(BaseModel):
     top_repos: List[TopRepoInfo] = []
     badges: List[str] = []
     analyzed_at: datetime
+    github_user_id: Optional[int] = None
 
 class ErrorResponse(BaseModel):
     error: str

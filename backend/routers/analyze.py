@@ -163,7 +163,8 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             resume_bullets=llm_result.get('resume_bullets'),
             top_repos=top_repos,
             badges=badges,
-            analyzed_at=datetime.now(timezone.utc)
+            analyzed_at=datetime.now(timezone.utc),
+            github_user_id=profile.get('github_user_id')
         )
 
         # 9. Store in cache and increment analysis counter

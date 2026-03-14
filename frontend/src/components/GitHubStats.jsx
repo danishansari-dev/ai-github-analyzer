@@ -1,106 +1,77 @@
-import React, { useState, useEffect } from 'react';
-
 /**
- * GitHubStats component — Displays advanced GitHub summary cards 
- * using the GitHub Profile Summary Cards API and OSS Insight.
- * 
- * @param {string} username - The GitHub username to fetch stats for
- * @returns A section containing multiple summary card widgets
+ * GitHubStats — Displays GitHub readme-style stat widgets (stats, streak, top langs,
+ * LeetCode, activity graph, OSS Insight). username and userId are passed from Results.
  */
-const GitHubStats = ({ username }) => {
-    const [userId, setUserId] = useState(null);
-
-    useEffect(() => {
-        if (!username) return;
-        fetch(`https://api.github.com/users/${username}`)
-            .then(r => r.json())
-            .then(data => {
-                if (data.id) setUserId(data.id);
-            })
-            .catch(() => {});
-    }, [username]);
-
+export default function GitHubStats({ username, userId }) {
     if (!username) return null;
 
-    const handleImgError = (e) => {
+    const hideImg = (e) => {
         e.target.style.display = 'none';
-        // If parent is a 2x2 grid item and it fails, we might want to hide the wrapper too
-        if (e.target.parentElement.classList.contains('count-card')) {
-            e.target.parentElement.style.display = 'none';
-        }
     };
 
-    const theme = 'custom'; // Custom theme to match our #111111 background
-    const themeColor = '111111';
-    const baseUrl = 'https://github-profile-summary-cards.vercel.app/api/cards';
-
     return (
-        <div className="flex flex-col w-full">
-            <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                📊 GitHub Statistics
-            </h2>
+        <div className="w-full flex flex-col items-center gap-6 p-6">
 
-            <div className="flex flex-col gap-4 w-full">
-                {/* Full Width OSS Insight */}
-                {userId && (
-                    <div className="w-full">
-                        <img
-                            src={`https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats/thumbnail.png?user_id=${userId}&image_size=auto&color_scheme=dark`}
-                            alt="OSS Insight Dashboard"
-                            className="w-full rounded-xl border border-[#1f1f1f]"
-                            onError={(e) => e.target.style.display = 'none'}
-                        />
-                    </div>
-                )}
-
-                {/* Contribution Graph (Summary Cards version) */}
-                <div className="w-full">
+            {/* OSS Insight Dashboard — full width */}
+            {userId && (
+                <div className="w-full flex justify-center">
                     <img
-                        src={`${baseUrl}/profile-details?username=${username}&theme=github_dark`}
-                        alt="Profile Details"
-                        className="w-full rounded-xl border border-[#1f1f1f]"
-                        onError={handleImgError}
+                        src={`https://next.ossinsight.io/widgets/official/compose-user-dashboard-stats/thumbnail.png?user_id=${userId}&image_size=auto&color_scheme=dark`}
+                        alt="OSS Insight Dashboard"
+                        className="w-full max-w-4xl rounded-xl"
+                        loading="lazy"
+                        onError={hideImg}
                     />
                 </div>
+            )}
 
-                {/* Summary cards — wider grid for full-width layout */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
-                        <img
-                            src={`${baseUrl}/repos-per-language?username=${username}&theme=github_dark`}
-                            alt="Repos per Language"
-                            className="w-full h-auto"
-                            onError={handleImgError}
-                        />
-                    </div>
-                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
-                        <img
-                            src={`${baseUrl}/most-commit-language?username=${username}&theme=github_dark`}
-                            alt="Most Commit Language"
-                            className="w-full h-auto"
-                            onError={handleImgError}
-                        />
-                    </div>
-                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
-                        <img
-                            src={`${baseUrl}/stats?username=${username}&theme=github_dark`}
-                            alt="General Stats"
-                            className="w-full h-auto"
-                            onError={handleImgError}
-                        />
-                    </div>
-                    <div className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#111111]">
-                        <img
-                            src={`${baseUrl}/productive-time?username=${username}&theme=github_dark&utcOffset=+5.5`}
-                            alt="Productive Time"
-                            className="w-full h-auto"
-                            onError={handleImgError}
-                        />
-                    </div>
-                </div>
+            {/* GitHub Stats + Streak — side by side */}
+            <div className="w-full flex flex-col md:flex-row gap-4 justify-center">
+                <img
+                    src={`https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=radical&count_private=true`}
+                    alt="GitHub Stats"
+                    className="w-full md:w-[49%] rounded-xl"
+                    loading="lazy"
+                    onError={hideImg}
+                />
+                <img
+                    src={`https://github-readme-streak-stats.herokuapp.com?user=${username}&theme=radical`}
+                    alt="GitHub Streak"
+                    className="w-full md:w-[49%] rounded-xl"
+                    loading="lazy"
+                    onError={hideImg}
+                />
             </div>
+
+            {/* Top Languages + LeetCode — side by side */}
+            <div className="w-full flex flex-col md:flex-row gap-4 justify-center">
+                <img
+                    src={`https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=radical&langs_count=8`}
+                    alt="Top Languages"
+                    className="w-full md:w-[49%] rounded-xl"
+                    loading="lazy"
+                    onError={hideImg}
+                />
+                <img
+                    src={`https://leetcard.jacoblin.cool/${username}?theme=radical&font=Karma&ext=heatmap`}
+                    alt="LeetCode Stats"
+                    className="w-full md:w-[49%] rounded-xl"
+                    loading="lazy"
+                    onError={hideImg}
+                />
+            </div>
+
+            {/* Activity Graph — full width */}
+            <div className="w-full flex justify-center">
+                <img
+                    src={`https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=react-dark&hide_border=true&area=true`}
+                    alt="GitHub Activity Graph"
+                    className="w-full max-w-4xl rounded-xl"
+                    loading="lazy"
+                    onError={hideImg}
+                />
+            </div>
+
         </div>
     );
-};
-
-export default GitHubStats;
+}
