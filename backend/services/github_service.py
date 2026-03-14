@@ -232,6 +232,35 @@ class GitHubService:
 
         return unlocked
 
+    def get_social_links(self, user) -> Dict[str, str]:
+        """Extract all available social/contact links from GitHub profile."""
+        links = {}
+        
+        # Direct GitHub User object fields
+        if user.blog:
+            url = user.blog if user.blog.startswith('http') else f'https://{user.blog}'
+            links['website'] = url
+        
+        if user.twitter_username:
+            links['twitter'] = f'https://twitter.com/{user.twitter_username}'
+        
+        if user.email:
+            links['email'] = f'mailto:{user.email}'
+        
+        # GitHub Social Accounts API (newer API - handles LinkedIn, YouTube, etc.)
+        try:
+            social_accounts = user.get_social_accounts()
+            for account in social_accounts:
+                provider = account.provider.lower()  # 'linkedin', 'youtube', 'twitch', etc.
+                links[provider] = account.url
+        except Exception:
+            pass
+        
+        # Always include GitHub profile itself
+        links['github'] = user.html_url
+        
+        return links
+
     def get_readme_skills(self, username: str) -> List[str]:
         """Fetch username/username README and extract programming language mentions."""
         try:
