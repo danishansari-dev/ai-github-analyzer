@@ -1,9 +1,25 @@
+import { Github, Twitter, Linkedin, Youtube, Globe, Mail, Twitch, Instagram } from 'lucide-react';
+
+function SocialIcon({ platform, size, color }) {
+    const props = { size, color };
+    switch (platform) {
+        case 'github': return <Github {...props} />;
+        case 'twitter': return <Twitter {...props} />;
+        case 'linkedin': return <Linkedin {...props} />;
+        case 'youtube': return <Youtube {...props} />;
+        case 'twitch': return <Twitch {...props} />;
+        case 'instagram': return <Instagram {...props} />;
+        case 'email': return <Mail {...props} />;
+        default: return <Globe {...props} />;
+    }
+}
+
 /**
  * ProfileCard — Displays the analyzed GitHub profile with tech stack,
  * domains, strengths, and gaps. This is the first card users see
  * after analysis completes, so it needs to feel immediately informative.
  */
-function ProfileCard({ data, username, isRoast = false }) {
+function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
     if (!data) return null;
 
     const {
@@ -22,16 +38,17 @@ function ProfileCard({ data, username, isRoast = false }) {
         profile_summary // This will actually be used in the center column
     } = stack || {};
 
-    // For followers/following we should really have them in the data object.
-    // Looking at analyze.py, we don't return them in the final JSON but they are in the GitHub profile object.
-    // Wait, let me check analyze_user in analyze.py.
-    // Actually, I should probably check github_service.py to see what get_user_profile returns.
-    // It returns: name, bio, avatar_url, public_repos, followers, following, html_url.
-    // However, FullAnalysisResponse in schemas.py doesn't include followers/following.
-    // Let me check schemas.py again.
-
-    // I will use some default values or check if they exist. 
-    // If I didn't add them to schemas.py, I might need to.
+    const socialIcons = {
+        github: { icon: 'github', label: 'GitHub', color: '#ffffff' },
+        twitter: { icon: 'twitter', label: 'Twitter', color: '#1DA1F2' },
+        linkedin: { icon: 'linkedin', label: 'LinkedIn', color: '#0A66C2' },
+        youtube: { icon: 'youtube', label: 'YouTube', color: '#FF0000' },
+        twitch: { icon: 'twitch', label: 'Twitch', color: '#9146FF' },
+        instagram: { icon: 'instagram', label: 'Instagram', color: '#E4405F' },
+        website: { icon: 'globe', label: 'Website', color: '#60a5fa' },
+        email: { icon: 'mail', label: 'Email', color: '#34d399' },
+        mastodon: { icon: 'globe', label: 'Mastodon', color: '#6364FF' },
+    };
 
     const formatBadgeName = (slug) => slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
@@ -132,6 +149,31 @@ function ProfileCard({ data, username, isRoast = false }) {
 
             {/* Sections */}
             <div className="space-y-8">
+
+                {/* Social Links */}
+                {socialLinks && Object.keys(socialLinks).length > 0 && (
+                    <div className="mb-3">
+                        <p className="text-xs tracking-widest text-white/40 uppercase mb-2">Socials</p>
+                        <div className="flex flex-wrap gap-2">
+                            {Object.entries(socialLinks).map(([platform, url]) => {
+                                const meta = socialIcons[platform] || { label: platform, color: '#60a5fa' };
+                                return (
+                                    <a
+                                        key={platform}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 cursor-pointer"
+                                        style={{ color: meta.color }}
+                                    >
+                                        <SocialIcon platform={platform} size={12} color={meta.color} />
+                                        <span className="text-white/70">{meta.label}</span>
+                                    </a>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Domains */}
                 <div>
