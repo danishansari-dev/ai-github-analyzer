@@ -68,7 +68,8 @@ function Home() {
 
     // Initialize hero canvas trailing-lines effect
     useEffect(() => {
-        renderCanvas();
+        const cleanup = renderCanvas();
+        return () => { cleanup?.(); };
     }, []);
 
     /**
@@ -239,7 +240,7 @@ function Home() {
 
                     <div className="grid md:grid-cols-3 gap-6">
                         {/* Stack Analysis Preview */}
-                        <div className="p-6 rounded-2xl border border-white/10 bg-white/5/5 bg-white/5 backdrop-blur-sm rounded-2xl">
+                        <div className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
                             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Tech Stack</h3>
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {['Python', 'React', 'TypeScript', 'FastAPI', 'Docker'].map((tech) => {
@@ -339,15 +340,15 @@ function Home() {
             <footer className="py-8 px-4 border-t border-white/5 text-center text-gray-500 text-sm">
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <span className="flex items-center gap-2">
-                        <span className="border border-white/10 rounded px-2 py-0.5 text-xs hover:border-white/30 transition-colors cursor-pointer">
+                        <a href="https://fastapi.tiangolo.com" target="_blank" rel="noopener noreferrer" className="border border-white/10 rounded px-2 py-0.5 text-xs hover:border-white/30 transition-colors cursor-pointer">
                             FastAPI
-                        </span>
-                        <span className="border border-white/10 rounded px-2 py-0.5 text-xs hover:border-white/30 transition-colors cursor-pointer">
+                        </a>
+                        <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="border border-white/10 rounded px-2 py-0.5 text-xs hover:border-white/30 transition-colors cursor-pointer">
                             Groq AI
-                        </span>
-                        <span className="border border-white/10 rounded px-2 py-0.5 text-xs hover:border-white/30 transition-colors cursor-pointer">
+                        </a>
+                        <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="border border-white/10 rounded px-2 py-0.5 text-xs hover:border-white/30 transition-colors cursor-pointer">
                             React
-                        </span>
+                        </a>
                     </span>
                     <a
                         href="https://github.com/danishansari-dev/ai-github-analyzer"
