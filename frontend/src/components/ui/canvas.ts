@@ -151,7 +151,8 @@ function onMousemove(e: any) {
         ((pos.x = ev.touches[0].pageX), (pos.y = ev.touches[0].pageY))
       : // @ts-ignore
         ((pos.x = ev.clientX), (pos.y = ev.clientY));
-    ev.preventDefault();
+    // Do not preventDefault on touch — allows native scrolling on mobile
+    if (!ev.touches) ev.preventDefault();
   }
   // @ts-ignore
   function l(ev: any) {
