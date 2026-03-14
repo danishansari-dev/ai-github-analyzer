@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FloatingParticlesBackground from '../components/FloatingParticlesBackground';
+import ConfettiBackground from '../components/ConfettiBackground';
 
 // Use production API URL if available, else fallback to empty string (Vite proxy)
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -81,14 +81,8 @@ function Home() {
         <div className="relative min-h-screen bg-[#0a0a0f] text-white">
             <div className="relative z-10">
                 {/* ===== HERO SECTION — background scoped here so sections below are not covered */}
-                <section className="relative overflow-hidden w-full flex flex-col items-center justify-center text-center min-h-screen px-6">
-                    <FloatingParticlesBackground
-                        particleCount={70}
-                        particleColor="#60a5fa"
-                        mouseGravity="repel"
-                        glowIntensity={8}
-                        backgroundColor="transparent"
-                    />
+                <section className="relative overflow-hidden w-full flex flex-col items-center justify-center text-center min-h-screen px-6 cursor-crosshair">
+                    <ConfettiBackground count={130} />
                     {/* Gradient background orbs for visual depth — purely decorative */}
                     <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
                     <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
