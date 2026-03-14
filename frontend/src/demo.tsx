@@ -1,4 +1,4 @@
-import OrbitingSkills from "@/components/ui/orbiting-skills";
+import OrbitingSkills from "@/components/ui/OrbitingSkills";
 
 export default function DemoOne() {
   return <OrbitingSkills />;

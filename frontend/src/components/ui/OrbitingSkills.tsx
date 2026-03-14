@@ -100,67 +100,13 @@ SkillIcon.displayName = 'SkillIcon';
 // --- Configuration for the Orbiting Skills ---
 const skillsConfig: SkillConfig[] = [
   // Inner Orbit
-  { 
-    id: 'html',
-    orbitRadius: 100, 
-    size: 40, 
-    speed: 1, 
-    iconType: 'html', 
-    phaseShift: 0, 
-    glowColor: 'cyan',
-    label: 'HTML5'
-  },
-  { 
-    id: 'css',
-    orbitRadius: 100, 
-    size: 45, 
-    speed: 1, 
-    iconType: 'css', 
-    phaseShift: (2 * Math.PI) / 3, 
-    glowColor: 'cyan',
-    label: 'CSS3'
-  },
-  { 
-    id: 'javascript',
-    orbitRadius: 100, 
-    size: 40, 
-    speed: 1, 
-    iconType: 'javascript', 
-    phaseShift: (4 * Math.PI) / 3, 
-    glowColor: 'cyan',
-    label: 'JavaScript'
-  },
+  { id: 'html', orbitRadius: 100, size: 40, speed: 1, iconType: 'html', phaseShift: 0, glowColor: 'cyan', label: 'HTML5' },
+  { id: 'css', orbitRadius: 100, size: 45, speed: 1, iconType: 'css', phaseShift: (2 * Math.PI) / 3, glowColor: 'cyan', label: 'CSS3' },
+  { id: 'javascript', orbitRadius: 100, size: 40, speed: 1, iconType: 'javascript', phaseShift: (4 * Math.PI) / 3, glowColor: 'cyan', label: 'JavaScript' },
   // Outer Orbit
-  { 
-    id: 'react',
-    orbitRadius: 180, 
-    size: 50, 
-    speed: -0.6, 
-    iconType: 'react', 
-    phaseShift: 0, 
-    glowColor: 'purple',
-    label: 'React'
-  },
-  { 
-    id: 'node',
-    orbitRadius: 180, 
-    size: 45, 
-    speed: -0.6, 
-    iconType: 'node', 
-    phaseShift: (2 * Math.PI) / 3, 
-    glowColor: 'purple',
-    label: 'Node.js'
-  },
-  { 
-    id: 'tailwind',
-    orbitRadius: 180, 
-    size: 40, 
-    speed: -0.6, 
-    iconType: 'tailwind', 
-    phaseShift: (4 * Math.PI) / 3, 
-    glowColor: 'purple',
-    label: 'Tailwind CSS'
-  },
+  { id: 'react', orbitRadius: 180, size: 50, speed: -0.6, iconType: 'react', phaseShift: 0, glowColor: 'purple', label: 'React' },
+  { id: 'node', orbitRadius: 180, size: 45, speed: -0.6, iconType: 'node', phaseShift: (2 * Math.PI) / 3, glowColor: 'purple', label: 'Node.js' },
+  { id: 'tailwind', orbitRadius: 180, size: 40, speed: -0.6, iconType: 'tailwind', phaseShift: (4 * Math.PI) / 3, glowColor: 'purple', label: 'Tailwind CSS' },
 ];
 
 // --- Memoized Orbiting Skill Component ---
@@ -211,18 +157,9 @@ OrbitingSkill.displayName = 'OrbitingSkill';
 // --- Optimized Orbit Path Component ---
 const GlowingOrbitPath = memo(({ radius, glowColor = 'cyan', animationDelay = 0 }: GlowingOrbitPathProps) => {
   const glowColors = {
-    cyan: {
-      primary: 'rgba(6, 182, 212, 0.4)',
-      secondary: 'rgba(6, 182, 212, 0.2)',
-      border: 'rgba(6, 182, 212, 0.3)'
-    },
-    purple: {
-      primary: 'rgba(147, 51, 234, 0.4)',
-      secondary: 'rgba(147, 51, 234, 0.2)',
-      border: 'rgba(147, 51, 234, 0.3)'
-    }
+    cyan: { primary: 'rgba(6, 182, 212, 0.4)', secondary: 'rgba(6, 182, 212, 0.2)', border: 'rgba(6, 182, 212, 0.3)' },
+    purple: { primary: 'rgba(147, 51, 234, 0.4)', secondary: 'rgba(147, 51, 234, 0.2)', border: 'rgba(147, 51, 234, 0.3)' }
   };
-
   const colors = glowColors[glowColor] || glowColors.cyan;
 
   return (
@@ -234,7 +171,6 @@ const GlowingOrbitPath = memo(({ radius, glowColor = 'cyan', animationDelay = 0 
         animationDelay: `${animationDelay}s`,
       }}
     >
-      {/* Glowing background */}
       <div
         className="absolute inset-0 rounded-full animate-pulse"
         style={{
@@ -244,8 +180,6 @@ const GlowingOrbitPath = memo(({ radius, glowColor = 'cyan', animationDelay = 0 
           animationDelay: `${animationDelay}s`,
         }}
       />
-
-      {/* Static ring for depth */}
       <div
         className="absolute inset-0 rounded-full"
         style={{
@@ -288,10 +222,9 @@ export default function OrbitingSkills() {
 
   return (
     <main className="w-full flex items-center justify-center overflow-hidden">
-      {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div 
-          className="absolute inset-0" 
+        <div
+          className="absolute inset-0"
           style={{
             backgroundImage: `radial-gradient(circle at 25% 25%, #374151 0%, transparent 50%),
                              radial-gradient(circle at 75% 75%, #4B5563 0%, transparent 50%)`,
@@ -299,13 +232,11 @@ export default function OrbitingSkills() {
         />
       </div>
 
-      <div 
+      <div
         className="relative w-[calc(100vw-40px)] h-[calc(100vw-40px)] md:w-[450px] md:h-[450px] flex items-center justify-center"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        
-        {/* Central "Code" Icon with enhanced glow */}
         <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center z-10 relative shadow-2xl">
           <div className="absolute inset-0 rounded-full bg-cyan-500/30 blur-xl animate-pulse"></div>
           <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -323,7 +254,6 @@ export default function OrbitingSkills() {
           </div>
         </div>
 
-        {/* Render glowing orbit paths */}
         {orbitConfigs.map((config) => (
           <GlowingOrbitPath
             key={`path-${config.radius}`}
@@ -333,7 +263,6 @@ export default function OrbitingSkills() {
           />
         ))}
 
-        {/* Render orbiting skill icons */}
         {skillsConfig.map((config) => {
           const angle = time * config.speed + (config.phaseShift || 0);
           return (
@@ -348,4 +277,3 @@ export default function OrbitingSkills() {
     </main>
   );
 }
-
