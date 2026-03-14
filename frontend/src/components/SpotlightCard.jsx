@@ -5,10 +5,11 @@ import React, { useRef, useState, useEffect } from 'react';
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Card content
  * @param {string} [props.glowColor='blue'] - Color of the glow (blue, cyan, purple, etc.)
+ * @param {number} [props.glowRadius=600] - The radius of the glow circle in pixels
  * @param {string} [props.className=''] - Additional CSS classes
  * @returns {JSX.Element}
  */
-const SpotlightCard = ({ children, glowColor = 'blue', className = '' }) => {
+const SpotlightCard = ({ children, glowColor = 'blue', glowRadius = 600, className = '' }) => {
     const containerRef = useRef(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [opacity, setOpacity] = useState(0);
@@ -49,7 +50,7 @@ const SpotlightCard = ({ children, glowColor = 'blue', className = '' }) => {
                 className="pointer-events-none absolute -inset-px transition-opacity duration-300"
                 style={{
                     opacity,
-                    background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${getGlowColor()}, transparent 40%)`,
+                    background: `radial-gradient(${glowRadius}px circle at ${position.x}px ${position.y}px, ${getGlowColor()}, transparent 40%)`,
                 }}
             />
             <div className="relative z-10 h-full flex flex-col">
