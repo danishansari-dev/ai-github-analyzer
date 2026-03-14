@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FloatingParticlesBackground from '../components/FloatingParticlesBackground';
-import { renderCanvas } from '../components/ui/canvas';
 
 // Use production API URL if available, else fallback to empty string (Vite proxy)
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -66,12 +65,6 @@ function Home() {
         return () => clearInterval(timer);
     }, [totalAnalyzed, totalVisitors]);
 
-    // Initialize hero canvas trailing-lines effect
-    useEffect(() => {
-        const cleanup = renderCanvas();
-        return () => { cleanup?.(); };
-    }, []);
-
     /**
      * Navigates the user to the results page when the form is submitted.
      * Appends ?mode=roast if roast mode is enabled.
@@ -86,32 +79,30 @@ function Home() {
 
     return (
         <div className="relative min-h-screen bg-[#0a0a0f] text-white">
-            {/* Interactive Background */}
-            <FloatingParticlesBackground 
-                particleCount={70}
-                particleColor="#60a5fa"
-                mouseGravity="repel"
-                glowIntensity={8}
-                backgroundColor="transparent"
-            />
-
             <div className="relative z-10">
-                {/* ===== HERO SECTION ===== */}
-                <section className="flex flex-col items-center justify-center min-h-screen px-4 relative overflow-hidden">
-                {/* Gradient background orbs for visual depth — purely decorative */}
-                <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px]" />
-                <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px]" />
+                {/* ===== HERO SECTION — background scoped here so sections below are not covered */}
+                <section className="relative overflow-hidden w-full flex flex-col items-center justify-center text-center min-h-screen px-6">
+                    <FloatingParticlesBackground
+                        particleCount={70}
+                        particleColor="#60a5fa"
+                        mouseGravity="repel"
+                        glowIntensity={8}
+                        backgroundColor="transparent"
+                    />
+                    {/* Gradient background orbs for visual depth — purely decorative */}
+                    <div className="absolute top-1/4 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
+                    <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-violet-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
 
-                <div className="relative z-10 text-center max-w-3xl mx-auto">
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
-                        See What Your Code Says
-                        <br />
-                        <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                            About You.
-                        </span>
-                    </h1>
+                    <div className="relative z-10 text-center w-full max-w-3xl mx-auto">
+                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight text-center bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+                            See What Your Code Says
+                            <br />
+                            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                                About You.
+                            </span>
+                        </h1>
 
-                    <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                        <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-xl mx-auto text-center leading-relaxed">
                         Enter any GitHub username to get your tech stack analysis, career role fit across 50+ roles, and GitHub stats dashboard.
                     </p>
 
@@ -174,10 +165,6 @@ function Home() {
                             <span>Roast Me</span>
                         </span>
                     </div>
-                    <canvas
-                        className="pointer-events-none absolute inset-0 mx-auto"
-                        id="canvas"
-                    />
                 </div>
             </section>
 
