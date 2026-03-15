@@ -240,42 +240,83 @@ class GitHubService:
 
     def get_readme_contact_info(self, username: str) -> dict:
         """
-        Extract contact info (phone, email, etc.) from profile README.
+        Extract contact info and social links from profile README.
         Only extracting from public README - user chose to make this public.
         """
         import re
         contact = {}
         try:
-            # The profile README is always in a repo named after the username
             repo = self.g.get_repo(f"{username}/{username}")
             content = repo.get_contents("README.md")
             readme_text = content.decoded_content.decode('utf-8', errors='ignore')
 
-            # Strict phone patterns only - must start with + country code or be 10 digits
+            # --- Phone extraction ---
             phone_patterns = [
-                r'\+\d{1,3}[\s\-]?\d{5,10}[\s\-]?\d{0,5}',  # +91 9876543210
-                r'\+\d{1,3}[\s\-]\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}',  # +1 (234) 567-8900
-                r'\b[6-9]\d{9}\b',  # Indian mobile: 10 digits starting 6-9
+                r'\+\d{1,3}[\s\-]?\d{5,10}[\s\-]?\d{0,5}',
+                r'\+\d{1,3}[\s\-]\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4}',
+                r'\b[6-9]\d{9}\b',
             ]
-
             for pattern in phone_patterns:
                 matches = re.findall(pattern, readme_text)
                 for match in matches:
                     digits = re.sub(r'\D', '', match)
-                    if 10 <= len(digits) <= 13:  # valid phone length
+                    if 10 <= len(digits) <= 13:
                         contact['phone'] = match.strip()
                         break
                 if contact.get('phone'):
                     break
 
-            # Also extract email if not already in GitHub profile
+            # --- Email extraction ---
             email_pattern = r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}'
             emails = re.findall(email_pattern, readme_text)
             if emails:
                 contact['readme_email'] = emails[0]
 
+            # --- Social/profile URL extraction from markdown links ---
+            # Matches both [label](url) and bare URLs
+            url_pattern = r'https?://[^\s\)\]\"\'<>]+'
+            all_urls = re.findall(url_pattern, readme_text)
+
+            social_url_map = {
+                'linkedin.com/in/': 'linkedin',
+                'linkedin.com/pub/': 'linkedin',
+                'twitter.com/': 'twitter',
+                'x.com/': 'twitter',
+                'leetcode.com/u/': 'leetcode',
+                'leetcode.com/': 'leetcode',
+                'kaggle.com/': 'kaggle',
+                'codeforces.com/profile/': 'codeforces',
+                'codechef.com/users/': 'codechef',
+                'hackerrank.com/': 'hackerrank',
+                'stackoverflow.com/users/': 'stackoverflow',
+                'dev.to/': 'devto',
+                'medium.com/': 'medium',
+                'hashnode.dev': 'hashnode',
+                'youtube.com/': 'youtube',
+                'instagram.com/': 'instagram',
+                'discord.gg/': 'discord',
+                'discord.com/': 'discord',
+                'telegram.me/': 'telegram',
+                't.me/': 'telegram',
+                'portfolio': 'portfolio',
+            }
+
+            for url in all_urls:
+                url_clean = url.rstrip('.,)')
+                url_lower = url_clean.lower()
+
+                # Skip GitHub links (already have those)
+                if 'github.com' in url_lower:
+                    continue
+
+                for pattern, platform in social_url_map.items():
+                    if pattern in url_lower:
+                        # Don't overwrite if already found from GitHub API
+                        if platform not in contact:
+                            contact[platform] = url_clean
+                        break
+
         except Exception:
-            # Silent fail for private repos or missing README
             pass
 
         return contact
