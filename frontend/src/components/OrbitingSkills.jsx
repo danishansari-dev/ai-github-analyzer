@@ -112,6 +112,28 @@ const deviconMap = {
   "Zig": "zig",
   "CoffeeScript": "coffeescript",
   "Groovy": "groovy",
+  "Scikit-learn": "scikitlearn",
+  "Matplotlib": "matplotlib",
+  "Plotly": "plotly",
+  "Ansible": "ansible",
+  "Jenkins": "jenkins",
+  "GitHub Actions": "githubactions",
+  "Power BI": "microsoftsqlserver",
+  "Tableau": "tableau",
+  "Seaborn": "python",
+  "Bash": "bash",
+  "SQL": "sqlite",
+  "GoogleCloud": "googlecloud",
+  "GCP": "googlecloud",
+  "NumPy": "numpy",
+  "Pandas": "pandas",
+  "Bootstrap": "bootstrap",
+  "Webpack": "webpack",
+  "Postman": "postman",
+  "Figma": "figma",
+  "Nginx": "nginx",
+  "Spring": "spring",
+  "Elasticsearch": "elasticsearch",
 };
 
 /**
@@ -135,18 +157,25 @@ const TECH_CATEGORIES = {
     'Spring', 'Laravel', 'Rails', 'GraphQL'
   ],
   'Data Science & ML': [
-    'PyTorch', 'TensorFlow', 'OpenCV', 'Pandas', 'NumPy', 'Jupyter Notebook',
-    'Scikit-learn', 'Matplotlib', 'Plotly', 'Keras'
+    'PyTorch', 'TensorFlow', 'OpenCV', 'Pandas', 'NumPy', 'Jupyter',
+    'Scikit-learn', 'Matplotlib', 'Plotly', 'Keras', 'Seaborn',
+    'HuggingFace', 'LangChain', 'Power BI', 'Tableau',
+    'Jupyter Notebook'
   ],
   'Cloud & DevOps': [
     'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Linux', 'Ubuntu',
-    'Git', 'Firebase', 'Ansible', 'Jenkins'
+    'Git', 'Firebase', 'Ansible', 'Jenkins', 'GitHub Actions',
+    'Terraform', 'Nginx', 'Apache', 'GoogleCloud'
   ],
   'Databases': [
     'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'SQLite', 'Cassandra'
   ],
+  'Tools & Design': [
+    'Figma', 'Postman', 'Webpack', 'Vite', 'Unity', 'Godot',
+    'Power BI', 'Tableau', 'Bootstrap'
+  ],
   'Tools & Other': [
-    'Unity', 'Godot', 'GraphQL', 'WebAssembly'
+    'GraphQL', 'WebAssembly'
   ]
 };
 
