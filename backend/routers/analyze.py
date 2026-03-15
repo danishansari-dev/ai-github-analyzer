@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response, Query
 from fastapi.responses import JSONResponse
-from typing import Dict, Any
+from typing import Dict, Any, List
 import asyncio
 import traceback
 from datetime import datetime, timezone
@@ -158,16 +158,17 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         print(f"[analyze] Combined LLM call complete for '{username}'")
 
         # 7. Build top_repos list (top 5 by stars, already sorted from github_service)
-        top_repos = []
-        for r in repos[:5]:
-            top_repos.append({
-                "name": r.get("name", ""),
-                "description": r.get("description"),
-                "language": r.get("language"),
-                "stars": r.get("stargazers_count", 0),
-                "total_commits": r.get("total_commits", 0),
-                "html_url": r.get("html_url", ""),
-            })
+        top_repos: List[Dict[str, Any]] = []
+        if isinstance(repos, list):
+            for r in repos[:5]:
+                top_repos.append({
+                    "name": r.get("name", ""),
+                    "description": r.get("description"),
+                    "language": r.get("language"),
+                    "stars": r.get("stargazers_count", 0),
+                    "total_commits": r.get("total_commits", 0),
+                    "html_url": r.get("html_url", ""),
+                })
 
         # 8. Build FullAnalysisResponse object
         role_fit = llm_result.get('role_fit', {})
@@ -189,14 +190,14 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             }
 
         # 8b. Merge README skills into primary stack
-        if readme_skills:
+        if readme_skills and isinstance(readme_skills, list):
             current_stack = llm_result.get('stack', {})
             primary_stack = current_stack.get('primary_stack', [])
             
             # Case-insensitive dedup merge
-            existing_lower = {s.lower() for s in primary_stack}
+            existing_lower = {str(s).lower() for s in primary_stack}
             for skill in readme_skills:
-                if skill.lower() not in existing_lower:
+                if isinstance(skill, str) and skill.lower() not in existing_lower:
                     primary_stack.append(skill)
                     existing_lower.add(skill.lower())
             

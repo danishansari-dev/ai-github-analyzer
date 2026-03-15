@@ -119,7 +119,7 @@ class GitHubService:
                 })
                 
             # Sort by the new combined score descending
-            repo_list.sort(key=lambda x: x["combined_score"], reverse=True)
+            repo_list.sort(key=lambda x: x.get("combined_score", 0), reverse=True)
             
             # Return top 5
             return repo_list[:5]
