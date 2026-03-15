@@ -232,11 +232,6 @@ class GitHubService:
 
         return unlocked
 
-    async def get_readme_skills(self, username: str) -> List[str]:
-        """Fetch and parse README for additional skill/language mentions."""
-        # implementation details here...
-        # (keeping existing method, just finding place to insert new one)
-        pass
 
     def get_readme_contact_info(self, username: str) -> dict:
         """
@@ -358,29 +353,142 @@ class GitHubService:
         
         return links
 
-    def get_readme_skills(self, username: str) -> List[str]:
-        """Fetch username/username README and extract programming language mentions."""
+    def get_readme_skills(self, username: str) -> list:
+        """Fetch username/username README and extract ALL technology mentions."""
         try:
             time.sleep(0.5)
             repo = self.g.get_repo(f"{username}/{username}")
             content = repo.get_contents("README.md")
             readme_text = content.decoded_content.decode('utf-8', errors='ignore').lower()
-            
-            # Match against known language names
-            known_languages = [
-                "javascript", "typescript", "python", "java", "c++", "c#", "go",
-                "rust", "ruby", "php", "swift", "kotlin", "dart", "scala", "r",
-                "react", "vue", "angular", "svelte", "node.js", "django", "flask",
-                "fastapi", "docker", "kubernetes", "mongodb", "postgresql", "mysql",
-                "redis", "firebase", "aws", "pytorch", "tensorflow", "next.js",
-                "tailwind", "graphql", "linux", "bash", "shell", "html", "css",
-            ]
-            
+
+            # Comprehensive tech map: search term → display name
+            tech_map = {
+                # Languages
+                "python": "Python",
+                "java": "Java",
+                "javascript": "JavaScript",
+                "typescript": "TypeScript",
+                "c++": "C++",
+                "c#": "C#",
+                "golang": "Go",
+                " go ": "Go",
+                "rust": "Rust",
+                "ruby": "Ruby",
+                "php": "PHP",
+                "swift": "Swift",
+                "kotlin": "Kotlin",
+                "dart": "Dart",
+                "scala": "Scala",
+                " r ": "R",
+                "matlab": "MATLAB",
+                "bash": "Bash",
+                "bash script": "Bash",
+                "shell": "Shell",
+                "powershell": "PowerShell",
+                "sql": "SQL",
+                "lua": "Lua",
+                "perl": "Perl",
+                "haskell": "Haskell",
+                "elixir": "Elixir",
+                "groovy": "Groovy",
+                # Frontend
+                "react": "React",
+                "vue": "Vue",
+                "angular": "Angular",
+                "svelte": "Svelte",
+                "next.js": "Next.js",
+                "nextjs": "Next.js",
+                "nuxt": "Nuxt.js",
+                "tailwind": "Tailwind",
+                "bootstrap": "Bootstrap",
+                "vite": "Vite",
+                "webpack": "Webpack",
+                "html": "HTML",
+                "css": "CSS",
+                "sass": "SCSS",
+                "scss": "SCSS",
+                "electron": "Electron",
+                # Backend
+                "node.js": "Node.js",
+                "nodejs": "Node.js",
+                "express": "Express",
+                "django": "Django",
+                "flask": "Flask",
+                "fastapi": "FastAPI",
+                "spring": "Spring",
+                "spring boot": "Spring",
+                "laravel": "Laravel",
+                "rails": "Rails",
+                "graphql": "GraphQL",
+                "rest api": "REST API",
+                # Data Science & ML
+                "pytorch": "PyTorch",
+                "tensorflow": "TensorFlow",
+                "scikit-learn": "Scikit-learn",
+                "sklearn": "Scikit-learn",
+                "scikit learn": "Scikit-learn",
+                "opencv": "OpenCV",
+                "numpy": "NumPy",
+                "pandas": "Pandas",
+                "matplotlib": "Matplotlib",
+                "plotly": "Plotly",
+                "seaborn": "Seaborn",
+                "keras": "Keras",
+                "hugging face": "HuggingFace",
+                "langchain": "LangChain",
+                "jupyter": "Jupyter",
+                "power bi": "Power BI",
+                "tableau": "Tableau",
+                # Cloud & DevOps
+                "docker": "Docker",
+                "kubernetes": "Kubernetes",
+                "aws": "AWS",
+                "amazon web services": "AWS",
+                "google cloud": "GCP",
+                "gcp": "GCP",
+                "azure": "Azure",
+                "github actions": "GitHub Actions",
+                "jenkins": "Jenkins",
+                "ansible": "Ansible",
+                "terraform": "Terraform",
+                "linux": "Linux",
+                "ubuntu": "Ubuntu",
+                "nginx": "Nginx",
+                "apache": "Apache",
+                # Databases
+                "mongodb": "MongoDB",
+                "postgresql": "PostgreSQL",
+                "postgres": "PostgreSQL",
+                "mysql": "MySQL",
+                "redis": "Redis",
+                "firebase": "Firebase",
+                "sqlite": "SQLite",
+                "cassandra": "Cassandra",
+                "elasticsearch": "Elasticsearch",
+                # Tools
+                "git": "Git",
+                "postman": "Postman",
+                "figma": "Figma",
+                "unity": "Unity",
+                "godot": "Godot",
+                "solidity": "Solidity",
+            }
+
             found = []
-            for lang in known_languages:
-                if lang in readme_text and lang not in found:
-                    found.append(lang.title())
-            
-            return found[:10]  # max 10 from README
-        except Exception:
+            seen_display = set()
+
+            for search_term, display_name in tech_map.items():
+                # Avoid duplicate display names
+                if display_name in seen_display:
+                    continue
+                # Use word boundary style matching
+                if search_term in readme_text:
+                    found.append(display_name)
+                    seen_display.add(display_name)
+
+            print(f"[readme_skills] Found {len(found)} skills: {found}")
+            return found  # Return ALL found, no cap
+
+        except Exception as e:
+            print(f"[readme_skills] Error: {e}")
             return []
