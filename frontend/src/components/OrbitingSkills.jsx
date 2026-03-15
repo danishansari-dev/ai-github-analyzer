@@ -280,31 +280,66 @@ function OrbitingSkills({ skills }) {
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
             >
-                {/* Orbit rings */}
+                {/* Glowing orbit rings — cyan inner, purple outer */}
                 <div className="absolute inset-0 pointer-events-none">
+                    {/* Inner ring (cyan) */}
                     <div
-                        className="absolute rounded-full border border-white/5"
+                        className="absolute rounded-full"
                         style={{
                             width: INNER_R * 2,
                             height: INNER_R * 2,
                             top: CENTER - INNER_R,
                             left: CENTER - INNER_R,
                         }}
-                    />
+                    >
+                        <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                                background: 'radial-gradient(circle, transparent 30%, rgba(6,182,212,0.15) 70%, rgba(6,182,212,0.3) 100%)',
+                                boxShadow: '0 0 60px rgba(6,182,212,0.3), inset 0 0 60px rgba(6,182,212,0.15)',
+                                animation: 'pulse 4s ease-in-out infinite',
+                            }}
+                        />
+                        <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                                border: '1px solid rgba(6,182,212,0.3)',
+                                boxShadow: 'inset 0 0 20px rgba(6,182,212,0.15)',
+                            }}
+                        />
+                    </div>
+                    {/* Outer ring (purple) */}
                     <div
-                        className="absolute rounded-full border border-white/5"
+                        className="absolute rounded-full"
                         style={{
                             width: OUTER_R * 2,
                             height: OUTER_R * 2,
                             top: CENTER - OUTER_R,
                             left: CENTER - OUTER_R,
                         }}
-                    />
+                    >
+                        <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                                background: 'radial-gradient(circle, transparent 30%, rgba(147,51,234,0.15) 70%, rgba(147,51,234,0.3) 100%)',
+                                boxShadow: '0 0 60px rgba(147,51,234,0.3), inset 0 0 60px rgba(147,51,234,0.15)',
+                                animation: 'pulse 4s ease-in-out infinite',
+                                animationDelay: '1.5s',
+                            }}
+                        />
+                        <div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                                border: '1px solid rgba(147,51,234,0.3)',
+                                boxShadow: 'inset 0 0 20px rgba(147,51,234,0.15)',
+                            }}
+                        />
+                    </div>
                 </div>
 
-                {/* Central node - explicit positioning */}
+                {/* Central node with dual cyan/purple glow */}
                 <div 
-                    className="rounded-full bg-slate-900/50 flex items-center justify-center relative shadow-2xl border border-white/10 z-20"
+                    className="rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center relative shadow-2xl z-20"
                     style={{
                         top: CENTER - 32,
                         left: CENTER - 32,
@@ -313,7 +348,8 @@ function OrbitingSkills({ skills }) {
                         position: 'absolute',
                     }}
                 >
-                    <div className="absolute inset-0 rounded-full blur-xl bg-cyan-500/10 animate-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-cyan-500/30 blur-xl animate-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
                     <svg width="24" height="24" viewBox="0 0 36 36" className="relative z-10 transition-transform duration-500">
                         <defs>
                             <linearGradient id="orbiting-skills-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
