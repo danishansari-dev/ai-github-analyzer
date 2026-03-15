@@ -114,18 +114,31 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         github_user_obj = await asyncio.to_thread(github_svc.g.get_user, username)
         social_links = await asyncio.to_thread(github_svc.get_social_links, github_user_obj)
         
-        # 5e. Extract phone and email from public README
+        # 5e. Extract all social links and contact info from public README
         readme_contact = await asyncio.to_thread(github_svc.get_readme_contact_info, username)
+
+        # Merge phone
         if readme_contact.get('phone'):
             import re
-            # Extract digits only for wa.me URL
-            cleaned = re.sub(r'\D', '', readme_contact['phone'])
+            cleaned = re.sub(r'[^+\d]', '', readme_contact['phone'])
             social_links['phone'] = f"https://wa.me/{cleaned}"
             social_links['phone_display'] = readme_contact['phone'].strip()
-        
-        # Only add readme email if GitHub profile email is missing
+
+        # Merge email only if not already present from GitHub profile
         if readme_contact.get('readme_email') and not social_links.get('email'):
             social_links['email'] = f"mailto:{readme_contact['readme_email']}"
+
+        # Merge all other social links found in README
+        # These keys map to display labels in the frontend
+        readme_social_keys = [
+            'linkedin', 'twitter', 'leetcode', 'kaggle',
+            'codeforces', 'codechef', 'hackerrank', 'stackoverflow',
+            'devto', 'medium', 'hashnode', 'youtube', 'instagram',
+            'discord', 'telegram', 'portfolio'
+        ]
+        for key in readme_social_keys:
+            if readme_contact.get(key) and not social_links.get(key):
+                social_links[key] = readme_contact[key]
 
         print(f"[analyze] Social links fetched: {len(social_links)} found (including README contact)")
 
