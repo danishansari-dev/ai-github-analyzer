@@ -481,8 +481,13 @@ class GitHubService:
                 # Avoid duplicate display names
                 if display_name in seen_display:
                     continue
-                # Use word boundary style matching
-                if search_term in readme_text:
+                
+                # Use regex word boundaries (negative lookbehind/lookahead for alphanumerics)
+                # to avoid matching "rust" in "trust", "go" in "good", "r" in "for"
+                escaped_term = re.escape(search_term.strip())
+                pattern = rf"(?<![a-zA-Z0-9_]){escaped_term}(?![a-zA-Z0-9_])"
+                
+                if re.search(pattern, readme_text):
                     found.append(display_name)
                     seen_display.add(display_name)
 
