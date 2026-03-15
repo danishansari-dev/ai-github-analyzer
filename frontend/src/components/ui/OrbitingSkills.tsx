@@ -1,279 +1,448 @@
-"use client"
-import React, { useEffect, useState, memo } from 'react';
+"use client";
+import React, { useState, useEffect, useRef, useMemo, memo } from "react";
 
-// --- Type Definitions ---
-type IconType = 'html' | 'css' | 'javascript' | 'react' | 'node' | 'tailwind';
-
-type GlowColor = 'cyan' | 'purple';
-
-interface SkillIconProps {
-  type: IconType;
-}
-
-interface SkillConfig {
-  id: string;
-  orbitRadius: number;
-  size: number;
-  speed: number;
-  iconType: IconType;
-  phaseShift: number;
-  glowColor: GlowColor;
-  label: string;
-}
-
-interface OrbitingSkillProps {
-  config: SkillConfig;
-  angle: number;
-}
-
-interface GlowingOrbitPathProps {
-  radius: number;
-  glowColor?: GlowColor;
-  animationDelay?: number;
-}
-
-// --- Improved SVG Icon Components ---
-const iconComponents: Record<IconType, { component: () => React.JSX.Element; color: string }> = {
-  html: {
-    component: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-        <path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z" fill="#E34F26"/>
-      </svg>
-    ),
-    color: '#E34F26'
-  },
-  css: {
-    component: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-        <path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm17.09 4.413L5.41 4.41l.213 2.622 10.125.002-.255 2.716h-6.64l.24 2.573h6.182l-.366 3.523-2.91.804-2.956-.81-.188-2.11h-2.61l.29 3.751L12 19.351l5.379-1.443.744-8.157z" fill="#1572B6"/>
-      </svg>
-    ),
-    color: '#1572B6'
-  },
-  javascript: {
-    component: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-        <rect width="24" height="24" fill="#F7DF1E"/>
-        <path d="M22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z" fill="#323330"/>
-      </svg>
-    ),
-    color: '#F7DF1E'
-  },
-  react: {
-    component: () => (
-      <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-        <g stroke="#61DAFB" strokeWidth="1" fill="none">
-          <circle cx="12" cy="12" r="2.05" fill="#61DAFB"/>
-          <ellipse cx="12" cy="12" rx="11" ry="4.2"/>
-          <ellipse cx="12" cy="12" rx="11" ry="4.2" transform="rotate(60 12 12)"/>
-          <ellipse cx="12" cy="12" rx="11" ry="4.2" transform="rotate(120 12 12)"/>
-        </g>
-      </svg>
-    ),
-    color: '#61DAFB'
-  },
-  node: {
-    component: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-        <path d="M11.998 24c-.321 0-.641-.084-.922-.247l-2.936-1.737c-.438-.245-.224-.332-.08-.383.585-.203.703-.25 1.328-.602.065-.037.151-.023.218.017l2.256 1.339c.082.045.198.045.275 0l8.795-5.076c.082-.047.135-.141.135-.241V6.921c0-.103-.055-.198-.137-.246l-8.791-5.072c-.081-.047-.189-.047-.273 0L2.075 6.675c-.084.048-.139.144-.139.246v10.146c0 .1.55.194.139.241l2.409 1.392c1.307.654 2.108-.116 2.108-.89V7.787c0-.142.114-.253.256-.253h1.115c.139 0 .255.112.255.253v10.021c0 1.745-.95 2.745-2.604 2.745-.508 0-.909 0-2.026-.551L1.352 18.675C.533 18.215 0 17.352 0 16.43V6.284c0-.922.533-1.786 1.352-2.245L10.147-.963c.8-.452 1.866-.452 2.657 0l8.796 5.002c.819.459 1.352 1.323 1.352 2.245v10.146c0 .922-.533 1.783-1.352 2.245l-8.796 5.078c-.28.163-.601.247-.926.247zm2.717-6.993c-3.849 0-4.654-1.766-4.654-3.246 0-.14.114-.253.256-.253h1.136c.127 0 .232.091.252.215.173 1.164.686 1.752 3.01 1.752 1.852 0 2.639-.419 2.639-1.401 0-.566-.224-1.03-3.099-1.249-2.404-.184-3.89-.768-3.89-2.689 0-1.771 1.491-2.825 3.991-2.825 2.808 0 4.199.975 4.377 3.068.007.072-.019.141-.065.193-.047.049-.111.077-.178.077h-1.14c-.119 0-.225-.083-.248-.196-.276-1.224-.944-1.616-2.746-1.616-2.023 0-2.259.705-2.259 1.234 0 .641.278.827 3.006 1.19 2.7.359 3.982.866 3.982 2.771 0 1.922-1.603 3.024-4.399 3.024z" fill="#339933"/>
-      </svg>
-    ),
-    color: '#339933'
-  },
-  tailwind: {
-    component: () => (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-        <path d="M12.001 4.8c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624C13.666 10.618 15.027 12 18.001 12c3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C16.337 6.182 14.976 4.8 12.001 4.8zm-6 7.2c-3.2 0-5.2 1.6-6 4.8 1.2-1.6 2.6-2.2 4.2-1.8.913.228 1.565.89 2.288 1.624 1.177 1.194 2.538 2.576 5.512 2.576 3.2 0 5.2-1.6 6-4.8-1.2 1.6-2.6 2.2-4.2 1.8-.913-.228-1.565-.89-2.288-1.624C10.337 13.382 8.976 12 6.001 12z" fill="#06B6D4"/>
-      </svg>
-    ),
-    color: '#06B6D4'
-  }
+// --- Color mapping for known languages/frameworks ---
+const SKILL_COLORS: Record<string, { color: string; textColor: string; abbrev: string }> = {
+  JavaScript: { color: "#F7DF1E", textColor: "#000000", abbrev: "JS" },
+  TypeScript: { color: "#3178C6", textColor: "#FFFFFF", abbrev: "TS" },
+  Python: { color: "#3776AB", textColor: "#FFFFFF", abbrev: "PY" },
+  React: { color: "#61DAFB", textColor: "#0B1120", abbrev: "RC" },
+  Vue: { color: "#42B883", textColor: "#FFFFFF", abbrev: "VU" },
+  "Node.js": { color: "#339933", textColor: "#FFFFFF", abbrev: "ND" },
+  HTML: { color: "#E34F26", textColor: "#FFFFFF", abbrev: "HT" },
+  CSS: { color: "#1572B6", textColor: "#FFFFFF", abbrev: "CS" },
+  Tailwind: { color: "#06B6D4", textColor: "#FFFFFF", abbrev: "TW" },
+  Go: { color: "#00ADD8", textColor: "#FFFFFF", abbrev: "GO" },
+  Rust: { color: "#CE422B", textColor: "#FFFFFF", abbrev: "RS" },
+  Java: { color: "#ED8B00", textColor: "#FFFFFF", abbrev: "JV" },
+  "C++": { color: "#00599C", textColor: "#FFFFFF", abbrev: "C+" },
+  Docker: { color: "#2496ED", textColor: "#FFFFFF", abbrev: "DK" },
+  Git: { color: "#F05032", textColor: "#FFFFFF", abbrev: "GT" },
+  "Jupyter Notebook": { color: "#F37626", textColor: "#FFFFFF", abbrev: "JN" },
+  Shell: { color: "#89E051", textColor: "#000000", abbrev: "SH" },
+  Ruby: { color: "#CC342D", textColor: "#FFFFFF", abbrev: "RB" },
+  PHP: { color: "#777BB4", textColor: "#FFFFFF", abbrev: "PH" },
+  Swift: { color: "#FA7343", textColor: "#FFFFFF", abbrev: "SW" },
+  Kotlin: { color: "#A97BFF", textColor: "#FFFFFF", abbrev: "KT" },
+  Dart: { color: "#00B4AB", textColor: "#FFFFFF", abbrev: "DT" },
+  Scala: { color: "#DC322F", textColor: "#FFFFFF", abbrev: "SC" },
+  R: { color: "#276DC3", textColor: "#FFFFFF", abbrev: "R" },
+  SCSS: { color: "#CC6699", textColor: "#FFFFFF", abbrev: "SC" },
 };
 
-// --- Memoized Icon Component ---
-const SkillIcon = memo(({ type }: SkillIconProps) => {
-  const IconComponent = iconComponents[type]?.component;
-  return IconComponent ? <IconComponent /> : null;
-});
-SkillIcon.displayName = 'SkillIcon';
+const FALLBACK_COLOR = "#60a5fa";
 
-// --- Configuration for the Orbiting Skills ---
-const skillsConfig: SkillConfig[] = [
-  // Inner Orbit
-  { id: 'html', orbitRadius: 100, size: 40, speed: 1, iconType: 'html', phaseShift: 0, glowColor: 'cyan', label: 'HTML5' },
-  { id: 'css', orbitRadius: 100, size: 45, speed: 1, iconType: 'css', phaseShift: (2 * Math.PI) / 3, glowColor: 'cyan', label: 'CSS3' },
-  { id: 'javascript', orbitRadius: 100, size: 40, speed: 1, iconType: 'javascript', phaseShift: (4 * Math.PI) / 3, glowColor: 'cyan', label: 'JavaScript' },
-  // Outer Orbit
-  { id: 'react', orbitRadius: 180, size: 50, speed: -0.6, iconType: 'react', phaseShift: 0, glowColor: 'purple', label: 'React' },
-  { id: 'node', orbitRadius: 180, size: 45, speed: -0.6, iconType: 'node', phaseShift: (2 * Math.PI) / 3, glowColor: 'purple', label: 'Node.js' },
-  { id: 'tailwind', orbitRadius: 180, size: 40, speed: -0.6, iconType: 'tailwind', phaseShift: (4 * Math.PI) / 3, glowColor: 'purple', label: 'Tailwind CSS' },
-];
+// --- Devicon slug mapping for CDN icon fetching ---
+const deviconMap: Record<string, string> = {
+  JavaScript: "javascript",
+  TypeScript: "typescript",
+  Python: "python",
+  Java: "java",
+  C: "c",
+  "C++": "cplusplus",
+  "C#": "csharp",
+  Go: "go",
+  Rust: "rust",
+  Ruby: "ruby",
+  PHP: "php",
+  Swift: "swift",
+  Kotlin: "kotlin",
+  Dart: "dart",
+  Scala: "scala",
+  R: "r",
+  MATLAB: "matlab",
+  Shell: "bash",
+  Bash: "bash",
+  PowerShell: "powershell",
+  HTML: "html5",
+  CSS: "css3",
+  SCSS: "sass",
+  Sass: "sass",
+  Less: "less",
+  React: "react",
+  Vue: "vuejs",
+  Angular: "angularjs",
+  Svelte: "svelte",
+  "Node.js": "nodejs",
+  NodeJs: "nodejs",
+  Express: "express",
+  Django: "django",
+  Flask: "flask",
+  FastAPI: "fastapi",
+  Spring: "spring",
+  Laravel: "laravel",
+  Rails: "rails",
+  Docker: "docker",
+  Kubernetes: "kubernetes",
+  Git: "git",
+  GraphQL: "graphql",
+  MongoDB: "mongodb",
+  PostgreSQL: "postgresql",
+  MySQL: "mysql",
+  Redis: "redis",
+  Firebase: "firebase",
+  AWS: "amazonwebservices",
+  GCP: "googlecloud",
+  Azure: "azure",
+  Linux: "linux",
+  Ubuntu: "ubuntu",
+  Electron: "electron",
+  "Jupyter Notebook": "jupyter",
+  Lua: "lua",
+  Perl: "perl",
+  Haskell: "haskell",
+  Elixir: "elixir",
+  Clojure: "clojure",
+  Erlang: "erlang",
+  OCaml: "ocaml",
+  "F#": "fsharp",
+  Vite: "vitejs",
+  Tailwind: "tailwindcss",
+  "Next.js": "nextjs",
+  "Nuxt.js": "nuxtjs",
+  PyTorch: "pytorch",
+  TensorFlow: "tensorflow",
+  OpenCV: "opencv",
+  Pandas: "pandas",
+  NumPy: "numpy",
+  Unity: "unity",
+  Godot: "godot",
+  Solidity: "solidity",
+  WebAssembly: "wasm",
+  Zig: "zig",
+  CoffeeScript: "coffeescript",
+  Groovy: "groovy",
+};
 
-// --- Memoized Orbiting Skill Component ---
-const OrbitingSkill = memo(({ config, angle }: OrbitingSkillProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const { orbitRadius, size, iconType, label } = config;
+// --- DevIcon: tries multiple CDN variants before falling back to text ---
+interface DevIconProps {
+  slug: string;
+  name: string;
+  color: string;
+}
 
-  const x = Math.cos(angle) * orbitRadius;
-  const y = Math.sin(angle) * orbitRadius;
-
-  return (
-    <div
-      className="absolute top-1/2 left-1/2 transition-all duration-300 ease-out"
-      style={{
-        width: `${size}px`,
-        height: `${size}px`,
-        transform: `translate(calc(${x}px - 50%), calc(${y}px - 50%))`,
-        zIndex: isHovered ? 20 : 10,
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div
-        className={`
-          relative w-full h-full p-2 bg-gray-800/90 backdrop-blur-sm
-          rounded-full flex items-center justify-center
-          transition-all duration-300 cursor-pointer
-          ${isHovered ? 'scale-125 shadow-2xl' : 'shadow-lg hover:shadow-xl'}
-        `}
-        style={{
-          boxShadow: isHovered
-            ? `0 0 30px ${iconComponents[iconType]?.color}40, 0 0 60px ${iconComponents[iconType]?.color}20`
-            : undefined
-        }}
-      >
-        <SkillIcon type={iconType} />
-        {isHovered && (
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900/95 backdrop-blur-sm rounded text-xs text-white whitespace-nowrap pointer-events-none">
-            {label}
-          </div>
-        )}
-      </div>
-    </div>
+function DevIcon({ slug, name, color }: DevIconProps) {
+  const fallbacks = useMemo(
+    () => [
+      `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`,
+      `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain.svg`,
+      `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original-wordmark.svg`,
+      `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain-wordmark.svg`,
+    ],
+    [slug]
   );
-});
-OrbitingSkill.displayName = 'OrbitingSkill';
 
-// --- Optimized Orbit Path Component ---
-const GlowingOrbitPath = memo(({ radius, glowColor = 'cyan', animationDelay = 0 }: GlowingOrbitPathProps) => {
-  const glowColors = {
-    cyan: { primary: 'rgba(6, 182, 212, 0.4)', secondary: 'rgba(6, 182, 212, 0.2)', border: 'rgba(6, 182, 212, 0.3)' },
-    purple: { primary: 'rgba(147, 51, 234, 0.4)', secondary: 'rgba(147, 51, 234, 0.2)', border: 'rgba(147, 51, 234, 0.3)' }
+  const [src, setSrc] = useState(fallbacks[0]);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+
+  /** Cycle through CDN URL variants; show text abbreviation if all fail */
+  const handleError = () => {
+    const next = fallbackIndex + 1;
+    if (next < fallbacks.length) {
+      setFallbackIndex(next);
+      setSrc(fallbacks[next]);
+    } else {
+      setSrc(""); // triggers text fallback
+    }
   };
-  const colors = glowColors[glowColor] || glowColors.cyan;
+
+  if (!src) {
+    return (
+      <div
+        className="w-full h-full rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+        style={{ backgroundColor: color + "33", border: `1px solid ${color}66` }}
+      >
+        {name.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-      style={{
-        width: `${radius * 2}px`,
-        height: `${radius * 2}px`,
-        animationDelay: `${animationDelay}s`,
-      }}
-    >
-      <div
-        className="absolute inset-0 rounded-full animate-pulse"
-        style={{
-          background: `radial-gradient(circle, transparent 30%, ${colors.secondary} 70%, ${colors.primary} 100%)`,
-          boxShadow: `0 0 60px ${colors.primary}, inset 0 0 60px ${colors.secondary}`,
-          animation: 'pulse 4s ease-in-out infinite',
-          animationDelay: `${animationDelay}s`,
-        }}
-      />
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          border: `1px solid ${colors.border}`,
-          boxShadow: `inset 0 0 20px ${colors.secondary}`,
-        }}
-      />
-    </div>
+    <img
+      src={src}
+      alt={name}
+      className="w-full h-full object-contain p-1"
+      onError={handleError}
+    />
   );
-});
-GlowingOrbitPath.displayName = 'GlowingOrbitPath';
+}
 
-// --- Main App Component ---
-export default function OrbitingSkills() {
+// --- Helper to resolve color config for a skill name ---
+function getSkillConfig(name: string) {
+  const base = SKILL_COLORS[name] || {};
+  const color = base?.color || FALLBACK_COLOR;
+  const textColor = base?.textColor || "#FFFFFF";
+  let abbrev = base?.abbrev;
+
+  if (!abbrev && typeof name === "string" && name.length >= 2) {
+    abbrev = name.slice(0, 2).toUpperCase();
+  } else if (!abbrev) {
+    abbrev = "??";
+  }
+
+  return { color, textColor, abbrev };
+}
+
+// --- Badge type used internally ---
+interface Badge {
+  name: string;
+  radius: number;
+  speed: number;
+  phaseShift: number;
+  size: number;
+  color: string;
+  textColor: string;
+  abbrev: string;
+  slug: string | null;
+  index: number;
+}
+
+// --- Props for the main component ---
+interface OrbitingSkillsProps {
+  skills?: string[];
+}
+
+/**
+ * Renders a two-tier orbiting skills visualisation.
+ * First 4 items orbit on the inner ring, the rest (up to 8) on the outer ring.
+ * Uses devicon CDN images where available, with text abbreviation fallback.
+ * @param skills - Array of technology/language names to display
+ * @returns Animated orbiting skills component
+ */
+export default function OrbitingSkills({ skills = [] }: OrbitingSkillsProps) {
   const [time, setTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+  const frameRef = useRef<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Get live dimensions for responsive sizing
+  const rect = containerRef.current?.getBoundingClientRect();
+  const liveSize = rect ? Math.min(rect.width, rect.height) : 460;
+
+  // Core layout math — proportional to container size
+  const CENTER = liveSize / 2;
+  const INNER_R = liveSize * 0.24;
+  const OUTER_R = liveSize * 0.4;
+
+  // Split skills into two tiers (inner: first 4, outer: next 8)
+  const innerSkills = (skills || []).slice(0, 4);
+  const outerSkills = (skills || []).slice(4, 12);
+  const total = innerSkills.length + outerSkills.length;
+
+  // Animation loop using requestAnimationFrame for smooth 60fps orbit
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || total === 0) {
+      cancelAnimationFrame(frameRef.current);
+      lastTimeRef.current = null;
+      return;
+    }
 
-    let animationFrameId: number;
-    let lastTime = performance.now();
-
-    const animate = (currentTime: number) => {
-      const deltaTime = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
-      setTime(prevTime => prevTime + deltaTime);
-      animationFrameId = requestAnimationFrame(animate);
+    const step = (timestamp: number) => {
+      if (lastTimeRef.current == null) lastTimeRef.current = timestamp;
+      const delta = (timestamp - lastTimeRef.current) / 1000;
+      lastTimeRef.current = timestamp;
+      setTime((prev) => prev + delta);
+      frameRef.current = requestAnimationFrame(step);
     };
 
-    animationFrameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isPaused]);
+    frameRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [isPaused, total]);
 
-  const orbitConfigs: Array<{ radius: number; glowColor: GlowColor; delay: number }> = [
-    { radius: 100, glowColor: 'cyan', delay: 0 },
-    { radius: 180, glowColor: 'purple', delay: 1.5 }
-  ];
+  // Precompute badge configs — only recalculates when skills or sizing change
+  const badges: Badge[] = useMemo(() => {
+    const all: Badge[] = [];
+    innerSkills.forEach((name, i) => {
+      all.push({
+        name,
+        radius: INNER_R,
+        speed: 0.4,
+        phaseShift: (i / (innerSkills.length || 1)) * Math.PI * 2,
+        size: Math.max(38, liveSize * 0.08),
+        ...getSkillConfig(name),
+        slug: deviconMap[name] || null,
+        index: all.length,
+      });
+    });
+    outerSkills.forEach((name, i) => {
+      all.push({
+        name,
+        radius: OUTER_R,
+        speed: 0.18,
+        phaseShift: (i / (outerSkills.length || 1)) * Math.PI * 2,
+        size: Math.max(44, liveSize * 0.1),
+        ...getSkillConfig(name),
+        slug: deviconMap[name] || null,
+        index: all.length,
+      });
+    });
+    return all;
+  }, [innerSkills, outerSkills, INNER_R, OUTER_R, liveSize]);
 
   return (
-    <main className="w-full flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, #374151 0%, transparent 50%),
-                             radial-gradient(circle at 75% 75%, #4B5563 0%, transparent 50%)`,
-          }}
-        />
-      </div>
-
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "460px",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
       <div
-        className="relative w-[calc(100vw-40px)] h-[calc(100vw-40px)] md:w-[450px] md:h-[450px] flex items-center justify-center"
+        ref={containerRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          minHeight: "460px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center z-10 relative shadow-2xl">
-          <div className="absolute inset-0 rounded-full bg-cyan-500/30 blur-xl animate-pulse"></div>
-          <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="relative z-10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#06B6D4" />
-                  <stop offset="100%" stopColor="#9333EA" />
-                </linearGradient>
-              </defs>
-              <polyline points="16 18 22 12 16 6"></polyline>
-              <polyline points="8 6 2 12 8 18"></polyline>
-            </svg>
-          </div>
+        {/* Orbit ring paths — purely decorative */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute rounded-full border border-white/5"
+            style={{
+              width: INNER_R * 2,
+              height: INNER_R * 2,
+              top: CENTER - INNER_R,
+              left: CENTER - INNER_R,
+            }}
+          />
+          <div
+            className="absolute rounded-full border border-white/5"
+            style={{
+              width: OUTER_R * 2,
+              height: OUTER_R * 2,
+              top: CENTER - OUTER_R,
+              left: CENTER - OUTER_R,
+            }}
+          />
         </div>
 
-        {orbitConfigs.map((config) => (
-          <GlowingOrbitPath
-            key={`path-${config.radius}`}
-            radius={config.radius}
-            glowColor={config.glowColor}
-            animationDelay={config.delay}
-          />
-        ))}
-
-        {skillsConfig.map((config) => {
-          const angle = time * config.speed + (config.phaseShift || 0);
-          return (
-            <OrbitingSkill
-              key={config.id}
-              config={config}
-              angle={angle}
+        {/* Central code icon with gradient glow */}
+        <div
+          className="rounded-full bg-slate-900/50 flex items-center justify-center relative shadow-2xl border border-white/10 z-20"
+          style={{
+            top: CENTER - 32,
+            left: CENTER - 32,
+            width: 64,
+            height: 64,
+            position: "absolute",
+          }}
+        >
+          <div className="absolute inset-0 rounded-full blur-xl bg-cyan-500/10 animate-pulse" />
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 36 36"
+            className="relative z-10 transition-transform duration-500"
+          >
+            <defs>
+              <linearGradient
+                id="orbiting-skills-gradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor="#22d3ee" />
+                <stop offset="100%" stopColor="#a855f7" />
+              </linearGradient>
+            </defs>
+            <polyline
+              points="10,11 6,18 10,25"
+              fill="none"
+              stroke="url(#orbiting-skills-gradient)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
+            <line
+              x1="15"
+              y1="11"
+              x2="21"
+              y2="25"
+              stroke="url(#orbiting-skills-gradient)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <polyline
+              points="26,11 30,18 26,25"
+              fill="none"
+              stroke="url(#orbiting-skills-gradient)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+
+        {/* Orbiting skill badges */}
+        {badges.map((item) => {
+          const angle = time * item.speed + item.phaseShift;
+          const x = CENTER + Math.cos(angle) * item.radius;
+          const y = CENTER + Math.sin(angle) * item.radius;
+          const isHovered = hoveredIndex === item.index;
+
+          return (
+            <button
+              type="button"
+              key={item.index}
+              className="absolute flex items-center justify-center rounded-full bg-gray-950/90 backdrop-blur-md cursor-pointer transition-all duration-300 border border-white/5 z-10"
+              style={{
+                width: `${item.size}px`,
+                height: `${item.size}px`,
+                top: y - item.size / 2,
+                left: x - item.size / 2,
+                transform: `scale(${isHovered ? 1.3 : 1})`,
+                boxShadow: isHovered
+                  ? `0 0 30px ${item.color}50`
+                  : "0 4px 12px rgba(0,0,0,0.5)",
+                borderColor: isHovered ? `${item.color}80` : undefined,
+              }}
+              onMouseEnter={() => setHoveredIndex(item.index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              <div className="w-full h-full p-2 flex items-center justify-center">
+                {item.slug ? (
+                  <DevIcon
+                    slug={item.slug}
+                    name={item.name}
+                    color={item.color}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <div
+                      className="w-1.5 h-1.5 rounded-full mb-0.5"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span
+                      className="text-[7px] font-black uppercase tracking-tighter"
+                      style={{ color: item.textColor }}
+                    >
+                      {item.abbrev}
+                    </span>
+                  </div>
+                )}
+                {/* Tooltip on hover */}
+                {isHovered && (
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/95 border border-white/10 rounded-md text-[10px] font-bold text-white whitespace-nowrap shadow-2xl pointer-events-none">
+                    {item.name}
+                  </div>
+                )}
+              </div>
+            </button>
           );
         })}
       </div>
-    </main>
+    </div>
   );
 }
