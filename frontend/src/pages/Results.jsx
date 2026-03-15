@@ -125,49 +125,18 @@ function Results() {
         setStartTrigger(prev => prev + 1);
     };
 
-    const KNOWN_LANGUAGE_LIKE = new Set([
-        'JavaScript',
-        'TypeScript',
-        'Python',
-        'React',
-        'Vue',
-        'Node.js',
-        'HTML',
-        'CSS',
-        'Tailwind',
-        'Go',
-        'Rust',
-        'Java',
-        'C++',
-        'Docker',
-        'Git',
-        'Jupyter Notebook',
-        'Shell',
-        'Ruby',
-        'PHP',
-        'Swift',
-        'Kotlin',
-        'Dart',
-        'Scala',
-        'R',
-        'SCSS'
-    ]);
-
     const techStack = useMemo(() => {
         const primaryStack = data?.stack?.primary_stack || [];
         if (!primaryStack || primaryStack.length === 0) return [];
         
-        // Prioritize language-like ones but keep others to reach up to 20
-        const languageLike = primaryStack.filter(item => KNOWN_LANGUAGE_LIKE.has(item));
-        
-        const result = [...languageLike];
-        for (const item of primaryStack) {
-            if (result.length >= 20) break;
-            if (!result.includes(item)) {
-                result.push(item);
-            }
-        }
-        return result;
+        // Deduplicate case-insensitively, preserve all items
+        const seen = new Set();
+        return primaryStack.filter(item => {
+            const lower = item.toLowerCase();
+            if (seen.has(lower)) return false;
+            seen.add(lower);
+            return true;
+        });
     }, [data?.stack?.primary_stack]);
 
     if (!username) return null;
