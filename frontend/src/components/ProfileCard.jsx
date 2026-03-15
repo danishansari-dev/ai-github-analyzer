@@ -1,17 +1,27 @@
-import { Github, Twitter, Linkedin, Youtube, Globe, Mail, Twitch, Instagram, Phone } from 'lucide-react';
+import { Github, Twitter, Linkedin, Youtube, Globe, Mail, Twitch, Instagram, Phone, Code, BookOpen, MessageCircle, Send } from 'lucide-react';
 
 function SocialIcon({ platform, size, color }) {
     const props = { size, color };
     switch (platform) {
-        case 'github': return <Github {...props} />;
-        case 'twitter': return <Twitter {...props} />;
-        case 'linkedin': return <Linkedin {...props} />;
-        case 'youtube': return <Youtube {...props} />;
-        case 'twitch': return <Twitch {...props} />;
-        case 'instagram': return <Instagram {...props} />;
-        case 'email': return <Mail {...props} />;
-        case 'phone': return <Phone {...props} />;
-        default: return <Globe {...props} />;
+        case 'github':        return <Github {...props} />;
+        case 'twitter':       return <Twitter {...props} />;
+        case 'linkedin':      return <Linkedin {...props} />;
+        case 'youtube':       return <Youtube {...props} />;
+        case 'twitch':        return <Twitch {...props} />;
+        case 'instagram':     return <Instagram {...props} />;
+        case 'email':         return <Mail {...props} />;
+        case 'phone':         return <Phone {...props} />;
+        case 'discord':       return <MessageCircle {...props} />;
+        case 'telegram':      return <Send {...props} />;
+        case 'medium':
+        case 'devto':
+        case 'hashnode':      return <BookOpen {...props} />;
+        case 'leetcode':
+        case 'codeforces':
+        case 'codechef':
+        case 'hackerrank':
+        case 'stackoverflow': return <Code {...props} />;
+        default:              return <Globe {...props} />;
     }
 }
 
@@ -40,16 +50,28 @@ function ProfileCard({ data, username, isRoast = false, socialLinks = {} }) {
     } = stack || {};
 
     const socialIcons = {
-        github: { icon: 'github', label: 'GitHub', color: '#ffffff' },
-        twitter: { icon: 'twitter', label: 'Twitter', color: '#1DA1F2' },
-        linkedin: { icon: 'linkedin', label: 'LinkedIn', color: '#0A66C2' },
-        youtube: { icon: 'youtube', label: 'YouTube', color: '#FF0000' },
-        twitch: { icon: 'twitch', label: 'Twitch', color: '#9146FF' },
-        instagram: { icon: 'instagram', label: 'Instagram', color: '#E4405F' },
-        website: { icon: 'globe', label: 'Website', color: '#60a5fa' },
-        email: { icon: 'mail', label: 'Email', color: '#34d399' },
-        phone: { icon: 'phone', label: 'Phone', color: '#34d399' },
-        mastodon: { icon: 'globe', label: 'Mastodon', color: '#6364FF' },
+        github:        { label: 'GitHub',       color: '#ffffff' },
+        twitter:       { label: 'Twitter',      color: '#1DA1F2' },
+        linkedin:      { label: 'LinkedIn',     color: '#0A66C2' },
+        youtube:       { label: 'YouTube',      color: '#FF0000' },
+        twitch:        { label: 'Twitch',       color: '#9146FF' },
+        instagram:     { label: 'Instagram',    color: '#E4405F' },
+        website:       { label: 'Website',      color: '#60a5fa' },
+        email:         { label: 'Email',        color: '#34d399' },
+        phone:         { label: 'Phone',        color: '#34d399' },
+        mastodon:      { label: 'Mastodon',     color: '#6364FF' },
+        leetcode:      { label: 'LeetCode',     color: '#FFA116' },
+        kaggle:        { label: 'Kaggle',       color: '#20BEFF' },
+        codeforces:    { label: 'Codeforces',   color: '#1F8ACB' },
+        codechef:      { label: 'CodeChef',     color: '#5B4638' },
+        hackerrank:    { label: 'HackerRank',   color: '#00EA64' },
+        stackoverflow: { label: 'Stack Overflow', color: '#F48024' },
+        devto:         { label: 'Dev.to',       color: '#ffffff' },
+        medium:        { label: 'Medium',       color: '#ffffff' },
+        hashnode:      { label: 'Hashnode',     color: '#2962FF' },
+        discord:       { label: 'Discord',      color: '#5865F2' },
+        telegram:      { label: 'Telegram',     color: '#26A5E4' },
+        portfolio:     { label: 'Portfolio',    color: '#60a5fa' },
     };
 
     const formatBadgeName = (slug) => slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
