@@ -217,9 +217,30 @@ export default function OrbitingSkills({ skills = [] }: OrbitingSkillsProps) {
   const frameRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get live dimensions for responsive sizing
-  const rect = containerRef.current?.getBoundingClientRect();
-  const liveSize = rect ? Math.min(rect.width, rect.height) : 460;
+  // Reactive size tracking — ResizeObserver ensures re-render with real pixel values
+  const [liveSize, setLiveSize] = useState(460);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      const s = Math.min(rect.width, rect.height);
+      if (s > 50) setLiveSize(s);
+    };
+
+    measure();
+    // Delayed re-measure to catch layout shifts after initial paint
+    const t = setTimeout(measure, 100);
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+
+    return () => {
+      clearTimeout(t);
+      ro.disconnect();
+    };
+  }, []);
 
   // Core layout math — proportional to container size
   const CENTER = liveSize / 2;
