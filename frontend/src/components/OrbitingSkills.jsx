@@ -180,11 +180,32 @@ function OrbitingSkills({ skills }) {
     const frameRef = useRef(null);
     const containerRef = useRef(null);
 
-    // Get live dimensions directly inside render for stability
-    const rect = containerRef.current?.getBoundingClientRect();
-    const liveSize = rect ? Math.min(rect.width, rect.height) : 460;
-    
-    // Core Math (Calculated every frame/render)
+    // Reactive size tracking — ResizeObserver ensures re-render with real pixel values
+    const [liveSize, setLiveSize] = useState(460);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const measure = () => {
+            const rect = el.getBoundingClientRect();
+            const s = Math.min(rect.width, rect.height);
+            if (s > 50) setLiveSize(s);
+        };
+
+        measure();
+        // Delayed re-measure to catch layout shifts after initial paint
+        const t = setTimeout(measure, 100);
+        const ro = new ResizeObserver(measure);
+        ro.observe(el);
+
+        return () => {
+            clearTimeout(t);
+            ro.disconnect();
+        };
+    }, []);
+
+    // Core Math (Calculated from reactive liveSize)
     const CENTER = liveSize / 2;
     const INNER_R = liveSize * 0.24;
     const OUTER_R = liveSize * 0.40;
