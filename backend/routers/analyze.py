@@ -116,6 +116,8 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         
         # 5e. Extract all social links and contact info from public README
         readme_contact = await asyncio.to_thread(github_svc.get_readme_contact_info, username)
+        
+        print(f"[analyze] README contact keys found: {list(readme_contact.keys())}")
 
         # Merge phone
         if readme_contact.get('phone'):
