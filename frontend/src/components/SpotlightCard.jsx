@@ -9,7 +9,7 @@ import React, { useRef, useState, useEffect } from 'react';
  * @param {string} [props.className=''] - Additional CSS classes
  * @returns {JSX.Element}
  */
-const SpotlightCard = ({ children, glowColor = 'blue', glowRadius = 600, className = '' }) => {
+const SpotlightCard = ({ children, glowColor = 'blue', glowRadius = 600, className = '', style = {} }) => {
     const containerRef = useRef(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [opacity, setOpacity] = useState(0);
@@ -41,6 +41,7 @@ const SpotlightCard = ({ children, glowColor = 'blue', glowRadius = 600, classNa
     return (
         <div
             ref={containerRef}
+            style={style}
             onMouseMove={handleMouseMove}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -53,7 +54,7 @@ const SpotlightCard = ({ children, glowColor = 'blue', glowRadius = 600, classNa
                     background: `radial-gradient(${glowRadius}px circle at ${position.x}px ${position.y}px, ${getGlowColor()}, transparent 40%)`,
                 }}
             />
-            <div className="relative z-10 h-full flex flex-col">
+            <div className="relative z-10 h-full flex flex-col flex-1">
                 {children}
             </div>
         </div>
