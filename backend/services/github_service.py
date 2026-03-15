@@ -273,21 +273,27 @@ class GitHubService:
                 contact['readme_email'] = emails[0]
 
             # --- Social/profile URL extraction from markdown links ---
-            # Matches both [label](url) and bare URLs
-            url_pattern = r'https?://[^\s\)\]\"\'<>]+'
+            # More permissive URL extraction — handles markdown badges and wrapped links
+            url_pattern = r'https?://(?:www\.)?[^\s\)\]\"\'<>,;]+'
             all_urls = re.findall(url_pattern, readme_text)
+
+            # Also extract URLs from markdown image-link patterns like [![...](...)](/url)
+            markdown_link_pattern = r'\[(?:[^\]]*)\]\((https?://[^\)]+)\)'
+            markdown_urls = re.findall(markdown_link_pattern, readme_text)
+            all_urls = list(set(all_urls + markdown_urls))
+
+            print(f"[readme_contact] All URLs found in README: {all_urls[:20]}")
 
             social_url_map = {
                 'linkedin.com/in/': 'linkedin',
                 'linkedin.com/pub/': 'linkedin',
                 'twitter.com/': 'twitter',
                 'x.com/': 'twitter',
-                'leetcode.com/u/': 'leetcode',
-                'leetcode.com/': 'leetcode',
-                'kaggle.com/': 'kaggle',
+                'leetcode.com': 'leetcode',
+                'kaggle.com': 'kaggle',
                 'codeforces.com/profile/': 'codeforces',
                 'codechef.com/users/': 'codechef',
-                'hackerrank.com/': 'hackerrank',
+                'hackerrank.com': 'hackerrank',
                 'stackoverflow.com/users/': 'stackoverflow',
                 'dev.to/': 'devto',
                 'medium.com/': 'medium',
@@ -315,6 +321,8 @@ class GitHubService:
                         if platform not in contact:
                             contact[platform] = url_clean
                         break
+            
+            print(f"[readme_contact] Final contact dict: {contact}")
 
         except Exception:
             pass
