@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
 const SKILL_COLORS = {
     'JavaScript': { color: '#F7DF1E', textColor: '#000000', abbrev: 'JS' },
@@ -113,6 +114,73 @@ const deviconMap = {
   "Groovy": "groovy",
 };
 
+/**
+ * Category mapping — used to group skills in the full Tech Stack panel.
+ * Uncategorized skills fall into "Tools & Other".
+ */
+const TECH_CATEGORIES = {
+  'Languages': [
+    'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'C', 'Go',
+    'Rust', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Dart', 'Scala', 'R',
+    'MATLAB', 'Shell', 'Bash', 'PowerShell', 'Lua', 'Perl', 'Haskell',
+    'Elixir', 'Clojure', 'Erlang', 'OCaml', 'F#', 'Groovy', 'Zig',
+    'CoffeeScript', 'WebAssembly', 'Solidity'
+  ],
+  'Frontend': [
+    'HTML', 'CSS', 'SCSS', 'Sass', 'Less', 'React', 'Vue', 'Angular',
+    'Svelte', 'Next.js', 'Nuxt.js', 'Tailwind', 'Vite', 'Electron'
+  ],
+  'Backend & Runtime': [
+    'Node.js', 'NodeJs', 'Express', 'Django', 'Flask', 'FastAPI',
+    'Spring', 'Laravel', 'Rails', 'GraphQL'
+  ],
+  'Data Science & ML': [
+    'PyTorch', 'TensorFlow', 'OpenCV', 'Pandas', 'NumPy', 'Jupyter Notebook',
+    'Scikit-learn', 'Matplotlib', 'Plotly', 'Keras'
+  ],
+  'Cloud & DevOps': [
+    'Docker', 'Kubernetes', 'AWS', 'GCP', 'Azure', 'Linux', 'Ubuntu',
+    'Git', 'Firebase', 'Ansible', 'Jenkins'
+  ],
+  'Databases': [
+    'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'SQLite', 'Cassandra'
+  ],
+  'Tools & Other': [
+    'Unity', 'Godot', 'GraphQL', 'WebAssembly'
+  ]
+};
+
+/**
+ * Groups the flat skills array into named categories for the panel.
+ * @param {string[]} skills - Flat list of skill names
+ * @returns {Record<string, string[]>} Categorized skills
+ */
+function categorizeSkills(skills) {
+  const categorized = {};
+  const usedSkills = new Set();
+
+  Object.entries(TECH_CATEGORIES).forEach(([category, categorySkills]) => {
+    const matches = skills.filter(s =>
+      categorySkills.some(cs => cs.toLowerCase() === s.toLowerCase())
+    );
+    if (matches.length > 0) {
+      categorized[category] = matches;
+      matches.forEach(s => usedSkills.add(s));
+    }
+  });
+
+  // Put uncategorized skills in "Tools & Other"
+  const uncategorized = skills.filter(s => !usedSkills.has(s));
+  if (uncategorized.length > 0) {
+    categorized['Tools & Other'] = [
+      ...(categorized['Tools & Other'] || []),
+      ...uncategorized
+    ];
+  }
+
+  return categorized;
+}
+
 function DevIcon({ slug, name, color }) {
   const [src, setSrc] = useState(
     `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`
@@ -172,10 +240,136 @@ function getSkillConfig(name) {
     return { color, textColor, abbrev };
 }
 
+/**
+ * Full-screen slide-in panel showing ALL skills grouped by category.
+ * Rendered via React Portal so it escapes any overflow-hidden ancestors.
+ * @param {{ skills: string[], onClose: () => void }} props
+ */
+function TechStackPanel({ skills, onClose }) {
+  const categorized = categorizeSkills(skills);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div className="fixed right-0 top-0 h-full w-full max-w-lg bg-[#0d0d14] border-l border-white/10 z-50 flex flex-col shadow-2xl overflow-hidden"
+        style={{ animation: 'slideInRight 0.3s ease-out' }}
+      >
+        <style>{`
+          @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+        `}</style>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 36 36" fill="none">
+                <defs>
+                  <linearGradient id="panel-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#22d3ee" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+                <polyline points="10,11 6,18 10,25" stroke="url(#panel-grad)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                <line x1="15" y1="11" x2="21" y2="25" stroke="url(#panel-grad)" strokeWidth="2.5" strokeLinecap="round"/>
+                <polyline points="26,11 30,18 26,25" stroke="url(#panel-grad)" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-white font-bold text-lg leading-none">Tech Stack</h2>
+              <p className="text-white/40 text-xs mt-0.5">{skills.length} technologies detected</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all cursor-pointer"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-7">
+          {Object.entries(categorized).map(([category, items]) => (
+            <div key={category}>
+              <h3 className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] mb-3">
+                {category}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {items.map((skill) => {
+                  const slug = deviconMap[skill] || null;
+                  // Resolve a brand colour for each pill
+                  const pillColor = (() => {
+                    const SKILL_COLORS_LOCAL = {
+                      'JavaScript': '#F7DF1E', 'TypeScript': '#3178C6',
+                      'Python': '#3776AB', 'React': '#61DAFB',
+                      'Java': '#ED8B00', 'C++': '#00599C',
+                      'Go': '#00ADD8', 'Rust': '#CE422B',
+                      'Docker': '#2496ED', 'Git': '#F05032',
+                      'Node.js': '#339933', 'HTML': '#E34F26',
+                      'CSS': '#1572B6', 'Tailwind': '#06B6D4',
+                      'PyTorch': '#EE4C2C', 'TensorFlow': '#FF6F00',
+                      'Vue': '#42B883', 'Swift': '#FA7343',
+                      'Kotlin': '#A97BFF', 'Ruby': '#CC342D',
+                      'PHP': '#777BB4', 'AWS': '#FF9900',
+                      'Firebase': '#FFCA28', 'MongoDB': '#47A248',
+                      'PostgreSQL': '#4169E1', 'MySQL': '#4479A1',
+                      'Redis': '#DC382D', 'Kubernetes': '#326CE5',
+                    };
+                    return SKILL_COLORS_LOCAL[skill] || '#60a5fa';
+                  })();
+
+                  return (
+                    <div
+                      key={skill}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold uppercase tracking-wider cursor-default select-none transition-all duration-200 hover:scale-105"
+                      style={{
+                        backgroundColor: pillColor + '18',
+                        borderColor: pillColor + '50',
+                        color: pillColor,
+                      }}
+                    >
+                      {slug ? (
+                        <img
+                          src={`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original.svg`}
+                          alt={skill}
+                          className="w-4 h-4 object-contain"
+                          onError={(e) => {
+                            e.target.src = `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain.svg`;
+                            e.target.onerror = () => { e.target.style.display = 'none'; };
+                          }}
+                        />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: pillColor + '40' }} />
+                      )}
+                      <span>{skill}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function OrbitingSkills({ skills }) {
     const [time, setTime] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState(null);
+    const [showPanel, setShowPanel] = useState(false);
     const lastTimeRef = useRef(null);
     const frameRef = useRef(null);
     const containerRef = useRef(null);
@@ -233,6 +427,14 @@ function OrbitingSkills({ skills }) {
         frameRef.current = requestAnimationFrame(step);
         return () => cancelAnimationFrame(frameRef.current);
     }, [isPaused, total]);
+
+    // Close the tech-stack panel when ESC is pressed
+    useEffect(() => {
+        if (!showPanel) return;
+        const onKey = (e) => { if (e.key === 'Escape') setShowPanel(false); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [showPanel]);
 
     // Compute badges based on live measurements
     const badges = useMemo(() => {
@@ -337,9 +539,10 @@ function OrbitingSkills({ skills }) {
                     </div>
                 </div>
 
-                {/* Central node with dual cyan/purple glow */}
-                <div 
-                    className="rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center relative shadow-2xl z-20"
+                {/* Central node — click to open full Tech Stack panel */}
+                <div
+                    onClick={() => setShowPanel(true)}
+                    className="rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center relative shadow-2xl z-20 cursor-pointer hover:scale-110 transition-transform duration-300 group"
                     style={{
                         top: CENTER - 32,
                         left: CENTER - 32,
@@ -347,9 +550,12 @@ function OrbitingSkills({ skills }) {
                         height: 64,
                         position: 'absolute',
                     }}
+                    title="View full tech stack"
                 >
                     <div className="absolute inset-0 rounded-full bg-cyan-500/30 blur-xl animate-pulse" />
                     <div className="absolute inset-0 rounded-full bg-purple-500/20 blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
+                    {/* Hover ring hint */}
+                    <div className="absolute inset-0 rounded-full border-2 border-cyan-400/0 group-hover:border-cyan-400/50 transition-all duration-300" />
                     <svg width="24" height="24" viewBox="0 0 36 36" className="relative z-10 transition-transform duration-500">
                         <defs>
                             <linearGradient id="orbiting-skills-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -408,6 +614,15 @@ function OrbitingSkills({ skills }) {
                     );
                 })}
             </div>
+
+            {/* Tech Stack panel — rendered via portal to escape overflow-hidden */}
+            {showPanel && createPortal(
+                <TechStackPanel
+                    skills={skills || []}
+                    onClose={() => setShowPanel(false)}
+                />,
+                document.body
+            )}
         </div>
     );
 }
