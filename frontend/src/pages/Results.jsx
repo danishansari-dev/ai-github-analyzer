@@ -287,7 +287,7 @@ function Results() {
                                 <SpotlightCard 
                                     glowColor="cyan" 
                                     className="p-2 flex items-center justify-center w-full flex-1 overflow-hidden bg-[#0f0f15]/80 backdrop-blur-xl border border-white/5 rounded-[2.5rem] shadow-2xl print-card"
-                                    style={{ minHeight: '500px' }}
+                                    style={{ minHeight: '500px', height: '500px' }}
                                 >
                                     <OrbitingSkills skills={techStack} />
                                 </SpotlightCard>
