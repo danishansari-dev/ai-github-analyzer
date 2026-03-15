@@ -193,13 +193,16 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
             current_stack = llm_result.get('stack', {})
             primary_stack = current_stack.get('primary_stack', [])
             
-            # Deduplicate and merge
+            # Case-insensitive dedup merge
+            existing_lower = {s.lower() for s in primary_stack}
             for skill in readme_skills:
-                if skill not in primary_stack:
+                if skill.lower() not in existing_lower:
                     primary_stack.append(skill)
+                    existing_lower.add(skill.lower())
             
             current_stack['primary_stack'] = primary_stack
             llm_result['stack'] = current_stack
+            print(f"[analyze] Final primary_stack has {len(primary_stack)} items: {primary_stack}")
 
         analysis_response = FullAnalysisResponse(
             username=username,
