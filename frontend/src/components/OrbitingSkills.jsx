@@ -221,6 +221,8 @@ function DevIcon({ slug, name, color }) {
     `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain.svg`,
     `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-original-wordmark.svg`,
     `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${slug}/${slug}-plain-wordmark.svg`,
+    // Flask-specific: white variant needs inversion
+    `https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${slug}/${slug}-original.svg`,
   ];
 
   const handleError = () => {
@@ -244,11 +246,15 @@ function DevIcon({ slug, name, color }) {
     );
   }
 
+  const WHITE_ICON_SLUGS = ['flask', 'github', 'express', 'fastapi'];
+  const needsInvert = WHITE_ICON_SLUGS.includes(slug);
+
   return (
     <img
       src={src}
       alt={name}
       className="w-full h-full object-contain p-1"
+      style={needsInvert ? { filter: 'invert(1) brightness(0.9)' } : {}}
       onError={handleError}
     />
   );
@@ -605,6 +611,9 @@ function OrbitingSkills({ skills }) {
                     const y = CENTER + Math.sin(angle) * item.radius;
                     const isHovered = hoveredIndex === item.index;
 
+                    // Determine tooltip position — flip to below if badge is in top 70% of container
+                    const isInTopHalf = y < liveSize * 0.7;
+
                     return (
                         <button
                             type="button"
@@ -622,7 +631,7 @@ function OrbitingSkills({ skills }) {
                             onMouseEnter={() => setHoveredIndex(item.index)}
                             onMouseLeave={() => setHoveredIndex(null)}
                         >
-                            <div className="w-full h-full p-2 flex items-center justify-center">
+                            <div className="w-full h-full p-2 flex items-center justify-center relative">
                                 {item.slug ? (
                                     <DevIcon slug={item.slug} name={item.name} color={item.color} />
                                 ) : (
@@ -633,8 +642,17 @@ function OrbitingSkills({ skills }) {
                                         </span>
                                     </div>
                                 )}
+                                {/* Smart tooltip — above if bottom half, below if top half */}
                                 {isHovered && (
-                                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/95 border border-white/10 rounded-md text-[10px] font-bold text-white whitespace-nowrap shadow-2xl pointer-events-none">
+                                    <div
+                                        className="absolute left-1/2 -translate-x-1/2 px-2 py-1 bg-black/95 border border-white/10 rounded-md text-[10px] font-bold text-white whitespace-nowrap shadow-2xl pointer-events-none z-50"
+                                        style={{
+                                            ...(isInTopHalf
+                                                ? { top: '110%', bottom: 'auto' }   // show BELOW when near top
+                                                : { bottom: '110%', top: 'auto' }   // show ABOVE when near bottom
+                                            )
+                                        }}
+                                    >
                                         {item.name}
                                     </div>
                                 )}
