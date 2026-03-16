@@ -139,13 +139,15 @@ Full scan of `ai-github-analyzer` (frontend + backend). No sugarcoating.
 
 🔴 **CRITICAL** — **Strengths (and roast one-liners) are never shown.** API returns `stack.strengths`; ProfileCard (and the rest of the app) never render them. In roast mode the strengths are the roast lines; they’re still missing from the UI.
 
-🟡 **WARNING** — **Groq prompt is large and asks for 50+ role scores.** The prompt is structured and gives clear keys; good. But when the model returns a **flat** `role_fit`, the backend normalization keeps only 5 roles. So the “50+ roles” claim and the RoleScoreCard’s category list can be underfilled. Fix the flat-case normalization to preserve all role keys.
+🟡 **WARNING** — **Groq prompt asks for 50+ role scores but PRD specifies only 5.** The PRD explicitly limits Role Fit Score to exactly 5 roles (ML Engineer, Backend Developer, Frontend Developer, MLOps Engineer, Full Stack Developer). The backend normalization keeps 5 roles, which aligns with the PRD, but the LLM prompt itself is violating the PRD by asking for 50+ roles.
+**Fix:** Update the LLM prompt to only evaluate the 5 standard roles defined in the PRD.
 
 🟡 **WARNING** — **Redis caching:** Cache key is `username` or `username:roast`; TTL is 60 minutes (in-memory). No cache stampede protection. If 100 people hit the same uncached user at once, you run 100 analyses. Consider a short-lived lock or “loading” placeholder per key.
 
 🟡 **WARNING** — **Analysis result validation:** You build `FullAnalysisResponse(...)` from the LLM and GitHub data. If the LLM omits a required field (e.g. `reasoning` in `RoleFitAnalysis`), Pydantic can raise and the request returns 500. Consider defaults for optional-looking fields (e.g. `reasoning: str = ""`) or a try/except and a sanitized error response.
 
-🟡 **WARNING** — **Share modal / PDF:** The comment says “shareable PNG card generator” but there is **no share modal and no PDF/PNG export** in the codebase (no `html-to-image` or similar usage). So sharing is “copy URL” only; the promise in the copy is misleading. Either implement export or update the copy.
+🟡 **WARNING** — **Misleading PDF/PNG export copy:** The codebase mentions a “shareable PNG card generator”, but the PRD explicitly lists "Downloadable PDF report" as **Out of Scope (v1)**.
+**Fix:** Remove the misleading copy claiming PDF/PNG export functionality, as "copy URL" is the only required sharing method for v1.
 
 🟡 **WARNING** — **Share URL:** Backend OG and redirect use `https://ai-github-analyzer.vercel.app/results/{username}`. If the user is in roast mode, the URL should include `?mode=roast` so that when someone opens the link they see the same mode. Currently the OG endpoint doesn’t pass mode; the redirect is always to `/results/{username}`. So shared roast links would open in normal mode.  
 **Fix:** Include query in OG url and redirect, e.g. when generating the page for roast, use `.../results/{username}?mode=roast`.
@@ -170,4 +172,16 @@ Full scan of `ai-github-analyzer` (frontend + backend). No sugarcoating.
 2. **Render `ResumeBullets` on the Results page** and pass `data.resume_bullets`. Right now the main value prop is invisible.
 3. **Guard `rawUsername` in Results.jsx** and optionally redirect when missing, so `/results` or invalid routes don’t throw.
 
-After that: show `stack.strengths` (and roast lines) in the UI, fix the flat `role_fit` normalization so all roles are kept, and replace HTTP with HTTPS for the GitHub stats cards.
+After that: show `stack.strengths` (and roast lines) in the UI, fix the LLM prompt to only ask for 5 roles as per PRD, and replace HTTP with HTTPS for the GitHub stats cards.
+
+---
+
+## 8. MISSING PRD REQUIREMENTS
+
+─────────────
+
+🔴 **CRITICAL** — **Gaps not rendered:** PRD requires "gaps: 2–3 notable missing signals (tests, documentation, etc.)" to be displayed. The API returns them based on the schema, but neither `ProfileCard` nor any other component renders them in the UI.
+
+🟡 **WARNING** — **Shareable Badge:** The PRD mentions a shareable badge function (e.g. "I'm 84% ML Engineer" badge = natural social sharing). There is currently no badge generator implemented beyond simple URL sharing.
+
+🟡 **WARNING** — **SlowAPI Rate Limiting:** PRD specifies "Rate Limiting: SlowAPI (FastAPI middleware)" to prevent abuse. This needs to be verified or implemented in the FastAPI backend, as it was not noted in the initial audit.
