@@ -402,7 +402,6 @@ function TechStackPanel({ skills, onClose }) {
 
 function OrbitingSkills({ skills }) {
     const [time, setTime] = useState(0);
-    const [isPaused, setIsPaused] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const [showPanel, setShowPanel] = useState(false);
     const lastTimeRef = useRef(null);
@@ -410,7 +409,7 @@ function OrbitingSkills({ skills }) {
     const containerRef = useRef(null);
 
     // Reactive size tracking — ResizeObserver ensures re-render with real pixel values
-    const [liveSize, setLiveSize] = useState(460);
+    const [dimensions, setDimensions] = useState({ width: 460, height: 460 });
 
     useEffect(() => {
         const el = containerRef.current;
@@ -418,8 +417,9 @@ function OrbitingSkills({ skills }) {
 
         const measure = () => {
             const rect = el.getBoundingClientRect();
-            const s = Math.min(rect.width, rect.height);
-            if (s > 50) setLiveSize(s);
+            if (rect.width > 50 && rect.height > 50) {
+                setDimensions({ width: rect.width, height: rect.height });
+            }
         };
 
         measure();
@@ -434,8 +434,12 @@ function OrbitingSkills({ skills }) {
         };
     }, []);
 
-    // Core Math (Calculated from reactive liveSize)
-    const CENTER = liveSize / 2;
+    const { width, height } = dimensions;
+    const liveSize = Math.min(width, height);
+    
+    // Core Math (Calculated from reactive measurements)
+    const CENTER_X = width / 2;
+    const CENTER_Y = height / 2;
     const INNER_R = liveSize * 0.24;
     const OUTER_R = liveSize * 0.40;
 
@@ -445,7 +449,7 @@ function OrbitingSkills({ skills }) {
     const total = innerSkills.length + outerSkills.length;
 
     useEffect(() => {
-        if (isPaused || total === 0) {
+        if (total === 0) {
             cancelAnimationFrame(frameRef.current);
             lastTimeRef.current = null;
             return;
@@ -455,13 +459,18 @@ function OrbitingSkills({ skills }) {
             if (lastTimeRef.current == null) lastTimeRef.current = timestamp;
             const delta = (timestamp - lastTimeRef.current) / 1000;
             lastTimeRef.current = timestamp;
-            setTime(prev => prev + delta);
+            
+            // Slow down time when hovering the container instead of stopping it entirely
+            // This keeps the 'orbit' feeling alive
+            const timeScale = hoveredIndex !== null ? 0.2 : 1.0;
+            setTime(prev => prev + delta * timeScale);
+            
             frameRef.current = requestAnimationFrame(step);
         };
 
         frameRef.current = requestAnimationFrame(step);
         return () => cancelAnimationFrame(frameRef.current);
-    }, [isPaused, total]);
+    }, [total, hoveredIndex !== null]);
 
     // Close the tech-stack panel when ESC is pressed
     useEffect(() => {
@@ -478,7 +487,7 @@ function OrbitingSkills({ skills }) {
             all.push({
                 name,
                 radius: INNER_R,
-                speed: 0.4,
+                speed: -0.4, // Opposing direction for inner ring
                 phaseShift: (i / (innerSkills.length || 1)) * Math.PI * 2,
                 size: Math.max(38, liveSize * 0.08),
                 ...getSkillConfig(name),
@@ -514,8 +523,6 @@ function OrbitingSkills({ skills }) {
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
             >
                 {/* Glowing orbit rings — cyan inner, purple outer */}
                 <div className="absolute inset-0 pointer-events-none">
@@ -525,8 +532,8 @@ function OrbitingSkills({ skills }) {
                         style={{
                             width: INNER_R * 2,
                             height: INNER_R * 2,
-                            top: CENTER - INNER_R,
-                            left: CENTER - INNER_R,
+                            top: CENTER_Y - INNER_R,
+                            left: CENTER_X - INNER_R,
                         }}
                     >
                         <div
@@ -551,8 +558,8 @@ function OrbitingSkills({ skills }) {
                         style={{
                             width: OUTER_R * 2,
                             height: OUTER_R * 2,
-                            top: CENTER - OUTER_R,
-                            left: CENTER - OUTER_R,
+                            top: CENTER_Y - OUTER_R,
+                            left: CENTER_X - OUTER_R,
                         }}
                     >
                         <div
@@ -579,8 +586,8 @@ function OrbitingSkills({ skills }) {
                     onClick={() => setShowPanel(true)}
                     className="rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center relative shadow-2xl z-20 cursor-pointer hover:scale-110 transition-transform duration-300 group"
                     style={{
-                        top: CENTER - 32,
-                        left: CENTER - 32,
+                        top: CENTER_Y - 32,
+                        left: CENTER_X - 32,
                         width: 64,
                         height: 64,
                         position: 'absolute',
@@ -607,8 +614,8 @@ function OrbitingSkills({ skills }) {
                 {/* Skill badges */}
                 {badges.map(item => {
                     const angle = time * item.speed + item.phaseShift;
-                    const x = CENTER + Math.cos(angle) * item.radius;
-                    const y = CENTER + Math.sin(angle) * item.radius;
+                    const x = CENTER_X + Math.cos(angle) * item.radius;
+                    const y = CENTER_Y + Math.sin(angle) * item.radius;
                     const isHovered = hoveredIndex === item.index;
 
                     // Determine tooltip position — flip to below if badge is in top 70% of container
