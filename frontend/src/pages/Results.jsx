@@ -9,7 +9,6 @@ import OrbitingSkills from '../components/OrbitingSkills';
 import SpotlightCard from '../components/SpotlightCard';
 import ScoreRing from '../components/ScoreRing';
 
-
 // 90-second timeout so the loading screen never spins forever
 const FETCH_TIMEOUT_MS = 90000;
 
