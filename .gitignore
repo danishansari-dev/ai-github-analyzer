@@ -25,3 +25,5 @@ backend/*.lock
 
 .cursor
 .vercel
+
+docs/
