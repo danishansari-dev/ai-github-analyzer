@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Response, Query
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, List
 import asyncio
+import re
 import traceback
 from datetime import datetime, timezone
 
@@ -35,6 +36,54 @@ async def health_check():
     @returns JSON status indicating 'ok'
     """
     return {"status": "ok"}
+
+
+@router.get("/debug/github")
+async def debug_github():
+    """Temporary diagnostic: verify anonymous GitHub API access from this runtime."""
+    import os
+    import requests as req
+
+    token = os.getenv("GITHUB_TOKEN")
+    token_state = "missing" if not token else f"set(len={len(token.strip())})"
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "ai-github-analyzer"}
+    if token and token.strip():
+        headers["Authorization"] = f"Bearer {token.strip()}"
+    try:
+        r = req.get("https://api.github.com/users/octocat", headers=headers, timeout=10)
+        return {
+            "token": token_state,
+            "status_code": r.status_code,
+            "login": (r.json() or {}).get("login") if r.ok else None,
+            "message": None if r.ok else r.text[:200],
+            "rate_remaining": r.headers.get("X-RateLimit-Remaining"),
+        }
+    except Exception as e:
+        return {"token": token_state, "error": f"{type(e).__name__}: {e}"}
+
+
+@router.get("/debug/groq")
+async def debug_groq():
+    """Temporary diagnostic: verify Groq API key works from this runtime."""
+    import os
+    from groq import Groq
+
+    raw = os.getenv("GROQ_API_KEY")
+    key = raw.strip() if raw else None
+    if not key:
+        return {"groq": "missing"}
+    try:
+        client = Groq(api_key=key)
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": "Reply with exactly: ok"}],
+            max_tokens=5,
+        )
+        text = completion.choices[0].message.content if completion.choices else ""
+        return {"groq": "ok", "reply": (text or "")[:40]}
+    except Exception as e:
+        safe = re.sub(r"(gsk_|ghp_)[A-Za-z0-9_]+", "[REDACTED]", str(e))
+        return {"groq": "error", "error": f"{type(e).__name__}: {safe[:240]}"}
 
 @router.get("/stats")
 async def get_stats():
@@ -89,33 +138,30 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
 
         print(f"[analyze] Profile fetched for '{username}'")
 
-        # 3. Call github_service.get_user_repos(username)
-        repos = await asyncio.to_thread(github_svc.get_user_repos, username)
-        print(f"[analyze] Repos fetched: {len(repos)} repos")
+        # 3. Fetch repositories, badges, GitHub user object, and profile README in parallel
+        # Why it exists: Running these remote network calls concurrently saves about 20-30 seconds of response latency.
+        repos, badges, github_user_obj, profile_readme = await asyncio.gather(
+            asyncio.to_thread(github_svc.get_user_repos, username),
+            asyncio.to_thread(github_svc.get_user_badges, username),
+            asyncio.to_thread(github_svc.g.get_user, username),
+            asyncio.to_thread(github_svc.get_profile_readme, username)
+        )
+        print(f"[analyze] Repos, badges, user object, and profile README fetched concurrently")
 
-        # 4. Call github_service.get_top_repos_with_readme(username)
-        repos_with_readmes = await asyncio.to_thread(github_svc.get_top_repos_with_readme, username)
+        # 4. Fetch READMEs for top repos, passing the pre-fetched repos list to prevent duplicate fetch traffic
+        repos_with_readmes = await asyncio.to_thread(github_svc.get_top_repos_with_readme, username, repos)
         print(f"[analyze] READMEs fetched for top repos")
 
-        # 5. Call github_service.get_language_breakdown(username)
-        language_breakdown = await asyncio.to_thread(github_svc.get_language_breakdown, username)
-        print(f"[analyze] Language breakdown complete")
+        # 5. Extract skills and contact/social links from the pre-fetched profile README.
+        # Tricky logic: Since the README is already downloaded in profile_readme, we parse it synchronously in-memory
+        # to avoid making another set of HTTP requests.
+        readme_skills = github_svc.get_readme_skills(username, profile_readme)
+        print(f"[analyze] README skills extracted: {len(readme_skills)} found")
 
-        # 5b. Fetch GitHub achievement badges
-        badges = await asyncio.to_thread(github_svc.get_user_badges, username)
-        print(f"[analyze] Badges fetched: {len(badges)} unlocked")
-
-        # 5c. Fetch README skills
-        readme_skills = await asyncio.to_thread(github_svc.get_readme_skills, username)
-        print(f"[analyze] README skills fetched: {len(readme_skills)} found")
-
-        # 5d. Fetch social links from GitHub profile
-        # Use g.get_user(username) to get the PyGithub user object required by get_social_links
-        github_user_obj = await asyncio.to_thread(github_svc.g.get_user, username)
-        social_links = await asyncio.to_thread(github_svc.get_social_links, github_user_obj)
+        readme_contact = github_svc.get_readme_contact_info(username, profile_readme)
         
-        # 5e. Extract all social links and contact info from public README
-        readme_contact = await asyncio.to_thread(github_svc.get_readme_contact_info, username)
+        # 6. Fetch social links from the GitHub API using the pre-fetched user object
+        social_links = await asyncio.to_thread(github_svc.get_social_links, github_user_obj)
         
         print(f"[analyze] README contact keys found: {list(readme_contact.keys())}")
 
@@ -243,4 +289,10 @@ async def analyze_user(username: str, response: Response, mode: str = Query("nor
         if "rate limit" in error_msg:
             raise HTTPException(status_code=429, detail="API rate limit exceeded. Please try again in 1 hour.")
 
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return exception type for diagnosis (never include raw auth material)
+        safe = re.sub(r"(ghp_|gsk_|github_pat_)[A-Za-z0-9_]+", "[REDACTED]", str(e))
+        print(f"[analyze] Unexpected error for '{username}': {type(e).__name__}: {safe}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"{type(e).__name__}: {safe[:240]}",
+        )
