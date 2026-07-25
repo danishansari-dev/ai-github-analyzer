@@ -3,9 +3,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from routers import analyze
+import os
 
-# Load environment variables from .env file
-load_dotenv()
+# Load local .env only outside Vercel — never ship secrets via uploaded .env files
+if os.getenv("VERCEL") != "1":
+    load_dotenv()
 
 # This file exists to act as the primary ASGI entry point for our server,
 # tying together our routers, middlewares, and global configurations.
@@ -14,17 +16,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Setup CORS middleware to allow our frontend to communicate with the API
+# Setup CORS middleware to allow our frontend to communicate with the API.
+# Also allow Vercel preview deployments of this project.
 allowed_origins = [
     "https://ai-github-analyzer.vercel.app",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
+allowed_origin_regex = r"https://ai-github-analyzer(-[a-z0-9-]+)?-danishs-projects-25aab0a7\.vercel\.app"
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=allowed_origin_regex,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
