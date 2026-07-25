@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+.vercel
+venv
+__pycache__
+*.pyc
+.python-version
