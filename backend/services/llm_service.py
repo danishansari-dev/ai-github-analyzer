@@ -5,8 +5,9 @@ from typing import Dict, List, Any
 from groq import Groq
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load local .env only outside Vercel — never ship secrets via uploaded .env files
+if os.getenv("VERCEL") != "1":
+    load_dotenv()
 
 class LLMService:
     """
@@ -15,8 +16,10 @@ class LLMService:
     """
 
     def __init__(self):
-        # GROQ_API_KEY is used for high-performance Llama 3 analysis
-        self.api_key = os.getenv("GROQ_API_KEY")
+        # GROQ_API_KEY is used for high-performance Llama 3 analysis.
+        # Strip whitespace — Vercel/CLI env injection can leave trailing \r\n.
+        raw = os.getenv("GROQ_API_KEY")
+        self.api_key = raw.strip() if raw else None
         if not self.api_key:
             logging.warning("Warning: GROQ_API_KEY not found in environment variables.")
 
