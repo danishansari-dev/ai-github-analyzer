@@ -3,11 +3,13 @@ import time
 import requests
 import re
 from typing import Dict, List, Any, Optional
+from concurrent.futures import ThreadPoolExecutor
 from github import Github, GithubException, UnknownObjectException, RateLimitExceededException
 from dotenv import load_dotenv
 
-# Load all environment variables from .env file
-load_dotenv()
+# Load local .env only outside Vercel — never ship secrets via uploaded .env files
+if os.getenv("VERCEL") != "1":
+    load_dotenv()
 
 class GitHubService:
     """
@@ -16,12 +18,15 @@ class GitHubService:
     """
 
     def __init__(self):
-        # We use a GITHUB_TOKEN for higher rate limits and personal access
-        self.token = os.getenv("GITHUB_TOKEN")
+        # We use a GITHUB_TOKEN for higher rate limits and personal access.
+        # Strip whitespace — Vercel/CLI env injection can leave trailing \r\n.
+        raw = os.getenv("GITHUB_TOKEN")
+        self.token = raw.strip() if raw else None
         if not self.token:
             print("Warning: GITHUB_TOKEN not found in environment variables. Rate limits will be severely restricted.")
-        
-        self.g = Github(self.token)
+            self.g = Github()
+        else:
+            self.g = Github(self.token)
 
     def get_user_profile(self, username: str) -> Dict[str, Any]:
         """
@@ -85,7 +90,11 @@ class GitHubService:
             
             repo_list = []
             sorted_repos = sorted_repos or []
-            for repo in sorted_repos:
+
+            # Tricky logic: We define a helper task function to run in a thread pool.
+            # This allows us to fetch commits and topics concurrently for all top 10 repos.
+            # We catch exceptions per-repository so that one bad API call doesn't ruin the whole analysis.
+            def fetch_repo_details(repo) -> Dict[str, Any]:
                 total_commits = 1
                 try:
                     headers = {}
@@ -99,6 +108,7 @@ class GitHubService:
                         if match:
                             total_commits = int(match.group(1))
                 except Exception as e:
+                    # Why the log exists: to help debug transient GitHub API network errors
                     print(f"Failed to fetch commit count for {repo.name}: {e}")
 
                 topics = []
@@ -107,7 +117,7 @@ class GitHubService:
                 except Exception:
                     pass
 
-                repo_list.append({
+                return {
                     "name": repo.name,
                     "description": repo.description,
                     "language": repo.language,
@@ -116,7 +126,13 @@ class GitHubService:
                     "html_url": repo.html_url,
                     "topics": topics,
                     "combined_score": (repo.stargazers_count * 2) + total_commits
-                })
+                }
+
+            # Parallelizing network calls to cut down total response latency for multiple repos
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                results = executor.map(fetch_repo_details, sorted_repos)
+                for r in results:
+                    repo_list.append(r)
                 
             # Sort by the new combined score descending
             repo_list.sort(key=lambda x: x.get("combined_score", 0), reverse=True)
@@ -182,20 +198,30 @@ class GitHubService:
         except Exception as e:
             raise Exception(f"Error calculating language breakdown: {str(e)}")
 
-    def get_top_repos_with_readme(self, username: str) -> List[Dict[str, Any]]:
+    def get_top_repos_with_readme(self, username: str, top_repos: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """
         Combines repository info and README content for the top 3 starred repositories.
+        Why it exists: We need the project readmes to let LLM analyze individual complexity and achievements.
+        Tricky logic: Accepts pre-fetched repos to avoid redundant fetching, and uses ThreadPoolExecutor
+        to download the top 3 READMEs concurrently.
         @param username - The GitHub username
+        @param top_repos - Pre-fetched list of repositories (optional)
         @returns List of top 3 repositories with their README content
         """
-        # Get top 10 repos first
-        top_repos = self.get_user_repos(username) or []
+        if top_repos is None:
+            # Fallback if no pre-fetched repos list is supplied
+            top_repos = self.get_user_repos(username) or []
+        
         # Take the top 3
         top_3 = top_repos[:3]
         
-        for repo in top_3:
-            # Fetch and attach readme content
+        def fetch_readme(repo):
             repo["readme"] = self.get_repo_readme(username, repo["name"])
+            return repo
+
+        # Concurrently fetch READMEs for the top 3 repos to reduce latency
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            top_3 = list(executor.map(fetch_readme, top_3))
 
         return top_3
 
@@ -220,30 +246,63 @@ class GitHubService:
         if self.token:
             headers["Authorization"] = f"token {self.token}"
 
-        for slug in achievement_slugs:
+        # Tricky logic: We define a nested function to process each badge independently in parallel.
+        # This prevents a single timeout/error from delaying the other achievement checks.
+        # Why it exists: 10 sequential HTTP requests take too long (>5s) and trigger Vercel/client timeout.
+        def check_badge(slug: str) -> Optional[str]:
             try:
                 url = f"https://github.com/{username}?tab=achievements&achievement={slug}"
                 res = requests.head(url, headers=headers, timeout=5, allow_redirects=True)
                 if res.status_code == 200:
-                    unlocked.append(slug)
+                    return slug
             except Exception:
-                # Skip individual badge check failures silently
+                # Ignore individual failures (such as network hiccups) to keep execution resilient
                 pass
+            return None
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = executor.map(check_badge, achievement_slugs)
+            for r in results:
+                if r is not None:
+                    unlocked.append(r)
 
         return unlocked
 
 
-    def get_readme_contact_info(self, username: str) -> dict:
+    def get_profile_readme(self, username: str) -> str:
+        """
+        Fetches the profile README.md text for a user.
+        Why it exists: Separating README fetching from parsing enables fetching it once
+        and running all other README-based processing completely in-memory.
+        @param username - The GitHub username
+        @returns Plain text content of the user's profile README, or empty string if not found
+        """
+        try:
+            time.sleep(0.5)
+            # Fetching the special profile repository username/username
+            repo = self.g.get_repo(f"{username}/{username}")
+            content = repo.get_contents("README.md")
+            return content.decoded_content.decode('utf-8', errors='ignore')
+        except Exception:
+            # Return empty string if repository or README doesn't exist
+            return ""
+
+    def get_readme_contact_info(self, username: str, readme_text: Optional[str] = None) -> dict:
         """
         Extract contact info and social links from profile README.
         Only extracting from public README - user chose to make this public.
+        @param username - The GitHub username
+        @param readme_text - Pre-fetched profile README text (optional)
+        @returns Dictionary of extracted social and contact links
         """
         import re
         contact = {}
         try:
-            repo = self.g.get_repo(f"{username}/{username}")
-            content = repo.get_contents("README.md")
-            readme_text = content.decoded_content.decode('utf-8', errors='ignore')
+            if readme_text is None:
+                readme_text = self.get_profile_readme(username)
+            if not readme_text:
+                return contact
+
 
             # --- Phone extraction ---
             phone_patterns = [
@@ -353,13 +412,19 @@ class GitHubService:
         
         return links
 
-    def get_readme_skills(self, username: str) -> list:
-        """Fetch username/username README and extract ALL technology mentions."""
+    def get_readme_skills(self, username: str, readme_text: Optional[str] = None) -> list:
+        """
+        Fetch username/username README and extract ALL technology mentions.
+        @param username - The GitHub username
+        @param readme_text - Pre-fetched profile README text (optional)
+        @returns List of detected technology skill names
+        """
         try:
-            time.sleep(0.5)
-            repo = self.g.get_repo(f"{username}/{username}")
-            content = repo.get_contents("README.md")
-            readme_text = content.decoded_content.decode('utf-8', errors='ignore').lower()
+            if readme_text is None:
+                readme_text = self.get_profile_readme(username)
+            if not readme_text:
+                return []
+            readme_text = readme_text.lower()
 
             # Comprehensive tech map: search term → display name
             tech_map = {
