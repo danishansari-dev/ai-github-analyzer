@@ -24,3 +24,4 @@ backend/visitors.json
 backend/*.lock
 
 .cursor
+.vercel
