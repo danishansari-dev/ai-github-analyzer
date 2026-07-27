@@ -9,8 +9,9 @@ An **AI-powered development analytics tool** that transforms your GitHub profile
 
 ## 📸 Screenshots
 
-![AI GitHub Analyzer Preview](https://via.placeholder.com/1200x600?text=AI+GitHub+Analyzer+Dashboard)
-*Note: Coming soon - Replace with actual screenshots of your application.*
+![AI GitHub Analyzer Preview](https://raw.githubusercontent.com/danishansari-dev/ai-github-analyzer/refs/heads/main/Screenshot.png)
+
+![AI GitHub Analyzer Preview](https://raw.githubusercontent.com/danishansari-dev/ai-github-analyzer/refs/heads/main/Screenshot-2.png)
 
 ---
 
