@@ -11,6 +11,8 @@ An **AI-powered development analytics tool** that transforms your GitHub profile
 
 ![AI GitHub Analyzer Preview](https://raw.githubusercontent.com/danishansari-dev/ai-github-analyzer/refs/heads/main/Screenshot.png)
 
+![AI GitHub Analyzer Preview](https://raw.githubusercontent.com/danishansari-dev/ai-github-analyzer/refs/heads/main/Screenshot-2.png)
+
 ---
 
 ## 🚀 What You Get
